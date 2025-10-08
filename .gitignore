@@ -8,3 +8,4 @@ dist
 build
 .vscode
 .DS_Store
+*.tsbuildinfo

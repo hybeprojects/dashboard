@@ -10,7 +10,9 @@ let OidcStrategyFactory: any;
 
 if (issuerUrl) {
   // Use require to avoid static imports that may break when the package shape differs.
-  const { Issuer, Client, Strategy: OIDCStrategy } = require('openid-client');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Issuer, Strategy: OIDCStrategy } = require('openid-client');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PassportStrategy } = require('@nestjs/passport');
 
   if (!OIDCStrategy) {

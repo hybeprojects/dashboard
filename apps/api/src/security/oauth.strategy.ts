@@ -11,6 +11,7 @@ if (!hasOauthConfig) {
   OauthStrategy = DummyOauthStrategy;
 } else {
   // Defensive require to support different module export shapes.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const passportOauth = require('passport-oauth2');
   const OauthStrategyImpl = passportOauth.Strategy || passportOauth || undefined;
 
