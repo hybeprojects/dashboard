@@ -5,8 +5,8 @@ import { AnalyticsResolver } from './analytics.resolver';
 
 @Module({
   imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
+    GraphQLModule.forRoot({
+      driver: ApolloDriver as any,
       autoSchemaFile: true,
       path: '/graphql',
     }),

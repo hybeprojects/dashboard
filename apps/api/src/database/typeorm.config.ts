@@ -1,5 +1,4 @@
 import { DataSourceOptions } from 'typeorm';
-import { DataSourceOptions } from 'typeorm';
 import { User } from '../modules/users/user.entity';
 import { Account } from '../modules/accounts/account.entity';
 import { Transaction } from '../modules/transactions/transaction.entity';

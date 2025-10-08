@@ -11,6 +11,8 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {},
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }
