@@ -10,6 +10,7 @@ async function bootstrap() {
   app.use(helmet());
   app.enableCors({ origin: true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   const dsn = process.env.SENTRY_DSN;
   if (dsn) {
