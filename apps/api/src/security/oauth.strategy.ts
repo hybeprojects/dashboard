@@ -15,17 +15,22 @@ if (!hasOauthConfig) {
   const OauthStrategyImpl = passportOauth.Strategy || passportOauth || undefined;
 
   @Injectable()
-  class RealOauthStrategy extends (PassportStrategy as any)(OauthStrategyImpl || class {}, 'oauth2') {
+  class RealOauthStrategy extends (PassportStrategy as any)(
+    OauthStrategyImpl || class {},
+    'oauth2',
+  ) {
     constructor() {
       super({
         authorizationURL: process.env.OAUTH2_AUTH_URL || '',
         tokenURL: process.env.OAUTH2_TOKEN_URL || '',
         clientID: process.env.OAUTH2_CLIENT_ID || '',
         clientSecret: process.env.OAUTH2_CLIENT_SECRET || '',
-        callbackURL: process.env.OAUTH2_CALLBACK_URL || ''
+        callbackURL: process.env.OAUTH2_CALLBACK_URL || '',
       } as any);
     }
-    validate(accessToken: string) { return { accessToken }; }
+    validate(accessToken: string) {
+      return { accessToken };
+    }
   }
 
   OauthStrategy = RealOauthStrategy;
