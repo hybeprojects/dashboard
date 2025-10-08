@@ -25,7 +25,6 @@
     "typeorm": "^0.3.20",
     "pg": "^8.11.5",
     "ioredis": "^5.4.1",
-    "@nestjs/graphql": "^12.2.6",
     "graphql": "^16.9.0",
     "apollo-server-express": "^3.13.0",
     "speakeasy": "^2.0.0",
