@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 
 // Load passport-jwt defensively to handle differing export shapes between versions.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const passportJwt = require('passport-jwt');
 const ExtractJwt =
   passportJwt.ExtractJwt || passportJwt.extractJwt || (passportJwt && passportJwt.ExtractJwt);
