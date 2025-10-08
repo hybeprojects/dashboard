@@ -18,8 +18,11 @@ function resolveDatabaseUrl(): string | undefined {
   return undefined;
 }
 
-const databaseUrl = resolveDatabaseUrl() || 'postgresql://postgres:postgres@localhost:5432/postgres';
-const synchronize = process.env.TYPEORM_SYNCHRONIZE ? process.env.TYPEORM_SYNCHRONIZE === 'true' : true;
+const databaseUrl =
+  resolveDatabaseUrl() || 'postgresql://postgres:postgres@localhost:5432/postgres';
+const synchronize = process.env.TYPEORM_SYNCHRONIZE
+  ? process.env.TYPEORM_SYNCHRONIZE === 'true'
+  : true;
 
 export const typeormConfig: DataSourceOptions = {
   type: 'postgres',
