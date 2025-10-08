@@ -10,11 +10,12 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { KycModule } from './modules/kyc/kyc.module';
 import { AuditMiddleware } from './common/middleware/audit.middleware';
+import { JwtAuthGuard } from './security/jwt.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    JwtModule.register({ global: true, secret: process.env.JWT_SECRET || 'secret', signOptions: { expiresIn: '1h' } }),
+    JwtModule.register({ global: true, secret: process.env.JWT_SECRET || 'secret', signOptions: { expiresIn: '15m' } }),
     DatabaseModule,
     RedisModule,
     AuthModule,
@@ -24,6 +25,7 @@ import { AuditMiddleware } from './common/middleware/audit.middleware';
     NotificationsModule,
     KycModule,
   ],
+  providers: [JwtAuthGuard],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
