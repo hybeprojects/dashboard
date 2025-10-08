@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container-page { @apply min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100; }
+.section { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+.navbar { @apply sticky top-0 z-40 backdrop-blur bg-white/60 dark:bg-gray-900/60 border-b border-gray-200 dark:border-gray-800; }
