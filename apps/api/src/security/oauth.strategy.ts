@@ -3,17 +3,19 @@ import { PassportStrategy } from '@nestjs/passport';
 
 const hasOauthConfig = !!process.env.OAUTH2_AUTH_URL;
 
+let OauthStrategy: any;
+
 if (!hasOauthConfig) {
   @Injectable()
   class DummyOauthStrategy {}
-  export { DummyOauthStrategy as OauthStrategy };
+  OauthStrategy = DummyOauthStrategy;
 } else {
   // Defensive require to support different module export shapes.
   const passportOauth = require('passport-oauth2');
   const OauthStrategyImpl = passportOauth.Strategy || passportOauth || undefined;
 
   @Injectable()
-  export class OauthStrategy extends (PassportStrategy as any)(OauthStrategyImpl || class {}, 'oauth2') {
+  class RealOauthStrategy extends (PassportStrategy as any)(OauthStrategyImpl || class {}, 'oauth2') {
     constructor() {
       super({
         authorizationURL: process.env.OAUTH2_AUTH_URL || '',
@@ -25,4 +27,8 @@ if (!hasOauthConfig) {
     }
     validate(accessToken: string) { return { accessToken }; }
   }
+
+  OauthStrategy = RealOauthStrategy;
 }
+
+export { OauthStrategy };
