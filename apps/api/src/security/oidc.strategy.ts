@@ -13,22 +13,29 @@ if (issuerUrl) {
   const { Issuer, Client, Strategy: OIDCStrategy } = require('openid-client');
   const { PassportStrategy } = require('@nestjs/passport');
 
-  @Injectable()
-  class RealOidcStrategy extends (PassportStrategy as any)(OIDCStrategy, 'oidc') {
-    constructor() {
-      // Discovering from issuer might be preferred, but we construct a minimal Issuer here.
-      const issuer = new Issuer({ issuer: issuerUrl } as any);
-      const client = new issuer.Client({
-        client_id: process.env.OAUTH2_CLIENT_ID || '',
-        client_secret: process.env.OAUTH2_CLIENT_SECRET || '',
-        redirect_uris: [process.env.OAUTH2_CALLBACK_URL || ''],
-        response_types: ['code'],
-      });
-      super({ client });
+  if (!OIDCStrategy) {
+    // openid-client does not provide a passport Strategy in this environment/version.
+    @Injectable()
+    class DummyOidcStrategy {}
+    OidcStrategyFactory = DummyOidcStrategy;
+  } else {
+    @Injectable()
+    class RealOidcStrategy extends (PassportStrategy as any)(OIDCStrategy, 'oidc') {
+      constructor() {
+        // Discovering from issuer might be preferred, but we construct a minimal Issuer here.
+        const issuer = new Issuer({ issuer: issuerUrl } as any);
+        const client = new issuer.Client({
+          client_id: process.env.OAUTH2_CLIENT_ID || '',
+          client_secret: process.env.OAUTH2_CLIENT_SECRET || '',
+          redirect_uris: [process.env.OAUTH2_CALLBACK_URL || ''],
+          response_types: ['code'],
+        });
+        super({ client });
+      }
     }
-  }
 
-  OidcStrategyFactory = RealOidcStrategy;
+    OidcStrategyFactory = RealOidcStrategy;
+  }
 } else {
   @Injectable()
   class DummyOidcStrategy {}
