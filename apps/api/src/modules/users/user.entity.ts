@@ -8,7 +8,7 @@ export class User {
   @Column({ default: false }) mfaEnabled!: boolean;
   @Column({ type: 'text', nullable: true }) mfaSecret?: string | null;
   @Column({ type: 'text', nullable: true }) firstName?: string | null;
-  @Column({ nullable: true }) lastName?: string | null;
+  @Column({ type: 'text', nullable: true }) lastName?: string | null;
   @CreateDateColumn() createdAt!: Date;
   @UpdateDateColumn() updatedAt!: Date;
 }
