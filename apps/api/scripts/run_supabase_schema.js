@@ -16,6 +16,10 @@ async function run() {
     const statements = sql.split(/;\n/).map(s => s.trim()).filter(Boolean);
     for (let i = 0; i < statements.length; i++) {
       const stmt = statements[i];
+      if (/CREATE\s+POLICY/i.test(stmt) || /CREATE\s+ROLE/i.test(stmt)) {
+        console.log(`Skipping policy/role statement ${i+1}/${statements.length}`);
+        continue;
+      }
       try {
         console.log(`Executing statement ${i+1}/${statements.length}`);
         await client.query(stmt);
