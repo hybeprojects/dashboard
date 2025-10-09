@@ -119,4 +119,26 @@ export class AuthService {
     await supabaseAdmin.from('refresh_tokens').delete().eq('id', tokenId);
     return { newToken, userId: data.user_id };
   }
+
+  async revokeRefreshToken(tokenId: string) {
+    await supabaseAdmin.from('refresh_tokens').delete().eq('id', tokenId);
+  }
+
+  async setupMfa(userId: string) {
+    const secret = speakeasy.generateSecret({ length: 20 });
+    const otpauth = secret.otpauth_url || '';
+    // store secret in local user table (base32)
+    await this.users.update({ id: userId } as any, { mfaSecret: secret.base32 });
+    return { otpauth, secret: secret.base32 };
+  }
+
+  async verifyMfa(userId: string, token: string) {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user || !user.mfaSecret) throw new UnauthorizedException('MFA not setup');
+    const ok = speakeasy.totp.verify({ secret: user.mfaSecret || '', encoding: 'base32', token, window: 1 });
+    if (!ok) throw new UnauthorizedException('Invalid OTP');
+    await this.users.update({ id: userId } as any, { mfaEnabled: true });
+    await supabaseAdmin.from('audit_logs').insert([{ action: 'mfa_verified', user_id: userId, ip_address: null }]);
+    return { success: true };
+  }
 }
