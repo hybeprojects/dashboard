@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KycService } from './kyc.service';
 import { KycController } from './kyc.controller';
