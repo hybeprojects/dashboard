@@ -4,11 +4,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
+import * as cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.enableCors({ origin: process.env.CORS_ORIGIN || true, credentials: true });
+  app.use(cookieParser());
+  // CSRF protection for state-changing requests using cookies
+  try {
+    app.use(csurf({ cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' } }));
+  } catch (e) {
+    // csurf may throw if not applicable in some environments
+  }
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalInterceptors(new LoggingInterceptor());
 
@@ -18,6 +27,7 @@ async function bootstrap() {
     app.use((req, _res, next) => {
       Sentry.configureScope((scope) => {
         scope.setTag('service', 'api');
+        if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
       });
       next();
     });
