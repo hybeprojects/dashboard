@@ -88,13 +88,35 @@ export class AuthService {
       });
       await this.users.save(local);
     }
-    const accessTokenJwt = await this.jwt.signAsync(
-      { sub: local.id, email: local.email },
-      { expiresIn: '15m' },
-    );
-    await supabaseAdmin
-      .from('audit_logs')
-      .insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
-    return { accessToken: accessTokenJwt };
+    const accessTokenJwt = await this.jwt.signAsync({ sub: local.id, email: local.email }, { expiresIn: '15m' });
+
+    // create refresh token
+    const refresh = await this.createRefreshToken(local.id);
+
+    await supabaseAdmin.from('audit_logs').insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
+    return { accessToken: accessTokenJwt, refreshCookieValue: refresh.cookieValue };
+  }
+
+  async createRefreshToken(userId: string) {
+    const { v4: uuidv4 } = await import('uuid');
+    const token = uuidv4() + '.' + Math.random().toString(36).slice(2);
+    const tokenId = uuidv4();
+    const hash = await argon2.hash(token, { type: argon2.argon2id });
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('refresh_tokens').insert([{ id: tokenId, user_id: userId, token_hash: hash, expires_at: expiresAt }]);
+    // cookieValue contains id and token so we can lookup by id and verify
+    return { id: tokenId, cookieValue: `${tokenId}|${token}` };
+  }
+
+  async rotateRefreshToken(tokenId: string, tokenValue: string) {
+    const { data } = await supabaseAdmin.from('refresh_tokens').select('*').eq('id', tokenId).single();
+    if (!data) throw new UnauthorizedException('Invalid refresh token');
+    const ok = await argon2.verify(data.token_hash, tokenValue);
+    if (!ok) throw new UnauthorizedException('Invalid refresh token');
+    // create new
+    const newToken = await this.createRefreshToken(data.user_id);
+    // delete old
+    await supabaseAdmin.from('refresh_tokens').delete().eq('id', tokenId);
+    return { newToken, userId: data.user_id };
   }
 }
