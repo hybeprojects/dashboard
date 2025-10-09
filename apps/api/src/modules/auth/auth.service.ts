@@ -41,7 +41,7 @@ export class AuthService {
       firstName: dto.firstName,
       lastName: dto.lastName,
     } as DeepPartial<User>) as User;
-    await this.users.save(user);
+    await this.users.save(local);
     // log to audit via Supabase table
     await supabaseAdmin
       .from('audit_logs')
@@ -90,13 +90,13 @@ export class AuthService {
     // ensure local user exists
     let local: any = await this.users.findOne({ where: { email: sbResp.user?.email } });
     if (!local) {
-      const localId = user.user?.id || undefined;
+      const localId = sbResp.user?.id || undefined;
       const newLocal = this.users.create({
         id: localId,
         email: sbResp.user?.email || '',
         passwordHash: '',
-        firstName: user.user?.user_metadata?.firstName,
-        lastName: user.user?.user_metadata?.lastName,
+        firstName: sbResp.user?.user_metadata?.firstName,
+        lastName: sbResp.user?.user_metadata?.lastName,
       } as DeepPartial<User>) as User;
       local = newLocal;
       await this.users.save(local);
