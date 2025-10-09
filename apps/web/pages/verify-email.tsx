@@ -27,13 +27,38 @@ export default function VerifyEmail() {
         router.push('/dashboard');
       }
     });
-  }, [router]);
+
+    // fetch link status for UX
+    if (email) {
+      try {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`);
+        if (resp.ok) {
+          const json = await resp.json();
+          if (json.lastSent) setStatus((s) => s); // keep status but store lastSent in state below
+          // store lastSent in local state via a small hack
+          (window as any).__lastSent = json.lastSent;
+          (window as any).__attemptsToday = json.attemptsToday;
+        }
+      } catch {}
+    }
+  }, [router, email]);
 
   async function onResend() {
     if (!email) return setStatus('No email provided');
     setResending(true);
     setStatus(null);
     try {
+      // ask backend if allowed
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const json = await resp.json();
+      if (!json.ok) {
+        setStatus(json.message || 'Rate limit');
+        return;
+      }
       await signInWithEmailOtp(email);
       setStatus('Magic link sent — check your inbox');
     } catch (err: any) {
@@ -56,6 +81,17 @@ export default function VerifyEmail() {
         router.push('/dashboard');
         return;
       }
+
+      // check if last sent is older than 24 hours
+      const lastSent = (window as any).__lastSent as string | undefined;
+      if (lastSent) {
+        const diff = Date.now() - new Date(lastSent).getTime();
+        if (diff > 24 * 60 * 60 * 1000) {
+          setStatus('Link expired — request a new one');
+          return;
+        }
+      }
+
       setStatus('Not verified yet — check your email and click the link.');
     } catch (err: any) {
       setStatus(err?.message || 'Error checking session');
