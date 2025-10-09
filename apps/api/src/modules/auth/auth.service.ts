@@ -80,12 +80,8 @@ export class AuthService {
     // ensure local user exists
     let local = await this.users.findOne({ where: { email: user.user?.email } });
     if (!local) {
-      local = this.users.create({
-        email: user.user?.email || '',
-        passwordHash: '',
-        firstName: user.user?.user_metadata?.firstName,
-        lastName: user.user?.user_metadata?.lastName,
-      });
+      const localId = user.user?.id || undefined;
+      local = this.users.create({ id: localId, email: user.user?.email || '', passwordHash: '', firstName: user.user?.user_metadata?.firstName, lastName: user.user?.user_metadata?.lastName } as any);
       await this.users.save(local);
     }
     const accessTokenJwt = await this.jwt.signAsync({ sub: local.id, email: local.email }, { expiresIn: '15m' });
