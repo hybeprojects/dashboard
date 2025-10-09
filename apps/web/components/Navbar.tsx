@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ThemeToggle from '../lib/theme';
 
