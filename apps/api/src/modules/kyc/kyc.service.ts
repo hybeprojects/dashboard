@@ -13,11 +13,22 @@ export class KycService {
     // basic validation
     const accountType = body.accountType || 'personal';
     if (accountType === 'business') {
-      const required = ['businessName', 'businessAddress', 'taxId', 'annualIncome', 'depositAccountNumber', 'routingNumber', 'initialDeposit', 'representativeName', 'representativeSsn'];
+      const required = [
+        'businessName',
+        'businessAddress',
+        'taxId',
+        'annualIncome',
+        'depositAccountNumber',
+        'routingNumber',
+        'initialDeposit',
+        'representativeName',
+        'representativeSsn',
+      ];
       for (const r of required) {
         if (!body[r]) throw new BadRequestException(`${r} is required for business accounts`);
       }
-      if (Number(body.initialDeposit) < 500) throw new BadRequestException('Minimum initial deposit is $500');
+      if (Number(body.initialDeposit) < 500)
+        throw new BadRequestException('Minimum initial deposit is $500');
     }
 
     // upload files to Supabase storage
@@ -31,12 +42,16 @@ export class KycService {
         const f = farr[0] as any;
         const key = `kyc/${uuidv4()}/${f.originalname}`;
         try {
-          await supabaseAdmin.storage.from(bucket).upload(key, f.buffer, { contentType: f.mimetype });
+          await supabaseAdmin.storage
+            .from(bucket)
+            .upload(key, f.buffer, { contentType: f.mimetype });
         } catch (e) {
           // attempt to create bucket and retry once
           try {
             await supabaseAdmin.storage.createBucket(bucket, { public: true });
-            await supabaseAdmin.storage.from(bucket).upload(key, f.buffer, { contentType: f.mimetype });
+            await supabaseAdmin.storage
+              .from(bucket)
+              .upload(key, f.buffer, { contentType: f.mimetype });
           } catch (e2) {
             // ignore failure
           }

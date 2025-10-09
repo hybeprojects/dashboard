@@ -30,7 +30,9 @@ export default function KYC() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function onApprove(id: string) {
     await fetch(`/api/kyc/${id}/approve`, { method: 'POST' });
@@ -39,7 +41,11 @@ export default function KYC() {
 
   async function onReject(id: string) {
     const reason = prompt('Rejection reason');
-    await fetch(`/api/kyc/${id}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) });
+    await fetch(`/api/kyc/${id}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
     load();
   }
 
@@ -48,7 +54,9 @@ export default function KYC() {
       <Navbar />
       <main className="section py-8">
         <h1 className="text-2xl font-bold mb-2">KYC Verification</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-300">Review and approve new customer submissions.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          Review and approve new customer submissions.
+        </p>
 
         <div className="mt-6 space-y-4">
           {loading && <div>Loading…</div>}
@@ -57,21 +65,45 @@ export default function KYC() {
             <div key={s.id} className="p-4 border rounded-md">
               <div className="flex justify-between">
                 <div>
-                  <div className="font-semibold">{s.accountType.toUpperCase()} — {s.id}</div>
-                  <div className="text-sm text-gray-600">Submitted: {new Date(s.createdAt).toLocaleString()}</div>
+                  <div className="font-semibold">
+                    {s.accountType.toUpperCase()} — {s.id}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Submitted: {new Date(s.createdAt).toLocaleString()}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="px-3 py-1 rounded bg-green-600 text-white" onClick={() => onApprove(s.id)}>Approve</button>
-                  <button className="px-3 py-1 rounded bg-red-600 text-white" onClick={() => onReject(s.id)}>Reject</button>
+                  <button
+                    className="px-3 py-1 rounded bg-green-600 text-white"
+                    onClick={() => onApprove(s.id)}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded bg-red-600 text-white"
+                    onClick={() => onReject(s.id)}
+                  >
+                    Reject
+                  </button>
                 </div>
               </div>
               <div className="mt-3 text-sm text-gray-700">
-                <pre className="text-xs bg-gray-50 p-2 overflow-auto">{JSON.stringify(s.data, null, 2)}</pre>
+                <pre className="text-xs bg-gray-50 p-2 overflow-auto">
+                  {JSON.stringify(s.data, null, 2)}
+                </pre>
               </div>
               {s.files?.length ? (
                 <div className="mt-2 flex gap-2">
                   {s.files.map((f) => (
-                    <a key={f.key} href={f.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">View {f.key}</a>
+                    <a
+                      key={f.key}
+                      href={f.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-primary underline"
+                    >
+                      View {f.key}
+                    </a>
                   ))}
                 </div>
               ) : null}

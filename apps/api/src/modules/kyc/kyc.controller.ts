@@ -1,4 +1,15 @@
-import { Controller, Post, Body, UseInterceptors, UploadedFiles, Param, Get, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseInterceptors,
+  UploadedFiles,
+  Param,
+  Get,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { KycService } from './kyc.service';
@@ -9,14 +20,16 @@ export class KycController {
   constructor(private readonly svc: KycService) {}
 
   @Post('submit')
-  @UseInterceptors(FileFieldsInterceptor(
-    [
-      { name: 'idFront', maxCount: 1 },
-      { name: 'idBack', maxCount: 1 },
-      { name: 'proofAddress', maxCount: 1 },
-    ],
-    { storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } },
-  ))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'idFront', maxCount: 1 },
+        { name: 'idBack', maxCount: 1 },
+        { name: 'proofAddress', maxCount: 1 },
+      ],
+      { storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } },
+    ),
+  )
   submit(@Body() body: any, @UploadedFiles() files: any) {
     return this.svc.submit(body, files);
   }
