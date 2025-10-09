@@ -33,7 +33,13 @@ export class AuthService {
     const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
     // use Supabase user's id as the local id so RLS can use auth.uid() directly
     const localId = (data && (data as any).user && (data as any).user.id) || undefined;
-    const user = this.users.create({ id: localId, email: dto.email, passwordHash, firstName: dto.firstName, lastName: dto.lastName } as any);
+    const user = this.users.create({
+      id: localId,
+      email: dto.email,
+      passwordHash,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+    } as any);
     await this.users.save(user);
     // log to audit via Supabase table
     await supabaseAdmin
@@ -60,7 +66,10 @@ export class AuthService {
     }
 
     // issue backend JWT
-    const accessToken = await this.jwt.signAsync({ sub: user.id, email: user.email }, { expiresIn: '15m' });
+    const accessToken = await this.jwt.signAsync(
+      { sub: user.id, email: user.email },
+      { expiresIn: '15m' },
+    );
 
     // create refresh token and return cookie value
     const refresh = await this.createRefreshToken(user.id);
@@ -81,15 +90,26 @@ export class AuthService {
     let local = await this.users.findOne({ where: { email: user.user?.email } });
     if (!local) {
       const localId = user.user?.id || undefined;
-      local = this.users.create({ id: localId, email: user.user?.email || '', passwordHash: '', firstName: user.user?.user_metadata?.firstName, lastName: user.user?.user_metadata?.lastName } as any);
+      local = this.users.create({
+        id: localId,
+        email: user.user?.email || '',
+        passwordHash: '',
+        firstName: user.user?.user_metadata?.firstName,
+        lastName: user.user?.user_metadata?.lastName,
+      } as any);
       await this.users.save(local);
     }
-    const accessTokenJwt = await this.jwt.signAsync({ sub: local.id, email: local.email }, { expiresIn: '15m' });
+    const accessTokenJwt = await this.jwt.signAsync(
+      { sub: local.id, email: local.email },
+      { expiresIn: '15m' },
+    );
 
     // create refresh token
     const refresh = await this.createRefreshToken(local.id);
 
-    await supabaseAdmin.from('audit_logs').insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
+    await supabaseAdmin
+      .from('audit_logs')
+      .insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
     return { accessToken: accessTokenJwt, refreshCookieValue: refresh.cookieValue };
   }
 
@@ -99,13 +119,19 @@ export class AuthService {
     const tokenId = uuidv4();
     const hash = await argon2.hash(token, { type: argon2.argon2id });
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    await supabaseAdmin.from('refresh_tokens').insert([{ id: tokenId, user_id: userId, token_hash: hash, expires_at: expiresAt }]);
+    await supabaseAdmin
+      .from('refresh_tokens')
+      .insert([{ id: tokenId, user_id: userId, token_hash: hash, expires_at: expiresAt }]);
     // cookieValue contains id and token so we can lookup by id and verify
     return { id: tokenId, cookieValue: `${tokenId}|${token}` };
   }
 
   async rotateRefreshToken(tokenId: string, tokenValue: string) {
-    const { data } = await supabaseAdmin.from('refresh_tokens').select('*').eq('id', tokenId).single();
+    const { data } = await supabaseAdmin
+      .from('refresh_tokens')
+      .select('*')
+      .eq('id', tokenId)
+      .single();
     if (!data) throw new UnauthorizedException('Invalid refresh token');
     const ok = await argon2.verify(data.token_hash, tokenValue);
     if (!ok) throw new UnauthorizedException('Invalid refresh token');
@@ -131,10 +157,17 @@ export class AuthService {
   async verifyMfa(userId: string, token: string) {
     const user = await this.users.findOne({ where: { id: userId } });
     if (!user || !user.mfaSecret) throw new UnauthorizedException('MFA not setup');
-    const ok = speakeasy.totp.verify({ secret: user.mfaSecret || '', encoding: 'base32', token, window: 1 });
+    const ok = speakeasy.totp.verify({
+      secret: user.mfaSecret || '',
+      encoding: 'base32',
+      token,
+      window: 1,
+    });
     if (!ok) throw new UnauthorizedException('Invalid OTP');
     await this.users.update({ id: userId } as any, { mfaEnabled: true });
-    await supabaseAdmin.from('audit_logs').insert([{ action: 'mfa_verified', user_id: userId, ip_address: null }]);
+    await supabaseAdmin
+      .from('audit_logs')
+      .insert([{ action: 'mfa_verified', user_id: userId, ip_address: null }]);
     return { success: true };
   }
 }
