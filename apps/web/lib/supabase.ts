@@ -24,10 +24,11 @@ export function getSupabase(): SupabaseClient | null {
   return client;
 }
 
-export async function signInWithEmailOtp(email: string) {
+export async function signInWithEmailOtp(email: string, redirectTo?: string) {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase client not available');
-  return supabase.auth.signInWithOtp({ email });
+  const redirect = redirectTo ?? (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(email)}` : undefined);
+  return supabase.auth.signInWithOtp({ email }, { redirectTo: redirect });
 }
 
 export async function signInWithPhoneOtp(phone: string) {
@@ -36,13 +37,14 @@ export async function signInWithPhoneOtp(phone: string) {
   return supabase.auth.signInWithOtp({ phone });
 }
 
-export async function signUpWithEmail(payload: { email: string; password: string; options?: any }) {
+export async function signUpWithEmail(payload: { email: string; password: string; options?: any; redirectTo?: string }) {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase client not available');
+  const redirect = payload.redirectTo ?? (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(payload.email)}` : undefined);
   return supabase.auth.signUp({
     email: payload.email,
     password: payload.password,
-    options: payload.options,
+    options: { ...(payload.options || {}), emailRedirectTo: redirect },
   });
 }
 
