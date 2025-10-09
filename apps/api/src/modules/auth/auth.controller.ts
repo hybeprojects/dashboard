@@ -146,7 +146,10 @@ export class AuthController {
 
   @NestCommon.UseGuards(RateLimitGuard)
   @NestCommon.Get('link-status')
-  async linkStatus(@NestCommon.Query('email') email?: string, @NestCommon.Query('phone') phone?: string) {
+  async linkStatus(
+    @NestCommon.Query('email') email?: string,
+    @NestCommon.Query('phone') phone?: string,
+  ) {
     const keyBase = (email || phone || 'unknown').toString().toLowerCase();
     const perDayKey = `resend:day:${keyBase}`;
     const lastKey = `resend:last:${keyBase}`;

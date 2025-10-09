@@ -33,7 +33,9 @@ export default function VerifyEmail() {
     // fetch link status for UX
     if (email) {
       try {
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`);
+        const resp = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`,
+        );
         if (resp.ok) {
           const json = await resp.json();
           setLastSent(json.lastSent || null);
