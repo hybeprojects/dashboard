@@ -61,7 +61,9 @@ export default function VerifyEmail() {
         setStatus(json.message || 'Rate limit');
         return;
       }
-      const redirect = process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(String(email))}` : undefined;
+      const redirect = process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(String(email))}`
+        : undefined;
       await signInWithEmailOtp(email, redirect);
       setStatus('Magic link sent — check your inbox');
     } catch (err: any) {

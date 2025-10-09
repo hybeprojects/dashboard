@@ -49,8 +49,14 @@ export default function Register() {
   async function onRegister(v: RegisterForm) {
     // Try client-side Supabase sign up first
     try {
-      const redirect = process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(v.email)}` : undefined;
-      const { data, error } = await signUpWithEmail({ email: v.email, password: v.password, redirectTo: redirect });
+      const redirect = process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(v.email)}`
+        : undefined;
+      const { data, error } = await signUpWithEmail({
+        email: v.email,
+        password: v.password,
+        redirectTo: redirect,
+      });
       if (error) throw error;
       const session = (data as any)?.session;
       if (session?.access_token) {

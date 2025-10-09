@@ -31,7 +31,9 @@ export default function Login() {
       });
       const json = await resp.json();
       if (!json.ok) return setMsg(json.message || 'Rate limited');
-      const redirect = process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(e)}` : undefined;
+      const redirect = process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(e)}`
+        : undefined;
       await signInWithEmailOtp(e, redirect);
       setMsg('Check your email for a sign-in link');
     } catch (err: any) {
