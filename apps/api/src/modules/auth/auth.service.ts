@@ -87,29 +87,30 @@ export class AuthService {
     const { data: sbResp, error } = await supabaseAdmin.auth.getUser(accessToken);
     if (error || !sbResp) throw new UnauthorizedException('Invalid supabase token');
     // ensure local user exists
-    let local = await this.users.findOne({ where: { email: sbResp.user?.email } });
+    let local: any = await this.users.findOne({ where: { email: sbResp.user?.email } });
     if (!local) {
       const localId = sbResp.user?.id || undefined;
-      local = this.users.create({
+      const created = this.users.create({
         id: localId,
         email: sbResp.user?.email || '',
         passwordHash: '',
         firstName: sbResp.user?.user_metadata?.firstName,
         lastName: sbResp.user?.user_metadata?.lastName,
       } as any);
-      await this.users.save(local as any);
+      const saved = (await this.users.save(created as any)) as any;
+      local = saved;
     }
     const accessTokenJwt = await this.jwt.signAsync(
-      { sub: (local as any).id, email: (local as any).email },
+      { sub: local.id, email: local.email },
       { expiresIn: '15m' },
     );
 
     // create refresh token
-    const refresh = await this.createRefreshToken((local as any).id);
+    const refresh = await this.createRefreshToken(local.id);
 
     await supabaseAdmin
       .from('audit_logs')
-      .insert([{ action: 'supabase_exchange', user_id: (local as any).id, ip_address: null }]);
+      .insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
     return { accessToken: accessTokenJwt, refreshCookieValue: refresh.cookieValue };
   }
 
