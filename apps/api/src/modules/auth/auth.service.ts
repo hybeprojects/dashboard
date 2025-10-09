@@ -31,12 +31,9 @@ export class AuthService {
 
     // store in local users table for MFA and additional metadata
     const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
-    const user = this.users.create({
-      email: dto.email,
-      passwordHash,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-    });
+    // use Supabase user's id as the local id so RLS can use auth.uid() directly
+    const localId = (data && (data as any).user && (data as any).user.id) || undefined;
+    const user = this.users.create({ id: localId, email: dto.email, passwordHash, firstName: dto.firstName, lastName: dto.lastName } as any);
     await this.users.save(user);
     // log to audit via Supabase table
     await supabaseAdmin
