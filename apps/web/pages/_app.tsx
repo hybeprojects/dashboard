@@ -1,7 +1,9 @@
 import type { AppProps } from 'next/app';
+import type { AppProps } from 'next/app';
 import { ThemeProvider } from 'next-themes';
 import '../styles/globals.css';
 import * as Sentry from '@sentry/react';
+import { AppQueryProvider } from '../lib/query';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
