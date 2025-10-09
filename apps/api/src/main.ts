@@ -4,8 +4,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
+import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,11 @@ async function bootstrap() {
   app.use(cookieParser());
   // CSRF protection for state-changing requests using cookies
   try {
-    app.use(csurf({ cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' } }));
+    app.use(
+      csurf({
+        cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' },
+      }),
+    );
   } catch (e) {
     // csurf may throw if not applicable in some environments
   }
@@ -23,9 +28,9 @@ async function bootstrap() {
 
   const dsn = process.env.SENTRY_DSN;
   if (dsn) {
-    Sentry.init({ dsn, tracesSampleRate: 0.1 });
-    app.use((req, _res, next) => {
-      Sentry.configureScope((scope) => {
+    (Sentry as any).init({ dsn, tracesSampleRate: 0.1 });
+    app.use((req: Request, _res: Response, next: NextFunction) => {
+      (Sentry as any).configureScope((scope: any) => {
         scope.setTag('service', 'api');
         if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
       });
