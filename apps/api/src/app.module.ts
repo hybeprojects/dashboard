@@ -15,7 +15,11 @@ import { JwtAuthGuard } from './security/jwt.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    JwtModule.register({ global: true, secret: process.env.JWT_SECRET || 'secret', signOptions: { expiresIn: '15m' } }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'secret',
+      signOptions: { expiresIn: '15m' },
+    }),
     DatabaseModule,
     RedisModule,
     AuthModule,

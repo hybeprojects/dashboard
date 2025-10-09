@@ -10,7 +10,10 @@ import { supabaseAdmin } from '../../lib/supabase.client';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectRepository(User) private users: Repository<User>, private jwt: JwtService) {}
+  constructor(
+    @InjectRepository(User) private users: Repository<User>,
+    private jwt: JwtService,
+  ) {}
 
   async register(dto: CreateUserDto) {
     // create user in Supabase Auth
@@ -28,10 +31,17 @@ export class AuthService {
 
     // store in local users table for MFA and additional metadata
     const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
-    const user = this.users.create({ email: dto.email, passwordHash, firstName: dto.firstName, lastName: dto.lastName });
+    const user = this.users.create({
+      email: dto.email,
+      passwordHash,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+    });
     await this.users.save(user);
     // log to audit via Supabase table
-    await supabaseAdmin.from('audit_logs').insert([{ action: 'register', user_id: user.id, ip_address: null }]);
+    await supabaseAdmin
+      .from('audit_logs')
+      .insert([{ action: 'register', user_id: user.id, ip_address: null }]);
     return { id: user.id, email: user.email };
   }
 
@@ -43,7 +53,12 @@ export class AuthService {
     if (!ok) throw new UnauthorizedException('Invalid credentials');
     if (user.mfaEnabled) {
       if (!otp) throw new UnauthorizedException('MFA required');
-      const verified = speakeasy.totp.verify({ secret: user.mfaSecret || '', encoding: 'base32', token: otp, window: 1 });
+      const verified = speakeasy.totp.verify({
+        secret: user.mfaSecret || '',
+        encoding: 'base32',
+        token: otp,
+        window: 1,
+      });
       if (!verified) throw new UnauthorizedException('Invalid OTP');
     }
 
@@ -51,7 +66,9 @@ export class AuthService {
     const accessToken = await this.jwt.signAsync({ sub: user.id, email: user.email });
 
     // log event
-    await supabaseAdmin.from('audit_logs').insert([{ action: 'login', user_id: user.id, ip_address: null }]);
+    await supabaseAdmin
+      .from('audit_logs')
+      .insert([{ action: 'login', user_id: user.id, ip_address: null }]);
 
     return { accessToken };
   }
@@ -63,11 +80,21 @@ export class AuthService {
     // ensure local user exists
     let local = await this.users.findOne({ where: { email: user.user?.email } });
     if (!local) {
-      local = this.users.create({ email: user.user?.email || '', passwordHash: '', firstName: user.user?.user_metadata?.firstName, lastName: user.user?.user_metadata?.lastName });
+      local = this.users.create({
+        email: user.user?.email || '',
+        passwordHash: '',
+        firstName: user.user?.user_metadata?.firstName,
+        lastName: user.user?.user_metadata?.lastName,
+      });
       await this.users.save(local);
     }
-    const accessTokenJwt = await this.jwt.signAsync({ sub: local.id, email: local.email }, { expiresIn: '15m' });
-    await supabaseAdmin.from('audit_logs').insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
+    const accessTokenJwt = await this.jwt.signAsync(
+      { sub: local.id, email: local.email },
+      { expiresIn: '15m' },
+    );
+    await supabaseAdmin
+      .from('audit_logs')
+      .insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
     return { accessToken: accessTokenJwt };
   }
 }

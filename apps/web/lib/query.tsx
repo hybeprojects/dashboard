@@ -11,6 +11,10 @@ export function AppQueryProvider({ children }: { children: ReactNode }) {
 export function subscribeToUser(userId: string, onChange: (payload: any) => void) {
   return supabase
     .channel('public:accounts')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts', filter: `user_id=eq.${userId}` }, (payload) => onChange(payload))
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'accounts', filter: `user_id=eq.${userId}` },
+      (payload) => onChange(payload),
+    )
     .subscribe();
 }
