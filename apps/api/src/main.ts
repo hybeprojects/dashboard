@@ -15,7 +15,11 @@ async function bootstrap() {
   app.use(cookieParser());
   // CSRF protection for state-changing requests using cookies
   try {
-    app.use(csurf({ cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' } }));
+    app.use(
+      csurf({
+        cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' },
+      }),
+    );
   } catch (e) {
     // csurf may throw if not applicable in some environments
   }
