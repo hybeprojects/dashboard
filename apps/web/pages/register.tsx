@@ -9,6 +9,8 @@ import Modal from '../components/ui/Modal';
 import { useState } from 'react';
 import api from '../lib/api';
 import { useRouter } from 'next/router';
+import { signUpWithEmail } from '../lib/supabase';
+import { backendLoginWithSupabase } from '../hooks/useAuth';
 
  type RegisterForm = {
   firstName: string; lastName: string; email: string; password: string;
