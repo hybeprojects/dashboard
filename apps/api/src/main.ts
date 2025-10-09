@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
 import * as cookieParser from 'cookie-parser';
 import csurf from 'csurf';
+import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,9 +24,9 @@ async function bootstrap() {
 
   const dsn = process.env.SENTRY_DSN;
   if (dsn) {
-    Sentry.init({ dsn, tracesSampleRate: 0.1 });
-    app.use((req, _res, next) => {
-      Sentry.configureScope((scope) => {
+    (Sentry as any).init({ dsn, tracesSampleRate: 0.1 });
+    app.use((req: Request, _res: Response, next: NextFunction) => {
+      (Sentry as any).configureScope((scope: any) => {
         scope.setTag('service', 'api');
         if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
       });
