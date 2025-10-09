@@ -11,6 +11,8 @@ export default function VerifyEmail() {
   const [status, setStatus] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [resending, setResending] = useState(false);
+  const [lastSent, setLastSent] = useState<string | null>(null);
+  const [attemptsToday, setAttemptsToday] = useState<number>(0);
 
   useEffect(() => {
     // If already signed in via supabase (magic link), exchange token and redirect
