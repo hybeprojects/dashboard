@@ -34,10 +34,8 @@ export default function VerifyEmail() {
         const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`);
         if (resp.ok) {
           const json = await resp.json();
-          if (json.lastSent) setStatus((s) => s); // keep status but store lastSent in state below
-          // store lastSent in local state via a small hack
-          (window as any).__lastSent = json.lastSent;
-          (window as any).__attemptsToday = json.attemptsToday;
+          setLastSent(json.lastSent || null);
+          setAttemptsToday(Number(json.attemptsToday || 0));
         }
       } catch {}
     }
