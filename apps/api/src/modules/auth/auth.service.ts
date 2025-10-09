@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../users/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
@@ -39,7 +39,7 @@ export class AuthService {
       passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,
-    } as any);
+    } as DeepPartial<User>) as User;
     await this.users.save(user);
     // log to audit via Supabase table
     await supabaseAdmin
@@ -90,13 +90,14 @@ export class AuthService {
     let local = await this.users.findOne({ where: { email: user.user?.email } });
     if (!local) {
       const localId = user.user?.id || undefined;
-      local = this.users.create({
+      const newLocal = this.users.create({
         id: localId,
         email: user.user?.email || '',
         passwordHash: '',
         firstName: user.user?.user_metadata?.firstName,
         lastName: user.user?.user_metadata?.lastName,
-      } as any);
+      } as DeepPartial<User>) as User;
+      local = newLocal;
       await this.users.save(local);
     }
     const accessTokenJwt = await this.jwt.signAsync(
