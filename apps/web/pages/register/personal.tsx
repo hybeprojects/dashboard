@@ -22,7 +22,12 @@ type Form = {
 export default function PersonalRegister() {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
   const openSavings = watch('openSavings');
 
   async function onSubmit(v: Form) {
@@ -32,7 +37,7 @@ export default function PersonalRegister() {
       Object.entries(v).forEach(([k, val]) => {
         if (val === undefined || val === null) return;
         if (k === 'idFront' || k === 'idBack' || k === 'proofAddress') {
-          const files = (val as any) as FileList;
+          const files = val as any as FileList;
           if (files && files[0]) form.append(k, files[0]);
           return;
         }
@@ -57,7 +62,10 @@ export default function PersonalRegister() {
       <Navbar />
       <main className="section py-10 max-w-3xl mx-auto">
         <h2 className="text-2xl font-bold mb-4">Premier Free Checking</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">No monthly fees. Complete KYC to open your account. Optionally add a linked savings account during signup.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          No monthly fees. Complete KYC to open your account. Optionally add a linked savings
+          account during signup.
+        </p>
         <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
           <FormInput label="Date of birth" type="date" {...register('dob')} error={errors.dob} />
@@ -83,12 +91,16 @@ export default function PersonalRegister() {
             <input type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
           </div>
           <div>
-            <label className="block text-sm mb-1">Proof of address (utility bill or bank statement)</label>
+            <label className="block text-sm mb-1">
+              Proof of address (utility bill or bank statement)
+            </label>
             <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting…' : 'Create Personal Account'}</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting…' : 'Create Personal Account'}
+            </Button>
           </div>
           {status && <div className="text-sm mt-2 text-primary">{status}</div>}
         </form>

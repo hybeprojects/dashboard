@@ -3,7 +3,10 @@ import * as yup from 'yup';
 export const loginSchema = yup.object({
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().min(8, 'At least 8 characters').required('Password is required'),
-  otp: yup.string().matches(/^\d{6}$/g, { message: '6-digit code', excludeEmptyString: true }).optional(),
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/g, { message: '6-digit code', excludeEmptyString: true })
+    .optional(),
 });
 
 export const registerSchema = yup.object({
@@ -27,7 +30,10 @@ export const businessRegisterSchema = yup.object({
   annualIncome: yup.number().min(0).required('Annual income required'),
   depositAccountNumber: yup.string().required('Account number required'),
   routingNumber: yup.string().required('Routing number required'),
-  initialDeposit: yup.number().min(500, 'Minimum initial deposit is $500').required('Initial deposit required'),
+  initialDeposit: yup
+    .number()
+    .min(500, 'Minimum initial deposit is $500')
+    .required('Initial deposit required'),
   representativeName: yup.string().required('Representative name required'),
   representativeSsn: yup.string().required('SSN required'),
 });
