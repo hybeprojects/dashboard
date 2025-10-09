@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { registerSchema } from '../hooks/useFormSchemas';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
+import Navbar from '../components/Navbar';
 import { register as apiRegister } from '../lib/auth';
 
 export default function Register() {
