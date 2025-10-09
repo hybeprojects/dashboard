@@ -11,14 +11,24 @@ export function useSupabaseSession() {
 
     supabase.auth.getSession().then((r) => {
       const session = r.data.session;
-      if (session?.user) setUser({ id: session.user.id, email: session.user.email || '' });
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email || '' });
+        // exchange supabase token with backend
+        if (session.access_token) {
+          backendLoginWithSupabase(session.access_token).catch(() => {});
+        }
+      }
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
+        if (session.access_token) {
+          backendLoginWithSupabase(session.access_token).catch(() => {});
+        }
       } else {
         setUser(null);
+        if (typeof window !== 'undefined') localStorage.removeItem('token');
       }
     });
 

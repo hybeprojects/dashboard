@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +22,49 @@ export function getSupabase(): SupabaseClient | null {
   if (typeof window === 'undefined') return null; // avoid creating client on server
   client = createClient(url, anon, { auth: { persistSession: false } });
   return client;
+}
+
+export async function signInWithEmailOtp(email: string, redirectTo?: string) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  const redirect =
+    redirectTo ??
+    (process.env.NEXT_PUBLIC_SITE_URL
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(email)}`
+      : undefined);
+  return supabase.auth.signInWithOtp({ email }, { redirectTo: redirect });
+}
+
+export async function signInWithPhoneOtp(phone: string) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  return supabase.auth.signInWithOtp({ phone });
+}
+
+export async function signUpWithEmail(payload: {
+  email: string;
+  password: string;
+  options?: any;
+  redirectTo?: string;
+}) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  const redirect =
+    payload.redirectTo ??
+    (process.env.NEXT_PUBLIC_SITE_URL
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(payload.email)}`
+      : undefined);
+  return supabase.auth.signUp({
+    email: payload.email,
+    password: payload.password,
+    options: { ...(payload.options || {}), emailRedirectTo: redirect },
+  });
+}
+
+export async function signOutSupabase() {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.auth.signOut();
 }
 
 export default getSupabase;
