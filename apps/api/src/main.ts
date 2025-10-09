@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
 import type { Request, Response, NextFunction } from 'express';
 
