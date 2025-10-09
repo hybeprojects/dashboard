@@ -1,200 +1,28 @@
+import Link from 'next/link';
 import Navbar from '../components/Navbar';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { registerSchema } from '../hooks/useFormSchemas';
-import FormInput from '../components/ui/FormInput';
-import Button from '../components/ui/Button';
-import { register as apiRegister } from '../lib/auth';
-import Modal from '../components/ui/Modal';
-import { useState } from 'react';
-import api from '../lib/api';
-import { useRouter } from 'next/router';
-import { signUpWithEmail } from '../lib/supabase';
-import { backendLoginWithSupabase } from '../hooks/useAuth';
-
-type RegisterForm = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phone?: string;
-  address?: string;
-  country?: string;
-  dob?: string;
-};
-
-type KycForm = {
-  phone: string;
-  country: string;
-  address: string;
-  dob: string;
-  idType: string;
-  idNumber: string;
-};
 
 export default function Register() {
-  const router = useRouter();
-  const [verifyOpen, setVerifyOpen] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterForm>({ resolver: yupResolver(registerSchema) });
-  const {
-    register: kreg,
-    handleSubmit: ksubmit,
-    formState: { isSubmitting: kSubmitting },
-  } = useForm<KycForm>();
-
-  async function onRegister(v: RegisterForm) {
-    // Try client-side Supabase sign up first
-    try {
-      const redirect = process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(v.email)}`
-        : undefined;
-      const { data, error } = await signUpWithEmail({
-        email: v.email,
-        password: v.password,
-        redirectTo: redirect,
-      });
-      if (error) throw error;
-      const session = (data as any)?.session;
-      if (session?.access_token) {
-        await backendLoginWithSupabase(session.access_token).catch(() => {});
-        setVerifyOpen(true);
-        return;
-      }
-      // If no session, prompt user to check email for confirmation and show verify page
-      router.push(`/verify-email?email=${encodeURIComponent(v.email)}`);
-      return;
-    } catch (err) {
-      // fallback to backend register (server creates supabase user)
-      await apiRegister({
-        firstName: v.firstName,
-        lastName: v.lastName,
-        email: v.email,
-        password: v.password,
-      });
-      setVerifyOpen(true);
-    }
-  }
-
-  async function onVerify(v: KycForm) {
-    await api.post('/kyc/submit', v);
-    setVerifyOpen(false);
-    router.push('/login?verified=1');
-  }
-
   return (
     <div className="container-page">
       <Navbar />
-      <main className="section py-10 grid md:grid-cols-2 gap-8 items-start">
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Open your account</h2>
-          <form
-            className="card-surface p-6 grid gap-4 md:grid-cols-2"
-            onSubmit={handleSubmit(onRegister)}
-          >
-            <FormInput label="First name" {...register('firstName')} error={errors.firstName} />
-            <FormInput label="Last name" {...register('lastName')} error={errors.lastName} />
-            <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
-            <FormInput
-              label="Password"
-              type="password"
-              {...register('password')}
-              error={errors.password}
-            />
-            <FormInput
-              label="Phone (optional)"
-              type="tel"
-              {...register('phone')}
-              error={undefined as any}
-            />
-            <FormInput
-              label="Country (optional)"
-              {...register('country')}
-              error={undefined as any}
-            />
-            <FormInput
-              label="Address (optional)"
-              className="md:col-span-2"
-              {...register('address')}
-              error={undefined as any}
-            />
-            <FormInput
-              label="Date of birth (optional)"
-              type="date"
-              {...register('dob')}
-              error={undefined as any}
-            />
-            <div className="md:col-span-2">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating…' : 'Create Account'}
-              </Button>
+      <main className="section py-20 max-w-3xl mx-auto">
+        <div className="card-surface p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Choose account type</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Select the account type that best fits your needs. Business accounts have additional requirements and a minimum initial deposit.</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 border rounded-lg">
+              <div className="font-semibold mb-2">Premier Business Checking</div>
+              <div className="text-sm text-gray-600 mb-4">Business accounts require additional KYC and a minimum initial deposit of $500.</div>
+              <Link href="/register/business" className="btn-primary">Open Business Account</Link>
             </div>
-          </form>
-        </div>
-        <div className="card-surface p-6">
-          <div className="font-semibold mb-2">Why we verify</div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            We verify your identity to protect your account and comply with financial regulations.
-            It only takes a minute.
-          </p>
-          <ul className="mt-4 text-sm list-disc pl-5 text-gray-600 dark:text-gray-400 space-y-1">
-            <li>Helps prevent fraud</li>
-            <li>Keeps your money safe</li>
-            <li>Enables higher limits</li>
-          </ul>
+            <div className="p-6 border rounded-lg">
+              <div className="font-semibold mb-2">Premier Free Checking</div>
+              <div className="text-sm text-gray-600 mb-4">Fast, no-fee personal checking. Optionally add a linked savings account.</div>
+              <Link href="/register/personal" className="btn-primary">Open Personal Account</Link>
+            </div>
+          </div>
         </div>
       </main>
-
-      <Modal open={verifyOpen} onClose={() => setVerifyOpen(false)} title="Verify your identity">
-        <form className="grid gap-3" onSubmit={ksubmit(onVerify)}>
-          <FormInput
-            label="Phone"
-            type="tel"
-            {...kreg('phone', { required: true })}
-            error={undefined as any}
-          />
-          <FormInput
-            label="Country"
-            {...kreg('country', { required: true })}
-            error={undefined as any}
-          />
-          <FormInput
-            label="Address"
-            {...kreg('address', { required: true })}
-            error={undefined as any}
-          />
-          <FormInput
-            label="Date of birth"
-            type="date"
-            {...kreg('dob', { required: true })}
-            error={undefined as any}
-          />
-          <div>
-            <label className="block text-sm font-medium mb-1">ID Type</label>
-            <select
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent"
-              {...kreg('idType', { required: true })}
-            >
-              <option value="passport">Passport</option>
-              <option value="national_id">National ID</option>
-              <option value="driver_license">Driver License</option>
-            </select>
-          </div>
-          <FormInput
-            label="ID Number"
-            {...kreg('idNumber', { required: true })}
-            error={undefined as any}
-          />
-          <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={kSubmitting}>
-              {kSubmitting ? 'Submitting…' : 'Submit for Review'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }
