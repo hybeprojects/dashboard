@@ -1,4 +1,3 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import * as NestCommon from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -7,12 +6,14 @@ import { Response, Request } from 'express';
 import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { JwtAuthGuard } from '../../security/jwt.guard';
 import { JwtService } from '@nestjs/jwt';
+import { RedisService } from '../../redis/redis.service';
 
 @NestCommon.Controller('auth')
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly jwt: JwtService,
+    private readonly redis: RedisService,
   ) {}
 
   @NestCommon.UseGuards(RateLimitGuard)
@@ -102,5 +103,57 @@ export class AuthController {
   @NestCommon.Post('mfa/verify')
   async mfaVerify(@NestCommon.Req() req: any, @NestCommon.Body() body: { token: string }) {
     return this.auth.verifyMfa(req.user.sub, body.token);
+  }
+
+  // Resend magic link / OTP with server-side rate limiting and tracking
+  @NestCommon.UseGuards(RateLimitGuard)
+  @NestCommon.Post('resend')
+  async resend(@NestCommon.Body() body: { email?: string; phone?: string }) {
+    const keyBase = (body.email || body.phone || 'unknown').toString().toLowerCase();
+    const perMinKey = `resend:count:${keyBase}`;
+    const perDayKey = `resend:day:${keyBase}`;
+    const lastKey = `resend:last:${keyBase}`;
+
+    // increment per-minute counter and set ttl 60s
+    const multi = this.redis.client.multi();
+    multi.incr(perMinKey).expire(perMinKey, 60);
+    multi.incr(perDayKey).expire(perDayKey, 24 * 60 * 60);
+    const res = await multi.exec();
+    const perMin = Number(res?.[0]?.[1] || 0);
+    const perDay = Number(res?.[1]?.[1] || 0);
+
+    if (perMin > 5) {
+      return { ok: false, message: 'Too many requests, wait a minute' };
+    }
+    if (perDay > 50) {
+      return { ok: false, message: 'Daily resend limit reached' };
+    }
+
+    // record last sent timestamp
+    await this.redis.client.set(lastKey, new Date().toISOString());
+
+    // log audit (best-effort)
+    try {
+      if ((this.auth as any).logAudit) {
+        await (this.auth as any).logAudit('resend', keyBase);
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return { ok: true, message: 'Allowed' };
+  }
+
+  @NestCommon.UseGuards(RateLimitGuard)
+  @NestCommon.Get('link-status')
+  async linkStatus(@NestCommon.Query('email') email?: string, @NestCommon.Query('phone') phone?: string) {
+    const keyBase = (email || phone || 'unknown').toString().toLowerCase();
+    const perDayKey = `resend:day:${keyBase}`;
+    const lastKey = `resend:last:${keyBase}`;
+    const [count, last] = await Promise.all([
+      this.redis.client.get(perDayKey),
+      this.redis.client.get(lastKey),
+    ]);
+    return { attemptsToday: Number(count || 0), lastSent: last || null };
   }
 }
