@@ -83,7 +83,6 @@ export default function VerifyEmail() {
       }
 
       // check if last sent is older than 24 hours
-      const lastSent = (window as any).__lastSent as string | undefined;
       if (lastSent) {
         const diff = Date.now() - new Date(lastSent).getTime();
         if (diff > 24 * 60 * 60 * 1000) {
