@@ -4,7 +4,9 @@ const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!url) {
-  throw new Error('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) is required for server-side Supabase client');
+  throw new Error(
+    'SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) is required for server-side Supabase client',
+  );
 }
 if (!key) {
   throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for server-side Supabase client');
