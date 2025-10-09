@@ -41,7 +41,7 @@ export class AuthController {
     if (!cookie) return { error: 'No refresh token' };
     const [id, token] = cookie.split('|');
     const { newToken, userId } = await this.auth.rotateRefreshToken(id, token);
-    const accessToken = await this.auth.jwt.signAsync({ sub: userId }, { expiresIn: '15m' });
+    const accessToken = await this.jwt.signAsync({ sub: userId }, { expiresIn: '15m' });
     res.cookie('refresh_token', newToken.cookieValue, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
     return { accessToken };
   }
