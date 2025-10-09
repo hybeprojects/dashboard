@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +22,30 @@ export function getSupabase(): SupabaseClient | null {
   if (typeof window === 'undefined') return null; // avoid creating client on server
   client = createClient(url, anon, { auth: { persistSession: false } });
   return client;
+}
+
+export async function signInWithEmailOtp(email: string) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  return supabase.auth.signInWithOtp({ email });
+}
+
+export async function signInWithPhoneOtp(phone: string) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  return supabase.auth.signInWithOtp({ phone });
+}
+
+export async function signUpWithEmail(payload: { email: string; password: string; options?: any }) {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
+  return supabase.auth.signUp({ email: payload.email, password: payload.password, options: payload.options });
+}
+
+export async function signOutSupabase() {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.auth.signOut();
 }
 
 export default getSupabase;
