@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -12,4 +12,9 @@ export class AuthController {
 
   @Post('login')
   login(@Body() dto: LoginDto) { return this.auth.login(dto); }
+
+  @Post('supabase')
+  async supabaseExchange(@Body() body: { accessToken: string }) {
+    return this.auth.exchangeSupabaseToken(body.accessToken);
+  }
 }
