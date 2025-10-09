@@ -117,6 +117,10 @@ export default function VerifyEmail() {
               {checking ? 'Checking…' : 'I clicked the link'}
             </Button>
           </div>
+          <div className="mt-4 text-sm text-gray-600">
+            {lastSent && <div>Last sent: {new Date(lastSent).toLocaleString()}</div>}
+            <div>Attempts today: {attemptsToday}</div>
+          </div>
           {status && <div className="mt-4 text-sm text-primary">{status}</div>}
         </div>
       </main>
