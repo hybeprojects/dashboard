@@ -52,6 +52,14 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   timestamp timestamptz DEFAULT now()
 );
 
+-- refresh tokens
+CREATE TABLE IF NOT EXISTS public.refresh_tokens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.users(id) ON DELETE CASCADE,
+  token_hash text NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+
 -- Soft delete helper example
 CREATE POLICY "users_owner" ON public.accounts FOR SELECT USING (auth.uid() = user_id);
 
