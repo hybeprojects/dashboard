@@ -63,14 +63,17 @@ export class AuthService {
     }
 
     // issue backend JWT
-    const accessToken = await this.jwt.signAsync({ sub: user.id, email: user.email });
+    const accessToken = await this.jwt.signAsync({ sub: user.id, email: user.email }, { expiresIn: '15m' });
+
+    // create refresh token and return cookie value
+    const refresh = await this.createRefreshToken(user.id);
 
     // log event
     await supabaseAdmin
       .from('audit_logs')
       .insert([{ action: 'login', user_id: user.id, ip_address: null }]);
 
-    return { accessToken };
+    return { accessToken, refreshCookieValue: refresh.cookieValue };
   }
 
   async exchangeSupabaseToken(accessToken: string) {
