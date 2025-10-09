@@ -13,7 +13,18 @@ async function run() {
   const client = await pool.connect();
   try {
     console.log('Running schema...');
-    await client.query(sql);
+    const statements = sql.split(/;\n/).map(s => s.trim()).filter(Boolean);
+    for (let i = 0; i < statements.length; i++) {
+      const stmt = statements[i];
+      try {
+        console.log(`Executing statement ${i+1}/${statements.length}`);
+        await client.query(stmt);
+      } catch (err) {
+        console.error(`Error executing statement ${i+1}:`, err.message);
+        console.error('Statement:', stmt.slice(0,200));
+        throw err;
+      }
+    }
     console.log('Schema applied successfully');
   } catch (err) {
     console.error('Error applying schema:', err);
