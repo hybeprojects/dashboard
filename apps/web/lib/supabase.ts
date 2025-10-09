@@ -39,7 +39,11 @@ export async function signInWithPhoneOtp(phone: string) {
 export async function signUpWithEmail(payload: { email: string; password: string; options?: any }) {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase client not available');
-  return supabase.auth.signUp({ email: payload.email, password: payload.password, options: payload.options });
+  return supabase.auth.signUp({
+    email: payload.email,
+    password: payload.password,
+    options: payload.options,
+  });
 }
 
 export async function signOutSupabase() {
