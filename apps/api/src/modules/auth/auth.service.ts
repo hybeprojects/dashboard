@@ -100,6 +100,7 @@ export class AuthService {
       local = newLocal;
       await this.users.save(local);
     }
+    if (!local) throw new UnauthorizedException('Could not create local user');
     const accessTokenJwt = await this.jwt.signAsync(
       { sub: local.id, email: local.email },
       { expiresIn: '15m' },
