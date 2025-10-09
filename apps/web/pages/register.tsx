@@ -57,8 +57,8 @@ export default function Register() {
         setVerifyOpen(true);
         return;
       }
-      // If no session, prompt user to check email for confirmation
-      setVerifyOpen(true);
+      // If no session, prompt user to check email for confirmation and show verify page
+      router.push(`/verify-email?email=${encodeURIComponent(v.email)}`);
       return;
     } catch (err) {
       // fallback to backend register (server creates supabase user)
