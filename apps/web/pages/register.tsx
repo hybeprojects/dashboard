@@ -1,38 +1,46 @@
-import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { registerSchema } from '../hooks/useFormSchemas';
+import FormInput from '../components/ui/FormInput';
+import Button from '../components/ui/Button';
 import Navbar from '../components/Navbar';
+import { register as apiRegister } from '../lib/auth';
 
 export default function Register() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<{ firstName: string; lastName: string; email: string; password: string }>({
+    resolver: yupResolver(registerSchema),
+  });
+
   return (
     <div className="container-page">
       <Navbar />
-      <main className="section py-20 max-w-3xl mx-auto">
-        <div className="card-surface p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Choose account type</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Select the account type that best fits your needs. Business accounts have additional
-            requirements and a minimum initial deposit.
-          </p>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-6 border rounded-lg">
-              <div className="font-semibold mb-2">Premier Business Checking</div>
-              <div className="text-sm text-gray-600 mb-4">
-                Business accounts require additional KYC and a minimum initial deposit of $500.
-              </div>
-              <Link href="/register/business" className="btn-primary">
-                Open Business Account
-              </Link>
-            </div>
-            <div className="p-6 border rounded-lg">
-              <div className="font-semibold mb-2">Premier Free Checking</div>
-              <div className="text-sm text-gray-600 mb-4">
-                Fast, no-fee personal checking. Optionally add a linked savings account.
-              </div>
-              <Link href="/register/personal" className="btn-primary">
-                Open Personal Account
-              </Link>
-            </div>
+      <main className="section py-10">
+        <h2 className="text-2xl font-bold mb-4">Open your account</h2>
+        <form
+          className="card-surface p-6 grid gap-4 md:grid-cols-2"
+          onSubmit={handleSubmit(async (v) => {
+            await apiRegister(v);
+          })}
+        >
+          <FormInput label="First name" {...register('firstName')} error={errors.firstName} />
+          <FormInput label="Last name" {...register('lastName')} error={errors.lastName} />
+          <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
+          <FormInput
+            label="Password"
+            type="password"
+            {...register('password')}
+            error={errors.password}
+          />
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating…' : 'Create Account'}
+            </Button>
           </div>
-        </div>
+        </form>
       </main>
     </div>
   );
