@@ -6,10 +6,11 @@ import { LoginDto } from './dto/login.dto';
 import { Response, Request } from 'express';
 import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { JwtAuthGuard } from '../../security/jwt.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthService, private readonly jwt: JwtService) {}
 
   @UseGuards(RateLimitGuard)
   @Post('register')
