@@ -24,6 +24,13 @@ export default function Login() {
   async function onEmailOtp(e: string) {
     setMsg(null);
     try {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: e }),
+      });
+      const json = await resp.json();
+      if (!json.ok) return setMsg(json.message || 'Rate limited');
       await signInWithEmailOtp(e);
       setMsg('Check your email for a sign-in link');
     } catch (err: any) {
@@ -34,6 +41,13 @@ export default function Login() {
   async function onPhoneOtp(phone: string) {
     setMsg(null);
     try {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const json = await resp.json();
+      if (!json.ok) return setMsg(json.message || 'Rate limited');
       await signInWithPhoneOtp(phone);
       setMsg('Check your phone for an OTP');
     } catch (err: any) {
