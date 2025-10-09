@@ -28,8 +28,24 @@ export default function Register() {
   const { register: kreg, handleSubmit: ksubmit, formState: { isSubmitting: kSubmitting } } = useForm<KycForm>();
 
   async function onRegister(v: RegisterForm) {
-    await apiRegister({ firstName: v.firstName, lastName: v.lastName, email: v.email, password: v.password });
-    setVerifyOpen(true);
+    // Try client-side Supabase sign up first
+    try {
+      const { data, error } = await signUpWithEmail({ email: v.email, password: v.password });
+      if (error) throw error;
+      const session = (data as any)?.session;
+      if (session?.access_token) {
+        await backendLoginWithSupabase(session.access_token).catch(() => {});
+        setVerifyOpen(true);
+        return;
+      }
+      // If no session, prompt user to check email for confirmation
+      setVerifyOpen(true);
+      return;
+    } catch (err) {
+      // fallback to backend register (server creates supabase user)
+      await apiRegister({ firstName: v.firstName, lastName: v.lastName, email: v.email, password: v.password });
+      setVerifyOpen(true);
+    }
   }
 
   async function onVerify(v: KycForm) {
