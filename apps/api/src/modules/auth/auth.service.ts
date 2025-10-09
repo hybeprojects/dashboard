@@ -55,4 +55,19 @@ export class AuthService {
 
     return { accessToken };
   }
+
+  async exchangeSupabaseToken(accessToken: string) {
+    // verify supabase token
+    const { data: user, error } = await supabaseAdmin.auth.getUser(accessToken);
+    if (error || !user) throw new UnauthorizedException('Invalid supabase token');
+    // ensure local user exists
+    let local = await this.users.findOne({ where: { email: user.user?.email } });
+    if (!local) {
+      local = this.users.create({ email: user.user?.email || '', passwordHash: '', firstName: user.user?.user_metadata?.firstName, lastName: user.user?.user_metadata?.lastName });
+      await this.users.save(local);
+    }
+    const accessTokenJwt = await this.jwt.signAsync({ sub: local.id, email: local.email }, { expiresIn: '15m' });
+    await supabaseAdmin.from('audit_logs').insert([{ action: 'supabase_exchange', user_id: local.id, ip_address: null }]);
+    return { accessToken: accessTokenJwt };
+  }
 }
