@@ -51,12 +51,12 @@ export default function Landing() {
           <div className="card-surface p-6">
             <div className="font-semibold mb-2">Business Accounts</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Multi-user, approvals, virtual cards, and accounting integrations.</p>
-            <div className="mt-4"><Link href="/register" className="btn-primary text-sm">Open Account</Link></div>
+            <div className="mt-4"><Link href="/register/business" className="btn-primary text-sm">Open Business Account</Link></div>
           </div>
           <div className="card-surface p-6">
             <div className="font-semibold mb-2">Personal Banking</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">No hidden fees, free ATM withdrawals, and smart savings goals.</p>
-            <div className="mt-4"><Link href="/register" className="btn-primary text-sm">Get Started</Link></div>
+            <div className="mt-4"><Link href="/register/personal" className="btn-primary text-sm">Get Started</Link></div>
           </div>
         </section>
 
