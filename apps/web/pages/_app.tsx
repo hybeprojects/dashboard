@@ -10,7 +10,6 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
 }
 
 function AppInner({ Component, pageProps }: AppProps) {
-  useSupabaseSession();
   return <Component {...pageProps} />;
 }
 
