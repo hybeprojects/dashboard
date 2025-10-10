@@ -1079,6 +1079,11 @@
   resolved "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-15.5.4.tgz"
   integrity sha512-7HKolaj+481FSW/5lL0BcTkA4Ueam9SPYWyN/ib/WGAFZf0DGAN8frNpNZYFHtM4ZstrHZS3LY3vrwlIQfsiMA==
 
+"@next/swc-linux-x64-musl@14.2.33":
+  version "14.2.33"
+  resolved "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-14.2.33.tgz"
+  integrity sha512-345tsIWMzoXaQndUTDv1qypDRiebFxGYx9pYkhwY4hBRaOLt8UGfiWKr9FSSHs25dFIf8ZqIFaPdy5MljdoawA==
+
 "@next/swc-linux-x64-musl@15.5.4":
   version "15.5.4"
   resolved "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-15.5.4.tgz"
@@ -6217,7 +6222,7 @@ prelude-ls@^1.2.1:
     "@nestjs/cli" "^11.0.10"
     axios "^1.7.2"
     framer-motion "^11.5.4"
-    next "^14.2.5"
+    next "^14.2.33"
     next-themes "^0.3.0"
     react "18.3.1"
     react-dom "18.3.1"
@@ -6268,7 +6273,7 @@ prelude-ls@^1.2.1:
     axios "^1.7.2"
     classnames "^2.5.1"
     framer-motion "^11.5.4"
-    next "^14.2.5"
+    next "^14.2.33"
     next-themes "^0.3.0"
     react "18.3.1"
     react-dom "18.3.1"
