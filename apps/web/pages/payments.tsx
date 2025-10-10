@@ -12,8 +12,57 @@ const schema = yup.object({
   amount: yup.number().positive('Positive amount').required('Amount required'),
 });
 
+import { useEffect, useState } from 'react';
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
+import Card from '../components/ui/Card';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import FormInput from '../components/ui/FormInput';
+import Button from '../components/ui/Button';
+import api from '../lib/api';
+
+const schema = yup.object({
+  to: yup.string().required('Recipient required'),
+  amount: yup.number().positive('Positive amount').required('Amount required'),
+});
+
 export default function Payments() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<{ to: string; amount: number }>({ resolver: yupResolver(schema) });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<{ to: string; amount: number }>({ resolver: yupResolver(schema) });
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get('/api/accounts')
+      .then((r) => setAccounts(r.data.accounts || []))
+      .catch(() => {});
+  }, []);
+
+  async function onSubmit(values: { to: string; amount: number }) {
+    setMsg(null);
+    try {
+      const from = accounts?.[0]?.id || values.to; // fallback
+      const resp = await api.post('/api/transfer', {
+        fromAccountId: from,
+        toAccountId: values.to,
+        amount: values.amount,
+      });
+      if (resp.data && resp.data.tx) {
+        setMsg('Transfer submitted');
+      } else {
+        setMsg('Transfer submitted (no ledger confirmation)');
+      }
+    } catch (err: any) {
+      setMsg(err?.response?.data?.error || err?.message || 'Transfer failed');
+    }
+  }
+
   return (
     <div className="container-page">
       <Navbar />
@@ -22,10 +71,25 @@ export default function Payments() {
         <main className="space-y-6">
           <Card>
             <h3 className="text-lg font-semibold mb-4">New Payment</h3>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(async () => { await new Promise((r) => setTimeout(r, 400)); })}>
-              <FormInput label="Recipient" {...register('to')} error={errors.to as any} />
-              <FormInput label="Amount" type="number" step="0.01" {...register('amount')} error={errors.amount as any} />
-              <div className="md:col-span-2"><Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Processing…' : 'Send'}</Button></div>
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
+              <FormInput
+                label="Recipient Account ID"
+                {...register('to')}
+                error={errors.to as any}
+              />
+              <FormInput
+                label="Amount"
+                type="number"
+                step="0.01"
+                {...register('amount')}
+                error={errors.amount as any}
+              />
+              <div className="md:col-span-2">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Processing…' : 'Send'}
+                </Button>
+              </div>
+              {msg && <div className="md:col-span-2 text-sm text-primary">{msg}</div>}
             </form>
           </Card>
         </main>

@@ -9,15 +9,6 @@ export function AppQueryProvider({ children }: { children: ReactNode }) {
 }
 
 export function subscribeToUser(userId: string, onChange: (payload: any) => void) {
-  const supabase = getSupabase();
-  if (!supabase) return { unsubscribe: () => {} } as any;
-
-  return supabase
-    .channel('public:accounts')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'accounts', filter: `user_id=eq.${userId}` },
-      (payload) => onChange(payload),
-    )
-    .subscribe();
+  // Using socket.io for realtime. Supabase realtime subscriptions disabled to prevent conflicts in this demo.
+  return { unsubscribe: () => {} } as any;
 }
