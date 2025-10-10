@@ -62,6 +62,15 @@ export default function Dashboard() {
   useEffect(() => {
     fetchAccounts();
     fetchTransactions();
+    // load persisted notifications
+    (async () => {
+      try {
+        const resp = await api.get('/api/notifications');
+        setNotifications(resp.data.notifications || []);
+      } catch (e) {
+        // ignore
+      }
+    })();
   }, [fetchAccounts, fetchTransactions]);
 
   const totalBalance = useMemo(() => {
