@@ -5,7 +5,8 @@
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "integration:test": "node scripts/integration_test.js"
   },
   "dependencies": {
     "@nestjs/apollo": "^12.2.2",
