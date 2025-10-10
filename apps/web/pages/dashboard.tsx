@@ -1,20 +1,3 @@
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import Card from '../components/ui/Card';
-import OverviewChart from '../components/charts/OverviewChart';
-import DonutChart from '../components/charts/DonutChart';
-
-const area = Array.from({ length: 12 }, (_, i) => ({
-  name: `M${i + 1}`,
-  value: Math.round(Math.random() * 1000),
-}));
-const donut = [
-  { name: 'Payments', value: 400 },
-  { name: 'Transfers', value: 300 },
-  { name: 'Cards', value: 200 },
-  { name: 'Other', value: 100 },
-];
-
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -62,14 +45,11 @@ export default function Dashboard() {
   useEffect(() => {
     fetchAccounts();
     fetchTransactions();
-    // load persisted notifications
     (async () => {
       try {
         const resp = await api.get('/api/notifications');
         setNotifications(resp.data.notifications || []);
-      } catch (e) {
-        // ignore
-      }
+      } catch (_) {}
     })();
   }, [fetchAccounts, fetchTransactions]);
 
@@ -83,7 +63,6 @@ export default function Dashboard() {
   useWebSocket((event, payload) => {
     if (event === 'transfer') {
       setTransactions((t) => [payload, ...t]);
-      // Simple notification
       setNotifications((n) => [
         { id: `n_${Date.now()}`, message: `Transfer of $${payload.amount}`, read: false },
         ...n,

@@ -31,7 +31,6 @@
     "graphql": "^16.9.0",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
-    "next": "^15.5.4",
     "openid-client": "^6.2.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -49,8 +48,6 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/csurf": "^1.11.5",
     "@types/node": "^24.7.1",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
     "typescript": "^5.6.2"
   }
 }
