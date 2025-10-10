@@ -4,7 +4,7 @@ module.exports = {
   init: (server) => {
     const { Server } = require('socket.io');
     io = new Server(server, {
-      cors: { origin: '*' }
+      cors: { origin: '*' },
     });
     io.on('connection', (socket) => {
       console.log('Socket connected', socket.id);
@@ -12,5 +12,5 @@ module.exports = {
     });
     return io;
   },
-  getIO: () => io
+  getIO: () => io,
 };

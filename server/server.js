@@ -36,7 +36,7 @@ async function seedDemo() {
       passwordHash: '$2a$08$u1qT0k1ZrB6y5QwY6YjUeO',
       fineractClientId: null,
       savingsAccountId: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
   });
   console.log('Seeded demo users');

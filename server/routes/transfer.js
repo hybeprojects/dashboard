@@ -10,10 +10,15 @@ const io = require('../sockets/transferSocket').getIO();
 router.post('/', auth, async (req, res) => {
   try {
     const { fromAccountId, toAccountId, amount } = req.body;
-    if (!fromAccountId || !toAccountId || !amount) return res.status(400).json({ error: 'Missing fields' });
+    if (!fromAccountId || !toAccountId || !amount)
+      return res.status(400).json({ error: 'Missing fields' });
 
     // Attempt to call Fineract transfer endpoint
-    const payload = { fromSavingsAccountId: fromAccountId, toSavingsAccountId: toAccountId, transferAmount: amount };
+    const payload = {
+      fromSavingsAccountId: fromAccountId,
+      toSavingsAccountId: toAccountId,
+      transferAmount: amount,
+    };
     const resp = await fineract.transferSavings(payload).catch((e) => null);
 
     const tx = {
@@ -22,7 +27,7 @@ router.post('/', auth, async (req, res) => {
       toAccountId,
       amount,
       status: resp ? 'success' : 'pending',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     store.ledger.push(tx);
@@ -30,7 +35,10 @@ router.post('/', auth, async (req, res) => {
     // Emit socket events to inform clients
     if (io) {
       io.emit('transfer', tx);
-      io.emit('notification', { message: `Transfer of $${amount} from ${fromAccountId} to ${toAccountId}`, tx });
+      io.emit('notification', {
+        message: `Transfer of $${amount} from ${fromAccountId} to ${toAccountId}`,
+        tx,
+      });
     }
 
     res.json({ tx, fineract: !!resp });

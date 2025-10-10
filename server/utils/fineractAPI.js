@@ -8,8 +8,8 @@ const password = process.env.FINERACT_PASSWORD || 'password';
 const api = axios.create({
   baseURL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 // Attach basic auth header via interceptor
@@ -40,5 +40,5 @@ module.exports = {
   getAccountTransactions: async (accountId) => {
     const resp = await api.get(`/savingsaccounts/${accountId}/transactions`);
     return resp.data;
-  }
+  },
 };

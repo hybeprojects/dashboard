@@ -8,7 +8,9 @@ router.get('/', auth, async (req, res) => {
   try {
     const userId = req.user.id;
     // For demo, filter ledger by account ids that match user's id (since we used clientId as user.id)
-    const entries = store.ledger.filter((tx) => tx.fromAccountId == userId || tx.toAccountId == userId);
+    const entries = store.ledger.filter(
+      (tx) => tx.fromAccountId == userId || tx.toAccountId == userId,
+    );
     res.json({ transactions: entries });
   } catch (err) {
     console.error(err);

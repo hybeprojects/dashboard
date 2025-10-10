@@ -16,6 +16,7 @@ npm --prefix server install
 npm --prefix server run start
 
 API endpoints:
+
 - POST /api/auth/signup
 - POST /api/auth/login
 - GET /api/accounts

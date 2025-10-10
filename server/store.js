@@ -2,5 +2,5 @@
 module.exports = {
   users: {},
   notifications: {},
-  ledger: []
+  ledger: [],
 };

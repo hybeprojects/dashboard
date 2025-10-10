@@ -25,7 +25,7 @@ router.post('/signup', async (req, res) => {
       firstname: name,
       lastname: '',
       mobileNumber: '',
-      legalForm: 1
+      legalForm: 1,
     };
     const clientResp = await fineract.createClient(clientPayload).catch((e) => null);
 
@@ -34,7 +34,7 @@ router.post('/signup', async (req, res) => {
       clientId: clientResp && clientResp.resourceId ? clientResp.resourceId : null,
       savingsProductId: 1,
       fieldOfficerId: 1,
-      submittedOnDate: new Date().toISOString().split('T')[0]
+      submittedOnDate: new Date().toISOString().split('T')[0],
     };
 
     let savingsResp = null;
@@ -43,13 +43,14 @@ router.post('/signup', async (req, res) => {
     }
 
     const user = {
-      id: clientResp && clientResp.resourceId ? String(clientResp.resourceId) : `local_${Date.now()}`,
+      id:
+        clientResp && clientResp.resourceId ? String(clientResp.resourceId) : `local_${Date.now()}`,
       name,
       email,
       passwordHash,
       fineractClientId: clientResp && clientResp.resourceId ? clientResp.resourceId : null,
       savingsAccountId: savingsResp && savingsResp.resourceId ? savingsResp.resourceId : null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     users[email] = user;

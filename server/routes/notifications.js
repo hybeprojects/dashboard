@@ -15,7 +15,9 @@ router.post('/mark-read', auth, (req, res) => {
   const email = req.user.email;
   const { id } = req.body;
   if (!store.notifications[email]) return res.json({ ok: true });
-  store.notifications[email] = store.notifications[email].map((n) => (n.id === id ? { ...n, read: true } : n));
+  store.notifications[email] = store.notifications[email].map((n) =>
+    n.id === id ? { ...n, read: true } : n,
+  );
   res.json({ ok: true });
 });
 

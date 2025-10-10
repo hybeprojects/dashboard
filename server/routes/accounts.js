@@ -35,7 +35,7 @@ router.post('/', auth, async (req, res) => {
       clientId: user.fineractClientId,
       savingsProductId: 1,
       fieldOfficerId: 1,
-      submittedOnDate: new Date().toISOString().split('T')[0]
+      submittedOnDate: new Date().toISOString().split('T')[0],
     };
     const resp = await fineract.createSavingsAccount(payload).catch((e) => null);
     if (resp && resp.resourceId) {
