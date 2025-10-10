@@ -31,7 +31,12 @@ export default function Register() {
           onSubmit={handleSubmit(async (v) => {
             setMsg(null);
             try {
-              const data = await apiRegister({ email: v.email, password: v.password, firstName: v.firstName, lastName: v.lastName });
+              const data = await apiRegister({
+                email: v.email,
+                password: v.password,
+                firstName: v.firstName,
+                lastName: v.lastName,
+              });
               if (data && data.token && data.user) {
                 if (typeof window !== 'undefined') localStorage.setItem('token', data.token);
                 setUser({ id: data.user.id, email: data.user.email, firstName: data.user.name });
@@ -58,7 +63,11 @@ export default function Register() {
               {isSubmitting ? 'Creating…' : 'Create Account'}
             </Button>
           </div>
-          {msg && <div className="md:col-span-2"><Alert kind="error">{msg}</Alert></div>}
+          {msg && (
+            <div className="md:col-span-2">
+              <Alert kind="error">{msg}</Alert>
+            </div>
+          )}
         </form>
       </main>
     </div>

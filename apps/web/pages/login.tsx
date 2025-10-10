@@ -64,9 +64,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-4 space-y-3">
-            {msg && <Alert kind="error">{msg}</Alert>}
-          </div>
+          <div className="mt-4 space-y-3">{msg && <Alert kind="error">{msg}</Alert>}</div>
         </div>
       </main>
     </div>

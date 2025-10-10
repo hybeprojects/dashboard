@@ -20,7 +20,8 @@ api.interceptors.response.use(
     if (!config) return Promise.reject(error);
     config.__retryCount = config.__retryCount || 0;
     const maxRetries = 2;
-    const shouldRetry = (!error.response || error.code === 'ECONNABORTED') && config.__retryCount < maxRetries;
+    const shouldRetry =
+      (!error.response || error.code === 'ECONNABORTED') && config.__retryCount < maxRetries;
     if (shouldRetry) {
       config.__retryCount += 1;
       await new Promise((r) => setTimeout(r, 300 * config.__retryCount));
