@@ -23,7 +23,9 @@ export default function VerifyEmail() {
       if (session?.access_token) {
         try {
           await backendLoginWithSupabase(session.access_token);
-        } catch (err) { console.warn('backend login exchange failed', err); }
+        } catch (err) {
+          console.warn('backend login exchange failed', err);
+        }
         router.push('/dashboard');
       }
     });
@@ -39,7 +41,9 @@ export default function VerifyEmail() {
           setLastSent(json.lastSent || null);
           setAttemptsToday(Number(json.attemptsToday || 0));
         }
-      } catch (err) { console.warn('link status check failed', err); }
+      } catch (err) {
+        console.warn('link status check failed', err);
+      }
     }
   }, [router, email]);
 
