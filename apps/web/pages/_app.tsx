@@ -4,7 +4,6 @@ import '../styles/globals.css';
 import * as Sentry from '@sentry/react';
 import { AppQueryProvider } from '../lib/query';
 import TopProgressBar from '../components/ui/TopProgressBar';
-import { useSupabaseSession } from '../hooks/useAuth';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
