@@ -68,7 +68,7 @@ export default function BusinessRegister() {
           Minimum initial deposit: $500. Provide business details and verification documents to
           speed up onboarding.
         </p>
-        <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="card-surface p-4 sm:p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             label="Business name"
             {...register('businessName')}
@@ -116,20 +116,35 @@ export default function BusinessRegister() {
           />
           <div>
             <label className="block text-sm mb-1">ID document (front)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
+            <input
+              className="w-full"
+              type="file"
+              accept="image/*,.pdf"
+              {...register('idFront' as any)}
+            />
           </div>
           <div>
             <label className="block text-sm mb-1">ID document (back)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
+            <input
+              className="w-full"
+              type="file"
+              accept="image/*,.pdf"
+              {...register('idBack' as any)}
+            />
           </div>
           <div>
             <label className="block text-sm mb-1">
               Proof of address (utility bill or bank statement)
             </label>
-            <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
+            <input
+              className="w-full"
+              type="file"
+              accept="image/*,.pdf"
+              {...register('proofAddress' as any)}
+            />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="flex">
+            <Button className="w-full sm:w-auto" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Business Account'}
             </Button>
           </div>
