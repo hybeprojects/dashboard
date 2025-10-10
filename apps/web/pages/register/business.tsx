@@ -68,7 +68,7 @@ export default function BusinessRegister() {
           Minimum initial deposit: $500. Provide business details and verification documents to
           speed up onboarding.
         </p>
-        <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="card-surface p-4 sm:p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             label="Business name"
             {...register('businessName')}
