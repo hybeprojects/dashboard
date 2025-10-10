@@ -1,11 +1,13 @@
 {
   "name": "premium-banking-api",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "integration:test": "node scripts/integration_test.js"
   },
   "dependencies": {
     "@nestjs/apollo": "^12.2.2",
@@ -29,6 +31,7 @@
     "graphql": "^16.9.0",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
+    "next": "^15.5.4",
     "openid-client": "^6.2.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -40,11 +43,14 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.4.5",
+    "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
     "@nestjs/testing": "^10.4.7",
     "@types/cookie-parser": "^1.4.9",
     "@types/csurf": "^1.11.5",
+    "@types/node": "^24.7.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
     "typescript": "^5.6.2"
   }
 }

@@ -29,13 +29,6 @@ async function bootstrap() {
   const dsn = process.env.SENTRY_DSN;
   if (dsn) {
     (Sentry as any).init({ dsn, tracesSampleRate: 0.1 });
-    app.use((req: Request, _res: Response, next: NextFunction) => {
-      (Sentry as any).configureScope((scope: any) => {
-        scope.setTag('service', 'api');
-        if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
-      });
-      next();
-    });
   }
 
   const port = process.env.PORT ? Number(process.env.PORT) : 4000;
