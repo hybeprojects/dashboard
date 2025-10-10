@@ -7,10 +7,23 @@ const store = require('../store');
 router.get('/', auth, async (req, res) => {
   try {
     const userId = req.user.id;
-    // For demo, filter ledger by account ids that match user's id (since we used clientId as user.id)
-    const entries = store.ledger.filter(
-      (tx) => tx.fromAccountId == userId || tx.toAccountId == userId,
-    );
+    // Try Supabase first
+    try {
+      const supabase = require('../lib/supabaseClient');
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .or(`from_account_id.eq.${userId},to_account_id.eq.${userId}`)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return res.json({ transactions: data || [] });
+      }
+    } catch (e) {
+      console.warn('Supabase transactions query failed, falling back to in-memory ledger', e && e.message ? e.message : e);
+    }
+
+    const entries = store.ledger.filter((tx) => tx.fromAccountId == userId || tx.toAccountId == userId);
     res.json({ transactions: entries });
   } catch (err) {
     console.error(err);
