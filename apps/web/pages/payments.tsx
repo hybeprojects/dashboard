@@ -29,19 +29,30 @@ const schema = yup.object({
 });
 
 export default function Payments() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<{ to: string; amount: number }>({ resolver: yupResolver(schema) });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<{ to: string; amount: number }>({ resolver: yupResolver(schema) });
   const [accounts, setAccounts] = useState<any[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get('/api/accounts').then((r) => setAccounts(r.data.accounts || [])).catch(() => {});
+    api
+      .get('/api/accounts')
+      .then((r) => setAccounts(r.data.accounts || []))
+      .catch(() => {});
   }, []);
 
   async function onSubmit(values: { to: string; amount: number }) {
     setMsg(null);
     try {
       const from = accounts?.[0]?.id || values.to; // fallback
-      const resp = await api.post('/api/transfer', { fromAccountId: from, toAccountId: values.to, amount: values.amount });
+      const resp = await api.post('/api/transfer', {
+        fromAccountId: from,
+        toAccountId: values.to,
+        amount: values.amount,
+      });
       if (resp.data && resp.data.tx) {
         setMsg('Transfer submitted');
       } else {
@@ -61,10 +72,22 @@ export default function Payments() {
           <Card>
             <h3 className="text-lg font-semibold mb-4">New Payment</h3>
             <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-              <FormInput label="Recipient Account ID" {...register('to')} error={errors.to as any} />
-              <FormInput label="Amount" type="number" step="0.01" {...register('amount')} error={errors.amount as any} />
+              <FormInput
+                label="Recipient Account ID"
+                {...register('to')}
+                error={errors.to as any}
+              />
+              <FormInput
+                label="Amount"
+                type="number"
+                step="0.01"
+                {...register('amount')}
+                error={errors.amount as any}
+              />
               <div className="md:col-span-2">
-                <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Processing…' : 'Send'}</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Processing…' : 'Send'}
+                </Button>
               </div>
               {msg && <div className="md:col-span-2 text-sm text-primary">{msg}</div>}
             </form>

@@ -82,7 +82,9 @@ router.post('/supabase', (req, res) => {
   const allUsers = Object.values(users);
   const demo = allUsers.length ? allUsers[0] : null;
   if (!demo) return res.status(404).json({ error: 'No users available' });
-  const token = jwt.sign({ email: demo.email, id: demo.id, name: demo.name }, secret, { expiresIn: '7d' });
+  const token = jwt.sign({ email: demo.email, id: demo.id, name: demo.name }, secret, {
+    expiresIn: '7d',
+  });
   res.json({ accessToken: token, user: demo });
 });
 

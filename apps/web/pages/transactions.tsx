@@ -13,7 +13,10 @@ import api from '../lib/api';
 export default function Transactions() {
   const [txs, setTxs] = useState<any[]>([]);
   useEffect(() => {
-    api.get('/api/transactions').then((r) => setTxs(r.data.transactions || [])).catch(() => {});
+    api
+      .get('/api/transactions')
+      .then((r) => setTxs(r.data.transactions || []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -24,7 +27,15 @@ export default function Transactions() {
         <main className="space-y-6">
           <Card>
             <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
-            <Table columns={[{ key: 'id', header: 'ID' }, { key: 'createdAt', header: 'Date' }, { key: 'desc', header: 'Description' }, { key: 'amount', header: 'Amount' }]} data={txs} />
+            <Table
+              columns={[
+                { key: 'id', header: 'ID' },
+                { key: 'createdAt', header: 'Date' },
+                { key: 'desc', header: 'Description' },
+                { key: 'amount', header: 'Amount' },
+              ]}
+              data={txs}
+            />
           </Card>
         </main>
       </div>
