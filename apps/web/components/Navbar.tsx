@@ -11,7 +11,7 @@ export default function Navbar() {
         <Link href="/" className="text-lg font-semibold text-primary">
           PremierBank
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <Link href="/login" className="text-sm">
             Login
           </Link>
