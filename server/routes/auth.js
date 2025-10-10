@@ -74,4 +74,16 @@ router.post('/login', (req, res) => {
   res.json({ token, user });
 });
 
+// Supabase exchange (compatibility shim)
+router.post('/supabase', (req, res) => {
+  const { accessToken } = req.body;
+  if (!accessToken) return res.status(400).json({ error: 'Missing accessToken' });
+  // For demo purposes, map any valid accessToken to a seeded demo user if available
+  const allUsers = Object.values(users);
+  const demo = allUsers.length ? allUsers[0] : null;
+  if (!demo) return res.status(404).json({ error: 'No users available' });
+  const token = jwt.sign({ email: demo.email, id: demo.id, name: demo.name }, secret, { expiresIn: '7d' });
+  res.json({ accessToken: token, user: demo });
+});
+
 module.exports = router;
