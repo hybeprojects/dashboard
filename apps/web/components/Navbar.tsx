@@ -28,9 +28,13 @@ export default function Navbar() {
         >
           <span className="sr-only">Menu</span>
           <div className="space-y-1.5">
-            <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? 'translate-y-1.5 rotate-45' : ''}`}></span>
+            <span
+              className={`block h-0.5 w-5 bg-current transition-transform ${open ? 'translate-y-1.5 rotate-45' : ''}`}
+            ></span>
             <span className={`block h-0.5 w-5 bg-current ${open ? 'opacity-0' : ''}`}></span>
-            <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? '-translate-y-1.5 -rotate-45' : ''}`}></span>
+            <span
+              className={`block h-0.5 w-5 bg-current transition-transform ${open ? '-translate-y-1.5 -rotate-45' : ''}`}
+            ></span>
           </div>
         </button>
       </div>
@@ -43,9 +47,19 @@ export default function Navbar() {
             className="md:hidden border-t border-gray-200 dark:border-gray-800"
           >
             <div className="section py-4 flex flex-col gap-3">
-              <Link href="/login" className="py-2" onClick={() => setOpen(false)}>Login</Link>
-              <Link href="/register" className="btn-primary text-center" onClick={() => setOpen(false)}>Open Account</Link>
-              <div className="pt-2"><ThemeToggle /></div>
+              <Link href="/login" className="py-2" onClick={() => setOpen(false)}>
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="btn-primary text-center"
+                onClick={() => setOpen(false)}
+              >
+                Open Account
+              </Link>
+              <div className="pt-2">
+                <ThemeToggle />
+              </div>
             </div>
           </motion.div>
         )}
