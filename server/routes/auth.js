@@ -76,12 +76,26 @@ router.post('/signup', async (req, res) => {
 });
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = users[email];
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   const ok = bcrypt.compareSync(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+  // ensure Supabase record exists
+  try {
+    const supabase = require('../lib/supabaseClient');
+    if (supabase) {
+      const { data } = await supabase.from('app_users').select('id').eq('id', user.id).limit(1);
+      if (!data || data.length === 0) {
+        await supabase.from('app_users').insert([{ id: user.id, name: user.name, email: user.email, fineract_client_id: user.fineractClientId }]);
+      }
+    }
+  } catch (e) {
+    console.warn('Supabase persist/login check failed', e && e.message ? e.message : e);
+  }
+
   const token = jwt.sign({ email, id: user.id, name: user.name }, secret, { expiresIn: '7d' });
   res.json({ token, user });
 });
