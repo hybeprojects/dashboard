@@ -116,20 +116,20 @@ export default function BusinessRegister() {
           />
           <div>
             <label className="block text-sm mb-1">ID document (front)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
+            <input className="w-full" type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
           </div>
           <div>
             <label className="block text-sm mb-1">ID document (back)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
+            <input className="w-full" type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
           </div>
           <div>
             <label className="block text-sm mb-1">
               Proof of address (utility bill or bank statement)
             </label>
-            <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
+            <input className="w-full" type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="flex">
+            <Button className="w-full sm:w-auto" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Business Account'}
             </Button>
           </div>
