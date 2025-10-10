@@ -55,6 +55,18 @@ router.post('/signup', async (req, res) => {
 
     users[email] = user;
 
+    // persist to Supabase if available
+    try {
+      const supabase = require('../lib/supabaseClient');
+      if (supabase) {
+        await supabase.from('app_users').insert([
+          { id: user.id, name: user.name, email: user.email, fineract_client_id: user.fineractClientId, created_at: new Date() }
+        ]);
+      }
+    } catch (e) {
+      console.warn('Failed to persist user to Supabase', e && e.message ? e.message : e);
+    }
+
     const token = jwt.sign({ email, id: user.id, name: user.name }, secret, { expiresIn: '7d' });
     res.json({ token, user });
   } catch (err) {
