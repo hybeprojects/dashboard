@@ -86,4 +86,9 @@ router.post('/supabase', (req, res) => {
   res.json({ accessToken: token, user: demo });
 });
 
+// Simple resend endpoint used by frontend for magic-link flows (no-op here)
+router.post('/resend', (req, res) => {
+  res.json({ ok: true });
+});
+
 module.exports = router;
