@@ -2,9 +2,19 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../lib/theme';
 import { useState } from 'react';
+import { useAuthStore } from '../state/useAuthStore';
+import { signOutSupabase } from '../lib/supabase';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  async function handleSignOut() {
+    try {
+      await signOutSupabase();
+    } catch (e) {}
+    logout();
+  }
   return (
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-16 items-center justify-between">
@@ -12,12 +22,25 @@ export default function Navbar() {
           PremierBank
         </Link>
         <div className="hidden md:flex items-center gap-4">
-          <Link href="/login" className="text-sm">
-            Login
-          </Link>
-          <Link href="/register" className="btn-primary text-sm">
-            Open Account
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="text-sm">
+                {user.firstName || user.email}
+              </Link>
+              <button className="text-sm text-red-600" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm">
+                Login
+              </Link>
+              <Link href="/register" className="btn-primary text-sm">
+                Open Account
+              </Link>
+            </>
+          )}
           <ThemeToggle />
         </div>
         <button
