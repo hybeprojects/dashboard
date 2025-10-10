@@ -30,10 +30,22 @@ async function bootstrap() {
   if (dsn) {
     (Sentry as any).init({ dsn, tracesSampleRate: 0.1 });
     app.use((req: Request, _res: Response, next: NextFunction) => {
-      (Sentry as any).configureScope((scope: any) => {
-        scope.setTag('service', 'api');
-        if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
-      });
+      try {
+        const s = (Sentry as any);
+        if (typeof s.configureScope === 'function') {
+          s.configureScope((scope: any) => {
+            scope.setTag('service', 'api');
+            if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
+          });
+        } else if (s && s.getCurrentHub && typeof s.getCurrentHub().configureScope === 'function') {
+          s.getCurrentHub().configureScope((scope: any) => {
+            scope.setTag('service', 'api');
+            if ((req as any).user) scope.setUser({ id: (req as any).user.sub });
+          });
+        }
+      } catch (e) {
+        // best-effort; continue without Sentry scope
+      }
       next();
     });
   }
