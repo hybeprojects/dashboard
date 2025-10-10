@@ -5,13 +5,14 @@ import { loginSchema } from '../hooks/useFormSchemas';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
 import { login } from '../lib/auth';
-import { signInWithEmailOtp, signInWithPhoneOtp } from '../lib/supabase';
 import { useState } from 'react';
-import { backendLoginWithSupabase } from '../hooks/useAuth';
 import { useRouter } from 'next/router';
+import { useAuthStore } from '../state/useAuthStore';
+import Alert from '../components/ui/Alert';
 
 export default function Login() {
   const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
   const [msg, setMsg] = useState<string | null>(null);
   const {
     register,
@@ -20,43 +21,6 @@ export default function Login() {
   } = useForm<{ email: string; password: string; otp?: string }>({
     resolver: yupResolver(loginSchema),
   });
-
-  async function onEmailOtp(e: string) {
-    setMsg(null);
-    try {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: e }),
-      });
-      const json = await resp.json();
-      if (!json.ok) return setMsg(json.message || 'Rate limited');
-      const redirect = process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(e)}`
-        : undefined;
-      await signInWithEmailOtp(e, redirect);
-      setMsg('Check your email for a sign-in link');
-    } catch (err: any) {
-      setMsg(err?.message || 'Error sending email');
-    }
-  }
-
-  async function onPhoneOtp(phone: string) {
-    setMsg(null);
-    try {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      });
-      const json = await resp.json();
-      if (!json.ok) return setMsg(json.message || 'Rate limited');
-      await signInWithPhoneOtp(phone);
-      setMsg('Check your phone for an OTP');
-    } catch (err: any) {
-      setMsg(err?.message || 'Error sending SMS');
-    }
-  }
 
   return (
     <div className="container-page">
@@ -67,8 +31,18 @@ export default function Login() {
           <form
             className="card-surface p-6 space-y-4"
             onSubmit={handleSubmit(async (v) => {
-              await login(v.email, v.password, v.otp);
-              router.push('/dashboard');
+              setMsg(null);
+              try {
+                const data = await login(v.email, v.password, v.otp);
+                if (data && data.user) {
+                  setUser({ id: data.user.id, email: data.user.email, firstName: data.user.name });
+                  router.push('/dashboard');
+                } else {
+                  setMsg('Login succeeded but no user returned');
+                }
+              } catch (err: any) {
+                setMsg(err?.response?.data?.error || err?.message || 'Login failed');
+              }
             })}
           >
             <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
@@ -91,42 +65,7 @@ export default function Login() {
           </form>
 
           <div className="mt-4 space-y-3">
-            <div className="text-sm text-gray-600">Or quick sign-in</div>
-            <div className="flex gap-2">
-              <input
-                placeholder="you@domain.com"
-                id="quick-email"
-                className="flex-1 px-3 py-2 rounded-lg border"
-              />
-              <button
-                className="btn-primary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const v = (document.getElementById('quick-email') as HTMLInputElement).value;
-                  onEmailOtp(v);
-                }}
-              >
-                Email Link
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                placeholder="+1555..."
-                id="quick-phone"
-                className="flex-1 px-3 py-2 rounded-lg border"
-              />
-              <button
-                className="btn-primary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const v = (document.getElementById('quick-phone') as HTMLInputElement).value;
-                  onPhoneOtp(v);
-                }}
-              >
-                SMS OTP
-              </button>
-            </div>
-            {msg && <div className="text-sm text-primary">{msg}</div>}
+            {msg && <Alert kind="error">{msg}</Alert>}
           </div>
         </div>
       </main>
