@@ -4,12 +4,15 @@ import Card from '../components/ui/Card';
 import OverviewChart from '../components/charts/OverviewChart';
 import DonutChart from '../components/charts/DonutChart';
 
-const area = Array.from({ length: 12 }, (_, i) => ({ name: `M${i + 1}`, value: Math.round(Math.random() * 1000) }));
+const area = Array.from({ length: 12 }, (_, i) => ({
+  name: `M${i + 1}`,
+  value: Math.round(Math.random() * 1000),
+}));
 const donut = [
   { name: 'Payments', value: 400 },
   { name: 'Transfers', value: 300 },
   { name: 'Cards', value: 200 },
-  { name: 'Other', value: 100 }
+  { name: 'Other', value: 100 },
 ];
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -22,12 +25,15 @@ import api from '../lib/api';
 import AccountCard from '../components/AccountCard';
 import useWebSocket from '../hooks/useWebSocket';
 
-const area = Array.from({ length: 12 }, (_, i) => ({ name: `M${i + 1}`, value: Math.round(Math.random() * 1000) }));
+const area = Array.from({ length: 12 }, (_, i) => ({
+  name: `M${i + 1}`,
+  value: Math.round(Math.random() * 1000),
+}));
 const donut = [
   { name: 'Payments', value: 400 },
   { name: 'Transfers', value: 300 },
   { name: 'Cards', value: 200 },
-  { name: 'Other', value: 100 }
+  { name: 'Other', value: 100 },
 ];
 
 export default function Dashboard() {
@@ -69,7 +75,10 @@ export default function Dashboard() {
     if (event === 'transfer') {
       setTransactions((t) => [payload, ...t]);
       // Simple notification
-      setNotifications((n) => [{ id: `n_${Date.now()}`, message: `Transfer of $${payload.amount}`, read: false }, ...n]);
+      setNotifications((n) => [
+        { id: `n_${Date.now()}`, message: `Transfer of $${payload.amount}`, read: false },
+        ...n,
+      ]);
     }
     if (event === 'notification') {
       setNotifications((n) => [payload, ...n]);
@@ -115,7 +124,9 @@ export default function Dashboard() {
                   {transactions.length ? (
                     transactions.slice(0, 6).map((tx) => (
                       <div key={tx.id} className="flex justify-between">
-                        <div className="text-sm">{tx.fromAccountId} → {tx.toAccountId}</div>
+                        <div className="text-sm">
+                          {tx.fromAccountId} → {tx.toAccountId}
+                        </div>
                         <div className="font-medium">${tx.amount}</div>
                       </div>
                     ))
@@ -135,7 +146,10 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   {notifications.length ? (
                     notifications.slice(0, 8).map((n) => (
-                      <div key={n.id} className={`p-2 rounded ${n.read ? 'bg-gray-100' : 'bg-green-50'}`}>
+                      <div
+                        key={n.id}
+                        className={`p-2 rounded ${n.read ? 'bg-gray-100' : 'bg-green-50'}`}
+                      >
                         {n.message || JSON.stringify(n)}
                       </div>
                     ))
