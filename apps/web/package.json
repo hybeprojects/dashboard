@@ -25,7 +25,8 @@
     "react-hook-form": "^7.53.0",
     "recharts": "^2.12.7",
     "yup": "^1.4.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
