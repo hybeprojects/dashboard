@@ -10,11 +10,14 @@ export default function Navbar() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   async function handleSignOut() {
-    try {
-      await signOutSupabase();
-    } catch (e) {}
+  try {
+    await signOutSupabase();
+  } catch (e) {
+    console.error("Error signing out:", e);
+  } finally {
     logout();
   }
+}
   return (
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-16 items-center justify-between">
