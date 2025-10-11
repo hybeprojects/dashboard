@@ -43,10 +43,9 @@ export const personalRegisterSchema = yup.object({
   dob: yup
     .string()
     .required('Date of birth required')
-    .matches(/^\d{4}-\d{2}-\d{2}$/, 'Use format YYYY-MM-DD')
-    .test('is-valid-date', 'Invalid date', (v) => {
-      if (!v) return false;
-      const d = new Date(v);
+    .test('is-valid-date', 'Invalid date', (value) => {
+      if (!value) return false;
+      const d = new Date(value);
       return !Number.isNaN(d.getTime());
     }),
   ssn: yup.string().required('SSN required'),
