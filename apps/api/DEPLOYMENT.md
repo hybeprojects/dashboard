@@ -4,13 +4,13 @@ Deployment checklist for apps/api
    - JWT_SECRET (required): a cryptographically strong secret used to sign JWTs.
    - SUPABASE_URL (required): your Supabase project URL.
    - SUPABASE_SERVICE_ROLE_KEY (required): Supabase service role key for server operations.
-   - DATABASE_URL or POSTGRES_*: PostgreSQL connection string or individual host/user/password vars.
+   - DATABASE*URL or POSTGRES*\*: PostgreSQL connection string or individual host/user/password vars.
    - REDIS_URL (required): Redis connection for rate-limiting and resend counters.
    - PORT (optional): port to listen on (default 4000).
    - SENTRY_DSN (optional): Sentry DSN for error monitoring.
 
 2. Safety reminders:
-   - Do NOT place secrets in client-side envs prefixed with NEXT_PUBLIC_.
+   - Do NOT place secrets in client-side envs prefixed with NEXT*PUBLIC*.
    - Rotate SUPABASE_SERVICE_ROLE_KEY and JWT_SECRET if ever exposed.
 
 3. Docker / docker-compose:
@@ -32,5 +32,6 @@ Deployment checklist for apps/api
    - Maintain a rotation plan for JWT_SECRET and SUPABASE_SERVICE_ROLE_KEY. Invalidating these will require rotating any long-lived tokens and re-issuing service keys.
 
 If you'd like, I can open a PR that:
- - Removes any legacy server references from docs or CI files (I checked docker-compose and there were no references left),
- - Adds a small github-actions workflow template for deploying apps/api with secrets.
+
+- Removes any legacy server references from docs or CI files (I checked docker-compose and there were no references left),
+- Adds a small github-actions workflow template for deploying apps/api with secrets.
