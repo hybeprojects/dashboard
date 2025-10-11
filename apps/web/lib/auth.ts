@@ -1,7 +1,11 @@
 import api from './api';
 import { AuthResponse, UserProfile } from '../types/api';
 
-export async function login(email: string, password: string, otp?: string): Promise<{ accessToken: string; user: UserProfile }> {
+export async function login(
+  email: string,
+  password: string,
+  otp?: string,
+): Promise<{ accessToken: string; user: UserProfile }> {
   const { data } = await api.post('/api/auth/login', { email, password, otp });
   if (typeof window !== 'undefined')
     localStorage.setItem('token', data.accessToken || data.token || '');

@@ -40,17 +40,15 @@ export class TransactionsService {
     if (error) throw new BadRequestException('Transfer failed');
 
     // insert transaction record
-    await supabaseAdmin
-      .from('transactions')
-      .insert([
-        {
-          account_id: dto.fromAccountId,
-          type: 'transfer',
-          amount: amount.toString(),
-          recipient_account: dto.toAccountNumber,
-          status: 'completed',
-        },
-      ]);
+    await supabaseAdmin.from('transactions').insert([
+      {
+        account_id: dto.fromAccountId,
+        type: 'transfer',
+        amount: amount.toString(),
+        recipient_account: dto.toAccountNumber,
+        status: 'completed',
+      },
+    ]);
     await supabaseAdmin
       .from('audit_logs')
       .insert([{ action: 'transfer', user_id: userId, ip_address: null }]);
@@ -77,7 +75,12 @@ export class TransactionsService {
     await supabaseAdmin
       .from('transactions')
       .insert([
-        { account_id: dto.accountId, type: 'deposit', amount: amount.toString(), status: 'completed' },
+        {
+          account_id: dto.accountId,
+          type: 'deposit',
+          amount: amount.toString(),
+          status: 'completed',
+        },
       ]);
     await supabaseAdmin
       .from('audit_logs')
@@ -105,7 +108,12 @@ export class TransactionsService {
     await supabaseAdmin
       .from('transactions')
       .insert([
-        { account_id: dto.accountId, type: 'withdrawal', amount: amount.toString(), status: 'completed' },
+        {
+          account_id: dto.accountId,
+          type: 'withdrawal',
+          amount: amount.toString(),
+          status: 'completed',
+        },
       ]);
     await supabaseAdmin
       .from('audit_logs')
