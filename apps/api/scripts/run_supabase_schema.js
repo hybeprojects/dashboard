@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { Pool } = require('pg');
 
 async function run() {
@@ -6,13 +7,14 @@ async function run() {
     require('path').resolve(__dirname, '../../..', 'infra/supabase_schema.sql'),
     'utf8',
   );
-  const connection = process.env.POSTGRES_URL || process.env.POSTGRES_HOST;
+  const connection =
+    process.env.POSTGRES_URL || process.env.NEXT_PUBLIC_POSTGRES_URL || process.env.POSTGRES_HOST || process.env.NEXT_PUBLIC_POSTGRES_HOST;
   if (!connection) {
     console.error('No POSTGRES_URL or POSTGRES_HOST found in environment');
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
+  const pool = new Pool({ connectionString: connection });
   const client = await pool.connect();
   try {
     console.log('Running schema...');
