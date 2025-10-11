@@ -1,6 +1,9 @@
 import { ButtonHTMLAttributes } from 'react';
 import cn from 'classnames';
 
-export default function Button({ className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button className={cn('btn-primary', className)} {...props} />;
+type Props = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' };
+
+export default function Button({ className, variant = 'primary', ...props }: Props) {
+  const base = variant === 'secondary' ? 'btn-secondary' : 'btn-primary';
+  return <button className={cn(base, className)} {...props} />;
 }
