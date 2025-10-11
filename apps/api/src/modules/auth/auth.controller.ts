@@ -46,10 +46,10 @@ export class AuthController {
     @NestCommon.Body() dto: LoginDto,
     @NestCommon.Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, refreshCookieValue } = await this.auth.login(dto as any);
+    const { accessToken, refreshCookieValue, user } = await this.auth.login(dto as any);
     // set secure httpOnly cookie
     res.cookie('refresh_token', refreshCookieValue, this.cookieOptions());
-    return { accessToken };
+    return { accessToken, user };
   }
 
   @NestCommon.Post('supabase')

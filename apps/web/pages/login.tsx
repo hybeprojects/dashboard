@@ -35,7 +35,12 @@ export default function Login() {
               try {
                 const data = await login(v.email, v.password, v.otp);
                 if (data && data.user) {
-                  setUser({ id: data.user.id, email: data.user.email, firstName: data.user.name });
+                  setUser({
+                    id: data.user.id,
+                    email: data.user.email,
+                    firstName: data.user.firstName || undefined,
+                    lastName: data.user.lastName || undefined,
+                  });
                   router.push('/dashboard');
                 } else {
                   setMsg('Login succeeded but no user returned');

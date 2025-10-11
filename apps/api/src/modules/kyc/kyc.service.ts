@@ -4,14 +4,24 @@ import { Repository } from 'typeorm';
 import { KycSubmission } from './kyc.entity';
 import { supabaseAdmin } from '../../lib/supabase.client';
 import { v4 as uuidv4 } from 'uuid';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { KycSubmitDto } from './dto/kyc-submit.dto';
 
 @Injectable()
 export class KycService {
   constructor(@InjectRepository(KycSubmission) private repo: Repository<KycSubmission>) {}
 
   async submit(body: any, files: any) {
-    // basic validation
-    const accountType = body.accountType || 'personal';
+    // basic validation via class-validator
+    const dto = plainToInstance(KycSubmitDto, body || {});
+    const errors = await validate(dto, { whitelist: true, forbidNonWhitelisted: false });
+    if (errors.length) {
+      throw new BadRequestException('Invalid submission payload');
+    }
+
+    // account type
+    const accountType = dto.accountType || 'personal';
     if (accountType === 'business') {
       const required = [
         'businessName',
