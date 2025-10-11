@@ -41,7 +41,7 @@ Note: Supabase will only accept `redirectTo` values that match the Redirect URLs
 If you need a different landing path after magic links, update NEXT_PUBLIC_SITE_URL or change the `redirectTo` argument in the calls above.
 
 ## Rate-limits & resend endpoints
-- Server endpoints (apps/api/src/modules/auth/auth.controller.ts):
+- API endpoints (apps/api/src/modules/auth/auth.controller.ts):
   - POST /auth/resend — checks/increments Redis counters and returns `{ ok: true }` or `{ ok: false, message }`.
   - GET /auth/link-status?email=... — returns `{ attemptsToday, lastSent }`.
 - Limits implemented:
@@ -75,7 +75,7 @@ Curl examples (replace host):
 ## Where to change behavior in code
 - Redirect defaults and helpers: `apps/web/lib/supabase.ts`
 - Signup/login usage and UX: `apps/web/pages/register.tsx`, `apps/web/pages/login.tsx`, `apps/web/pages/verify-email.tsx`
-- Server resend/rate-limit: `apps/api/src/modules/auth/auth.controller.ts` and `apps/api/src/common/guards/rate-limit.guard.ts`
+- API resend/rate-limit: `apps/api/src/modules/auth/auth.controller.ts` and `apps/api/src/common/guards/rate-limit.guard.ts`
 - Redis connection: `apps/api/src/redis/redis.service.ts`
 
 ---
