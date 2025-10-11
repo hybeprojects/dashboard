@@ -17,7 +17,14 @@ export default function Accounts() {
         <main className="space-y-6">
           <Card>
             <h3 className="text-lg font-semibold mb-4">Accounts</h3>
-            <Table columns={[{ key: 'id', header: 'Account ID' }, { key: 'type', header: 'Type' }, { key: 'balance', header: 'Balance' }]} data={accounts} />
+            <Table
+              columns={[
+                { key: 'id', header: 'Account ID' },
+                { key: 'type', header: 'Type' },
+                { key: 'balance', header: 'Balance' },
+              ]}
+              data={accounts}
+            />
           </Card>
         </main>
       </div>

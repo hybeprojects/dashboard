@@ -11,7 +11,9 @@ export default function Settings() {
         <main className="space-y-6">
           <Card>
             <h3 className="text-lg font-semibold mb-2">Settings</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Configure preferences, notifications, and privacy.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Configure preferences, notifications, and privacy.
+            </p>
           </Card>
         </main>
       </div>

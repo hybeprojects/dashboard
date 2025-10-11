@@ -11,7 +11,9 @@ export default function Profile() {
         <main className="space-y-6">
           <Card>
             <h3 className="text-lg font-semibold mb-2">Profile</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Manage your personal information and security settings.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Manage your personal information and security settings.
+            </p>
           </Card>
         </main>
       </div>
