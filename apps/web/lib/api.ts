@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 const api = axios.create({ baseURL: BASE, timeout: 10000 });
 
 // attach token
