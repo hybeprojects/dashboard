@@ -51,7 +51,11 @@ async function bootstrap() {
   try {
     app.use(
       csurf({
-        cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: (process.env.SESSION_SAME_SITE as any) || 'lax' },
+        cookie: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: (process.env.SESSION_SAME_SITE as any) || 'lax',
+        },
       }),
     );
   } catch (e) {

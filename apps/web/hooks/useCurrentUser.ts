@@ -13,7 +13,12 @@ export default function useCurrentUser() {
         if (!mounted) return;
         const data = res.data;
         if (data && data.user) {
-          setUser({ id: data.user.id, email: data.user.email, firstName: data.user.firstName, lastName: data.user.lastName });
+          setUser({
+            id: data.user.id,
+            email: data.user.email,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+          });
         } else {
           setUser(null);
         }
