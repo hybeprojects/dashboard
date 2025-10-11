@@ -11,6 +11,12 @@ import type { Request, Response, NextFunction } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
+  if (!process.env.JWT_SECRET) {
+    console.error(
+      'JWT_SECRET is required for the API. Set a server-only JWT_SECRET and do NOT expose it to client envs.',
+    );
+    throw new Error('JWT_SECRET is required');
+  }
   app.enableCors({ origin: process.env.CORS_ORIGIN || true, credentials: true });
   app.use(cookieParser());
   // CSRF protection for state-changing requests using cookies

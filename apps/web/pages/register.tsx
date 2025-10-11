@@ -38,9 +38,9 @@ export default function Register() {
                 firstName: v.firstName,
                 lastName: v.lastName,
               });
-              if (data && data.token && data.user) {
-                if (typeof window !== 'undefined') localStorage.setItem('token', data.token);
-                setUser({ id: data.user.id, email: data.user.email, firstName: data.user.name });
+              if (data && data.accessToken) {
+                if (typeof window !== 'undefined') localStorage.setItem('token', data.accessToken);
+                setUser({ id: '', email: v.email, firstName: v.firstName, lastName: v.lastName });
                 router.push('/dashboard');
               } else {
                 setMsg('Account created but no token returned');

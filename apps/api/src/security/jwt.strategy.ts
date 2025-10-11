@@ -17,7 +17,11 @@ export class JwtStrategy extends (PassportStrategy as any)(JwtStrategyImpl || cl
         ExtractJwt.fromAuthHeaderAsBearerToken &&
         ExtractJwt.fromAuthHeaderAsBearerToken()) ||
       (() => null);
-    super({ jwtFromRequest, secretOrKey: process.env.JWT_SECRET || 'secret' } as any);
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is required for server-side authentication');
+    }
+    super({ jwtFromRequest, secretOrKey: secret } as any);
   }
   async validate(payload: any) {
     return { userId: payload?.sub, email: payload?.email };

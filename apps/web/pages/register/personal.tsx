@@ -23,11 +23,11 @@ export default function PersonalRegister() {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
   const {
-  register,
-  handleSubmit,
-  watch: _watch,
-  formState: { errors, isSubmitting },
-} = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
+    register,
+    handleSubmit,
+    watch: _watch,
+    formState: { errors, isSubmitting },
+  } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
@@ -43,10 +43,12 @@ export default function PersonalRegister() {
       });
       form.append('accountType', 'personal');
       form.append('openSavings', v.openSavings ? '1' : '0');
-      await api.post('/kyc/submit', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/api/kyc/submit', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       if (v.openSavings) {
         // create linked savings via API (best-effort placeholder)
-        await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
+        await api.post('/api/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
       }
       setStatus('Submitted — verification in progress');
       router.push('/register/complete?type=personal');

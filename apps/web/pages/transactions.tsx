@@ -2,12 +2,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
-
 import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import Card from '../components/ui/Card';
-import Table from '../components/ui/Table';
 import api from '../lib/api';
 
 export default function Transactions() {
@@ -15,7 +10,7 @@ export default function Transactions() {
   useEffect(() => {
     api
       .get('/api/transactions')
-      .then((r) => setTxs(r.data.transactions || []))
+      .then((r) => setTxs(r.data?.transactions || r.data || []))
       .catch(() => {});
   }, []);
 

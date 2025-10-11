@@ -13,6 +13,14 @@ export async function register(payload: {
   firstName: string;
   lastName: string;
 }) {
-  const { data } = await api.post('/api/auth/signup', payload);
-  return data;
+  // Create account
+  await api.post('/api/auth/register', payload);
+  // Immediately login to obtain access token
+  const { data } = await api.post('/api/auth/login', {
+    email: payload.email,
+    password: payload.password,
+  });
+  if (typeof window !== 'undefined')
+    localStorage.setItem('token', data.token || data.accessToken || '');
+  return { accessToken: data.accessToken || data.token };
 }
