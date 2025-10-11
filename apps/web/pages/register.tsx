@@ -8,6 +8,7 @@ import { register as apiRegister } from '../lib/auth';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../state/useAuthStore';
 import Alert from '../components/ui/Alert';
+import { useState } from 'react';
 
 export default function Register() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function Register() {
   } = useForm<{ firstName: string; lastName: string; email: string; password: string }>({
     resolver: yupResolver(registerSchema),
   });
-  const [msg, setMsg] = require('react').useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
 
   return (
     <div className="container-page">
