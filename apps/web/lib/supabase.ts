@@ -32,7 +32,7 @@ export async function signInWithEmailOtp(email: string, redirectTo?: string) {
     (process.env.NEXT_PUBLIC_SITE_URL
       ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(email)}`
       : undefined);
-  return supabase.auth.signInWithOtp({ email }, { redirectTo: redirect });
+  return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
 }
 
 export async function signInWithPhoneOtp(phone: string) {
