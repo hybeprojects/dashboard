@@ -28,7 +28,6 @@ export default function PersonalRegister() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
-  const openSavings = watch('openSavings');
 
   async function onSubmit(v: Form) {
     setStatus(null);

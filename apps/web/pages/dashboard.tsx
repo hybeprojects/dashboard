@@ -49,7 +49,9 @@ export default function Dashboard() {
       try {
         const resp = await api.get('/api/notifications');
         setNotifications(resp.data.notifications || []);
-      } catch (_) {}
+      } catch (err) {
+        console.warn('Failed to fetch notifications', err);
+      }
     })();
   }, [fetchAccounts, fetchTransactions]);
 

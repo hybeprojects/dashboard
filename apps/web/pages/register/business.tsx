@@ -47,11 +47,7 @@ export default function BusinessRegister() {
       });
       // include account type
       form.append('accountType', 'business');
-      const res = await api
-        .post('/kyc/submit', form, { headers: { 'Content-Type': 'multipart/form-data' } })
-        .catch((e) => {
-          throw e;
-        });
+      await api.post('/kyc/submit', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setStatus('Submitted — verification in progress');
       router.push('/register/complete?type=business');
     } catch (err: any) {

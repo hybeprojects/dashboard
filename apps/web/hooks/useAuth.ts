@@ -40,7 +40,7 @@ export function useSupabaseSession() {
 
 export async function backendLoginWithSupabase(accessToken: string) {
   // exchange supabase session.access_token with backend JWT
-  const { data } = await api.post('/auth/supabase', { accessToken });
+  const { data } = await api.post('/api/auth/supabase', { accessToken });
   if (typeof window !== 'undefined') {
     localStorage.setItem('token', data.accessToken);
   }
