@@ -6,21 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
-
-const schema = yup.object({
-  to: yup.string().required('Recipient required'),
-  amount: yup.number().positive('Positive amount').required('Amount required'),
-});
-
 import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import Card from '../components/ui/Card';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import FormInput from '../components/ui/FormInput';
-import Button from '../components/ui/Button';
 import api from '../lib/api';
 
 const schema = yup.object({
@@ -28,32 +14,34 @@ const schema = yup.object({
   amount: yup.number().positive('Positive amount').required('Amount required'),
 });
 
+type Form = { to: string; amount: number };
+
 export default function Payments() {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<{ to: string; amount: number }>({ resolver: yupResolver(schema) });
+  } = useForm<Form>({ resolver: yupResolver(schema) });
   const [accounts, setAccounts] = useState<any[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .get('/api/accounts')
-      .then((r) => setAccounts(r.data.accounts || []))
+      .then((r) => setAccounts(r.data || r.data?.accounts || []))
       .catch(() => {});
   }, []);
 
-  async function onSubmit(values: { to: string; amount: number }) {
+  async function onSubmit(values: Form) {
     setMsg(null);
     try {
       const from = accounts?.[0]?.id || values.to; // fallback
-      const resp = await api.post('/api/transfer', {
+      const resp = await api.post('/api/transactions/transfer', {
         fromAccountId: from,
-        toAccountId: values.to,
+        toAccountNumber: values.to,
         amount: values.amount,
       });
-      if (resp.data && resp.data.tx) {
+      if (resp.data && (resp.data.success || resp.data.tx)) {
         setMsg('Transfer submitted');
       } else {
         setMsg('Transfer submitted (no ledger confirmation)');
@@ -72,11 +60,7 @@ export default function Payments() {
           <Card>
             <h3 className="text-lg font-semibold mb-4">New Payment</h3>
             <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-              <FormInput
-                label="Recipient Account ID"
-                {...register('to')}
-                error={errors.to as any}
-              />
+              <FormInput label="Recipient Account ID" {...register('to')} error={errors.to as any} />
               <FormInput
                 label="Amount"
                 type="number"
