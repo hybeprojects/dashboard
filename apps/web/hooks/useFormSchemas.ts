@@ -40,7 +40,14 @@ export const businessRegisterSchema = yup.object({
 
 export const personalRegisterSchema = yup.object({
   fullName: yup.string().required('Full name required'),
-  dob: yup.date().required('Date of birth required'),
+  dob: yup
+    .string()
+    .required('Date of birth required')
+    .test('is-valid-date', 'Invalid date', (value) => {
+      if (!value) return false;
+      const d = new Date(value);
+      return !Number.isNaN(d.getTime());
+    }),
   ssn: yup.string().required('SSN required'),
   address: yup.string().required('Address required'),
 });
