@@ -80,7 +80,16 @@ export class AuthService {
       .from('audit_logs')
       .insert([{ action: 'login', user_id: user.id, ip_address: null }]);
 
-    return { accessToken, refreshCookieValue: refresh.cookieValue };
+    return {
+      accessToken,
+      refreshCookieValue: refresh.cookieValue,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+      },
+    };
   }
 
   async exchangeSupabaseToken(accessToken: string) {

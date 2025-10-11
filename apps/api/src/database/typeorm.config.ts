@@ -21,7 +21,7 @@ const databaseUrl =
   resolveDatabaseUrl() || 'postgresql://postgres:postgres@localhost:5432/postgres';
 const synchronize = process.env.TYPEORM_SYNCHRONIZE
   ? process.env.TYPEORM_SYNCHRONIZE === 'true'
-  : true;
+  : false; // default to false to avoid accidental schema changes in prod
 
 export const typeormConfig: DataSourceOptions = {
   type: 'postgres',
