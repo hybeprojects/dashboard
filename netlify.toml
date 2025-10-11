@@ -10,9 +10,9 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Enable the official Netlify Next.js plugin. Netlify will install this plugin at build time.
+# Enable the official Netlify Next.js plugin. Pin to a version compatible with Next 14.
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
+  package = "@netlify/plugin-nextjs@5.9.1"
 
 # IMPORTANT: Do NOT store secrets or keys in this file. Set all environment variables
 # (especially non-public secrets) in the Netlify UI: Site settings → Build & deploy → Environment.
