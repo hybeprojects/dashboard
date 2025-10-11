@@ -32,18 +32,20 @@ export default function VerifyEmail() {
 
     // fetch link status for UX
     if (email) {
-      try {
-        const resp = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`,
-        );
-        if (resp.ok) {
-          const json = await resp.json();
-          setLastSent(json.lastSent || null);
-          setAttemptsToday(Number(json.attemptsToday || 0));
+      (async () => {
+        try {
+          const resp = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`,
+          );
+          if (resp.ok) {
+            const json = await resp.json();
+            setLastSent(json.lastSent || null);
+            setAttemptsToday(Number(json.attemptsToday || 0));
+          }
+        } catch (err) {
+          console.warn('link status check failed', err);
         }
-      } catch (err) {
-        console.warn('link status check failed', err);
-      }
+      })();
     }
   }, [router, email]);
 
