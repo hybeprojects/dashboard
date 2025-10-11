@@ -44,7 +44,7 @@ export async function signInWithPhoneOtp(phone: string) {
 export async function signUpWithEmail(payload: {
   email: string;
   password: string;
-  options?: any;
+  options?: Record<string, unknown>;
   redirectTo?: string;
 }) {
   const supabase = getSupabase();

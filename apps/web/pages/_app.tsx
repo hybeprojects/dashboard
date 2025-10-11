@@ -10,7 +10,13 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
 }
 
-function AppInner({ Component, pageProps }: AppProps) {
+function AppInner({
+  Component,
+  pageProps,
+}: {
+  Component: AppProps['Component'];
+  pageProps: AppProps['pageProps'];
+}) {
   useCurrentUser();
   return <Component {...pageProps} />;
 }
