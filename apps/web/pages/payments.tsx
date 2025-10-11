@@ -60,7 +60,11 @@ export default function Payments() {
           <Card>
             <h3 className="text-lg font-semibold mb-4">New Payment</h3>
             <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-              <FormInput label="Recipient Account ID" {...register('to')} error={errors.to as any} />
+              <FormInput
+                label="Recipient Account ID"
+                {...register('to')}
+                error={errors.to as any}
+              />
               <FormInput
                 label="Amount"
                 type="number"
