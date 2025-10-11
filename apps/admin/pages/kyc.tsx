@@ -1,6 +1,4 @@
 import Navbar from '../components/ui/Navbar';
-
-import Navbar from '../components/ui/Navbar';
 import { useEffect, useState } from 'react';
 
 type Submission = {
@@ -17,12 +15,18 @@ export default function KYC() {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(false);
 
+  function authHeaders() {
+    if (typeof window === 'undefined') return {} as HeadersInit;
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch('/api/kyc');
+      const res = await fetch('/api/kyc', { headers: { ...authHeaders() } });
       const data = await res.json();
-      setSubs(data);
+      setSubs(Array.isArray(data) ? data : []);
     } catch (e) {
       // ignore
     } finally {
@@ -35,7 +39,7 @@ export default function KYC() {
   }, []);
 
   async function onApprove(id: string) {
-    await fetch(`/api/kyc/${id}/approve`, { method: 'POST' });
+    await fetch(`/api/kyc/${id}/approve`, { method: 'POST', headers: { ...authHeaders() } });
     load();
   }
 
@@ -43,7 +47,7 @@ export default function KYC() {
     const reason = prompt('Rejection reason');
     await fetch(`/api/kyc/${id}/reject`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ reason }),
     });
     load();
