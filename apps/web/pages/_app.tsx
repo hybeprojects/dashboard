@@ -4,12 +4,14 @@ import '../styles/globals.css';
 import * as Sentry from '@sentry/react';
 import { AppQueryProvider } from '../lib/query';
 import TopProgressBar from '../components/ui/TopProgressBar';
+import useCurrentUser from '../hooks/useCurrentUser';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
 }
 
 function AppInner({ Component, pageProps }: AppProps) {
+  useCurrentUser();
   return <Component {...pageProps} />;
 }
 

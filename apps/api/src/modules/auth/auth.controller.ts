@@ -7,6 +7,9 @@ import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { JwtAuthGuard } from '../../security/jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '../../redis/redis.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @NestCommon.Controller('auth')
 export class AuthController {
@@ -14,7 +17,18 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly jwt: JwtService,
     private readonly redis: RedisService,
+    @InjectRepository(User) private readonly users: Repository<User>,
   ) {}
+
+  private cookieOptions() {
+    const sameSite = (process.env.SESSION_SAME_SITE as any) || 'lax';
+    return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    } as any;
+  }
 
   @NestCommon.UseGuards(RateLimitGuard)
   @NestCommon.Post('register')
@@ -34,12 +48,7 @@ export class AuthController {
   ) {
     const { accessToken, refreshCookieValue } = await this.auth.login(dto as any);
     // set secure httpOnly cookie
-    res.cookie('refresh_token', refreshCookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('refresh_token', refreshCookieValue, this.cookieOptions());
     return { accessToken };
   }
 
@@ -51,12 +60,7 @@ export class AuthController {
     const { accessToken, refreshCookieValue } = await this.auth.exchangeSupabaseToken(
       body.accessToken,
     );
-    res.cookie('refresh_token', refreshCookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('refresh_token', refreshCookieValue, this.cookieOptions());
     return { accessToken };
   }
 
@@ -70,12 +74,7 @@ export class AuthController {
     const [id, token] = cookie.split('|');
     const { newToken, userId } = await this.auth.rotateRefreshToken(id, token);
     const accessToken = await this.jwt.signAsync({ sub: userId }, { expiresIn: '15m' });
-    res.cookie('refresh_token', newToken.cookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('refresh_token', newToken.cookieValue, this.cookieOptions());
     return { accessToken };
   }
 
@@ -158,5 +157,23 @@ export class AuthController {
       this.redis.client.get(lastKey),
     ]);
     return { attemptsToday: Number(count || 0), lastSent: last || null };
+  }
+
+  // Minimal profile endpoint
+  @NestCommon.UseGuards(JwtAuthGuard)
+  @NestCommon.Get('me')
+  async me(@NestCommon.Req() req: any) {
+    const userId = req.user?.sub;
+    if (!userId) return { user: null };
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) return { user: null };
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+      },
+    };
   }
 }
