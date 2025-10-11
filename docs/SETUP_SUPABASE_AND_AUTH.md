@@ -92,3 +92,5 @@ Curl examples (replace host):
 ---
 
 If you want, I can add this to the README or open a PR with an additional short `AUTH.md` under `apps/api/` — tell me where you'd like the documentation placed or if you'd like a shortened version for the README.
+
+See also `docs/SCHEMA_CHECKLIST.md` for SQL queries and Supabase commands to confirm the database schema (transactions RPC, accounts.balance type, notifications columns, KYC bucket).
