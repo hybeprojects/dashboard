@@ -1,0 +1,19 @@
+# Netlify configuration for this monorepo
+# Builds the Next.js app located at apps/web using @netlify/plugin-nextjs
+
+[build]
+  base = "apps/web"
+  publish = ".next"
+  command = "yarn build"
+
+# Use a supported Node version for the build (change in Netlify UI if needed)
+[build.environment]
+  NODE_VERSION = "20"
+
+# Enable the official Netlify Next.js plugin. Netlify will install this plugin at build time.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# IMPORTANT: Do NOT store secrets or keys in this file. Set all environment variables
+# (especially non-public secrets) in the Netlify UI: Site settings → Build & deploy → Environment.
+# Only expose public environment variables that must be available in the browser as NEXT_PUBLIC_* via the Netlify UI.
