@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { registerSchema } from '../hooks/useFormSchemas';
@@ -8,7 +9,6 @@ import { register as apiRegister } from '../lib/auth';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../state/useAuthStore';
 import Alert from '../components/ui/Alert';
-import { useState } from 'react';
 
 export default function Register() {
   const router = useRouter();
