@@ -1,4 +1,6 @@
 const fs = require('fs');
+const fs = require('fs');
+const path = require('path');
 const { Pool } = require('pg');
 
 async function run() {
