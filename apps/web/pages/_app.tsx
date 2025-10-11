@@ -21,7 +21,9 @@ function AppInner({
   return <Component {...pageProps} />;
 }
 
-export default function App({ Component, pageProps }: AppProps) {
+import NextApp from 'next/app';
+
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AppQueryProvider>
@@ -31,3 +33,10 @@ export default function App({ Component, pageProps }: AppProps) {
     </ThemeProvider>
   );
 }
+
+MyApp.getInitialProps = async (appContext: any) => {
+  const appProps = await NextApp.getInitialProps(appContext);
+  return { ...appProps };
+};
+
+export default MyApp;
