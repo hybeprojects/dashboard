@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Card from '../components/ui/Card';
 import api from '../lib/api';
