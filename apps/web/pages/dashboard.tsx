@@ -220,7 +220,7 @@ export default function Dashboard() {
                         )}
                       </div>
                     </div>
-                    <button className="text-blue-700 font-semibold text-sm">VIEW</button>
+                    <Link href={`/accounts/${acct.id ?? acct.accountId ?? acct.number ?? i}`} className="text-blue-700 font-semibold text-sm">VIEW</Link>
                   </div>
                 ),
               )}
