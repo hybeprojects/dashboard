@@ -1,0 +1,6 @@
+
+> dashboard-server@1.0.0 dev
+> node server.js
+
+🚀 Dashboard server listening on port 5000
+⚠️ MySQL not available: connect ECONNREFUSED 127.0.0.1:3306

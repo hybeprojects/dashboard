@@ -107,6 +107,10 @@ router.post('/', auth, async (req, res) => {
     if (!sender) return res.status(404).json({ error: 'sender not found' });
     if (!receiver) return res.status(404).json({ error: 'receiver not found' });
 
+    if (String(fromAccountId) === String(toAccountId)) {
+      return res.status(400).json({ error: 'sender and receiver accounts cannot be the same' });
+    }
+
     const sys = await loadSys();
     const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
     if (!clearingId) return res.status(500).json({ error: 'clearing account not configured' });
