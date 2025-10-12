@@ -243,7 +243,7 @@ export default function Dashboard() {
 
         <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <ul className="grid grid-cols-5 text-xs">
-            <li className="flex flex-col items-center py-2 text-red-600">
+            <li className="flex flex-col items-center py-2 text-primary">
               <Link href="/accounts" className="flex flex-col items-center">
                 <Icon d={icons.eye} />
                 <span>Accounts</span>
