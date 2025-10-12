@@ -9,7 +9,7 @@ export default function Transactions() {
   const [txs, setTxs] = useState<any[]>([]);
   useEffect(() => {
     api
-      .get('/api/transactions')
+      .get('/transactions')
       .then((r) => setTxs(r.data?.transactions || r.data || []))
       .catch(() => {});
   }, []);

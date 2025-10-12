@@ -6,7 +6,7 @@ export async function login(
   password: string,
   otp?: string,
 ): Promise<{ accessToken: string; user: UserProfile }> {
-  const { data } = await api.post('/api/auth/login', { email, password, otp });
+  const { data } = await api.post('/auth/login', { email, password, otp });
   if (typeof window !== 'undefined')
     localStorage.setItem('token', data.accessToken || data.token || '');
   return data as { accessToken: string; user: UserProfile };
@@ -19,9 +19,9 @@ export async function register(payload: {
   lastName: string;
 }) {
   // Create account
-  await api.post('/api/auth/register', payload);
+  await api.post('/auth/register', payload);
   // Immediately login to obtain access token
-  const { data } = await api.post('/api/auth/login', {
+  const { data } = await api.post('/auth/login', {
     email: payload.email,
     password: payload.password,
   });
@@ -31,7 +31,7 @@ export async function register(payload: {
 }
 
 export async function logout() {
-  await api.post('/api/auth/logout');
+  await api.post('/auth/logout');
   if (typeof window !== 'undefined') localStorage.removeItem('token');
 }
 

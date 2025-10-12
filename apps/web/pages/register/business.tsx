@@ -47,7 +47,7 @@ export default function BusinessRegister() {
       });
       // include account type
       form.append('accountType', 'business');
-      await api.post('/api/kyc/submit', form, {
+      await api.post('/kyc/submit', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setStatus('Submitted — verification in progress');

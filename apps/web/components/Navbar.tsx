@@ -4,20 +4,25 @@ import ThemeToggle from '../lib/theme';
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
 import { signOutSupabase } from '../lib/supabase';
+import { logout as backendLogout } from '../lib/auth';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   async function handleSignOut() {
-  try {
-    await signOutSupabase();
-  } catch (e) {
-    console.error("Error signing out:", e);
-  } finally {
-    logout();
+    try {
+      await signOutSupabase();
+    } catch (e) {
+      console.error('Error signing out:', e);
+    }
+    try {
+      await backendLogout();
+    } catch {}
+    finally {
+      logout();
+    }
   }
-}
   return (
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-16 items-center justify-between">
