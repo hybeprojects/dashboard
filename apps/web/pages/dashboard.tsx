@@ -127,7 +127,7 @@ export default function Dashboard() {
     }
   });
 
-  const primary = 'bg-red-600 text-white';
+  const primary = 'bg-primary text-white';
 
   return (
     <div className="container-page">
