@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
 
       - name: Build workspace
         env:
-          NEXT_PUBLIC_API_URL: "http://localhost:5000"
+          NEXT_PUBLIC_API_URL: 'http://localhost:5000'
         run: |
           if [ "${{ matrix.workspace }}" = "web" ]; then
             npm --prefix apps/web run build;
