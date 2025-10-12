@@ -25,23 +25,29 @@ router.post('/signup', async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'missing email/password' });
-    const users = await loadUsers();
-    if (users.find((u) => u.email === email)) return res.status(400).json({ error: 'user exists' });
     const hashed = await bcrypt.hash(password, 10);
+
     // create Fineract client
     const clientPayload = { firstname: firstName || email.split('@')[0], lastname: lastName || '' };
     const fineractClient = await createClient(clientPayload).catch((e) => null);
     const clientId = fineractClient?.clientId || null;
-    // create savings account in Fineract following typical contract (this is sandbox sample)
-    const savingsPayload = {
-      clientId: clientId,
-      productId: 1,
-      accountNo: `SAV-${Date.now()}`,
-      fieldOfficerId: 1
-    };
+    // create savings account in Fineract
+    const savingsPayload = { clientId: clientId, productId: 1 };
     const savings = clientId ? await createSavingsAccount(savingsPayload).catch((e) => null) : null;
     const accountId = savings?.savingsId || null;
 
+    // If DB is available, insert into DB, otherwise fallback to file
+    if (db && db.isAvailable && db.isAvailable()) {
+      const userId = uuidv4();
+      const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+      await db.query(`INSERT INTO ${schema}.users (id, first_name, last_name, email, password_hash, fineract_client_id) VALUES (?, ?, ?, ?, ?, ?);`, [userId, firstName || null, lastName || null, email, hashed, clientId]);
+      const [acctRes] = await db.query(`INSERT INTO ${schema}.accounts (user_id, fineract_account_id, balance) VALUES (?, ?, ?);`, [userId, accountId || null, 0]);
+      const token = jwt.sign({ sub: userId, email }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+      return res.json({ accessToken: token, user: { id: userId, email, firstName, lastName } });
+    }
+
+    const users = await loadUsers();
+    if (users.find((u) => u.email === email)) return res.status(400).json({ error: 'user exists' });
     const user = { id: uuidv4(), firstName, lastName, email, password: hashed, fineractClientId: clientId, accountId };
     users.push(user);
     await saveUsers(users);
