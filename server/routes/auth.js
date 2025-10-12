@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+const db = require('../utils/db');
 
 async function loadUsers() {
   const exists = await fs.pathExists(USERS_FILE);
