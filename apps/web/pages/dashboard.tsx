@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/ui/Card';
@@ -7,6 +7,8 @@ import DonutChart from '../components/charts/DonutChart';
 import api from '../lib/api';
 import AccountCard from '../components/AccountCard';
 import useWebSocket from '../hooks/useWebSocket';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 
 const area = Array.from({ length: 12 }, (_, i) => ({
   name: `M${i + 1}`,
@@ -19,108 +21,197 @@ const donut = [
   { name: 'Other', value: 100 },
 ];
 
+function normalizeToArray(payload: any, key?: string) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object') {
+    if (key && Array.isArray(payload[key])) return payload[key];
+    if (Array.isArray(payload.accounts)) return payload.accounts;
+    if (Array.isArray(payload.transactions)) return payload.transactions;
+    if (Array.isArray(payload.notifications)) return payload.notifications;
+    // Convert object map to array of values
+    const vals = Object.values(payload);
+    if (vals.every((v) => typeof v !== 'undefined')) return vals;
+    return [];
+  }
+  return [];
+}
+
+async function fetchAccounts() {
+  try {
+    const res = await api.get('/accounts');
+    return normalizeToArray(res.data, 'accounts');
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn(
+        '/accounts endpoint not found (404). Returning empty accounts array. Set NEXT_PUBLIC_API_URL to your API server if needed.',
+      );
+      return [];
+    }
+    throw err;
+  }
+}
+async function fetchTransactions() {
+  try {
+    const res = await api.get('/transactions');
+    return normalizeToArray(res.data, 'transactions');
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn('/transactions endpoint not found (404). Returning empty transactions array.');
+      return [];
+    }
+    throw err;
+  }
+}
+async function fetchNotifications() {
+  try {
+    const res = await api.get('/notifications');
+    return normalizeToArray(res.data, 'notifications');
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn('/notifications endpoint not found (404). Returning empty notifications array.');
+      return [];
+    }
+    throw err;
+  }
+}
+
 export default function Dashboard() {
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const qc = useQueryClient();
+  const { data: accounts = [], isLoading: accLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: fetchAccounts,
+    staleTime: 30_000,
+  });
+  const { data: transactions = [], isLoading: txLoading } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: fetchTransactions,
+    staleTime: 15_000,
+  });
+  const { data: notifications = [], isLoading: notifLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+    staleTime: 15_000,
+  });
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const res = await api.get('/accounts');
-      setAccounts(res.data?.accounts || res.data || []);
-    } catch (err) {
-      console.error('Failed to fetch accounts', err);
-    }
-  }, []);
-
-  const fetchTransactions = useCallback(async () => {
-    try {
-      const res = await api.get('/transactions');
-      setTransactions(res.data?.transactions || res.data || []);
-    } catch (err) {
-      console.error('Failed to fetch transactions', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAccounts();
-    fetchTransactions();
-    (async () => {
-      try {
-        const resp = await api.get('/notifications');
-        setNotifications(resp.data?.notifications || resp.data || []);
-      } catch (err) {
-        console.warn('Failed to fetch notifications', err);
-      }
-    })();
-  }, [fetchAccounts, fetchTransactions]);
+  const accountsArr = Array.isArray(accounts) ? accounts : [];
+  const transactionsArr = Array.isArray(transactions) ? transactions : [];
+  const notificationsArr = Array.isArray(notifications) ? notifications : [];
 
   const totalBalance = useMemo(() => {
-    return accounts.reduce((sum, a) => {
+    return accountsArr.reduce((sum: number, a: any) => {
       const rawAmt = Number(a?.raw?.accountBalance?.amount ?? 0);
-      const bal = Number((a as any).balance ?? rawAmt);
+      const bal = Number(a.balance ?? rawAmt);
       return sum + (isNaN(bal) ? 0 : bal);
     }, 0);
-  }, [accounts]);
+  }, [accountsArr]);
 
   useWebSocket((event, payload) => {
     if (event === 'transfer') {
-      setTransactions((t) => [payload, ...t]);
-      setNotifications((n) => [
+      qc.setQueryData<any[]>(['transactions'], (prev = []) => [{ ...payload }, ...prev]);
+      qc.invalidateQueries({ queryKey: ['accounts'] });
+      qc.setQueryData<any[]>(['notifications'], (prev = []) => [
         { id: `n_${Date.now()}`, message: `Transfer of $${payload.amount}`, read: false },
-        ...n,
+        ...prev,
       ]);
     }
     if (event === 'notification') {
-      setNotifications((n) => [payload, ...n]);
+      qc.setQueryData<any[]>(['notifications'], (prev = []) => [payload, ...prev]);
     }
   });
+
+  const statVariants = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } };
 
   return (
     <div className="container-page">
       <Navbar />
       <div className="section grid md:grid-cols-[16rem_1fr] gap-6 py-6">
         <Sidebar />
-        <main className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <div className="text-sm text-gray-500">Total Balance</div>
-              <div className="text-2xl font-bold">${totalBalance.toFixed(2)}</div>
-            </Card>
-            <Card>
-              <div className="text-sm text-gray-500">Accounts</div>
-              <div className="text-2xl font-bold">{accounts.length}</div>
-            </Card>
-            <Card>
-              <div className="text-sm text-gray-500">Recent Transactions</div>
-              <div className="text-2xl font-bold">{transactions.length}</div>
-            </Card>
+        <main className="space-y-6" aria-labelledby="dashboard-heading">
+          <h1 id="dashboard-heading" className="sr-only">
+            Dashboard
+          </h1>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              { label: 'Total Balance', value: `$${totalBalance.toFixed(2)}`, loading: accLoading },
+              { label: 'Accounts', value: accounts.length, loading: accLoading },
+              { label: 'Recent Transactions', value: transactions.length, loading: txLoading },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                initial="hidden"
+                animate="show"
+                transition={{ delay: i * 0.05 }}
+                variants={statVariants}
+              >
+                <Card aria-live="polite" aria-busy={s.loading}>
+                  <div className="text-sm text-gray-500">{s.label}</div>
+                  <div className="text-2xl font-bold">
+                    {s.loading ? (
+                      <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                    ) : (
+                      s.value
+                    )}
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <Card>
-                <h3 className="text-lg font-semibold mb-4">Accounts</h3>
+                <h2 className="text-lg font-semibold mb-4">Accounts</h2>
                 <div className="space-y-3">
-                  {accounts.length ? (
-                    accounts.map((acct) => <AccountCard key={acct.id} account={acct} />)
+                  {accLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
+                      />
+                    ))
+                  ) : accountsArr.length ? (
+                    accountsArr.map((acct: any) => (
+                      <motion.div
+                        key={acct.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <AccountCard account={acct} />
+                      </motion.div>
+                    ))
                   ) : (
                     <div className="text-sm text-gray-500">No accounts yet</div>
                   )}
                 </div>
               </Card>
               <Card>
-                <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+                <h2 className="text-lg font-semibold mb-4">Recent Transactions</h2>
                 <div className="space-y-2">
-                  {transactions.length ? (
-                    transactions.slice(0, 6).map((tx) => (
-                      <div key={tx.id} className="flex justify-between">
+                  {txLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
+                      />
+                    ))
+                  ) : transactionsArr.length ? (
+                    transactionsArr.slice(0, 6).map((tx: any, i: number) => (
+                      <motion.div
+                        key={
+                          tx.id ??
+                          `${tx.fromAccountId}-${tx.toAccountId}-${tx.amount}-${tx.createdAt ?? i}`
+                        }
+                        className="flex justify-between"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
                         <div className="text-sm">
                           {tx.fromAccountId || tx.account_id || tx.accountId || '—'} →{' '}
                           {tx.toAccountId || tx.recipient_account || '—'}
                         </div>
                         <div className="font-medium">${tx.amount}</div>
-                      </div>
+                      </motion.div>
                     ))
                   ) : (
                     <div className="text-sm text-gray-500">No transactions</div>
@@ -128,22 +219,31 @@ export default function Dashboard() {
                 </div>
               </Card>
             </div>
-            <div>
+            <div className="space-y-4">
               <Card>
-                <h3 className="text-lg font-semibold mb-4">Cashflow</h3>
+                <h2 className="text-lg font-semibold mb-4">Cashflow</h2>
                 <OverviewChart data={area} />
               </Card>
               <Card>
-                <h3 className="text-lg font-semibold mb-4">Notifications</h3>
-                <div className="space-y-2">
-                  {notifications.length ? (
-                    notifications.slice(0, 8).map((n) => (
+                <h2 className="text-lg font-semibold mb-4">Notifications</h2>
+                <div className="space-y-2" role="region" aria-live="polite">
+                  {notifLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
                       <div
+                        key={i}
+                        className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
+                      />
+                    ))
+                  ) : notificationsArr.length ? (
+                    notificationsArr.slice(0, 8).map((n: any) => (
+                      <motion.div
                         key={n.id}
-                        className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100' : 'bg-green-50'}`}
+                        className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100 dark:bg-gray-800/60' : 'bg-green-50 dark:bg-green-900/30'}`}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
                       >
                         {n.message || JSON.stringify(n)}
-                      </div>
+                      </motion.div>
                     ))
                   ) : (
                     <div className="text-sm text-gray-500">No notifications</div>
@@ -154,7 +254,7 @@ export default function Dashboard() {
           </div>
 
           <Card>
-            <h3 className="text-lg font-semibold mb-4">Spending breakdown</h3>
+            <h2 className="text-lg font-semibold mb-4">Spending breakdown</h2>
             <DonutChart data={donut} />
           </Card>
         </main>

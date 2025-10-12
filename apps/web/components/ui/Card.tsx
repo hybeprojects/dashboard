@@ -1,4 +1,12 @@
-import { ReactNode } from 'react';
-export default function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`card-surface p-4 ${className}`}>{children}</div>;
+import { ReactNode, HTMLAttributes } from 'react';
+export default function Card({
+  children,
+  className = '',
+  ...props
+}: { children: ReactNode; className?: string } & HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={`card-surface p-4 ${className}`} {...props}>
+      {children}
+    </div>
+  );
 }
