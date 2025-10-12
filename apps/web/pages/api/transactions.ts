@@ -9,7 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     if (supabase) {
-      const { data, error } = await supabase.from('transactions').select('*').order('timestamp', { ascending: false }).limit(100);
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(100);
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data || []);
     }
@@ -40,9 +44,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
           if ((rpc as any).error) {
             // fallback to insert transaction only
-            await supabase.from('transactions').insert([{ account_id: body.fromAccountId, type: 'transfer', amount: String(body.amount), recipient_account: body.toAccountNumber, status: 'completed' }]);
+            await supabase
+              .from('transactions')
+              .insert([
+                {
+                  account_id: body.fromAccountId,
+                  type: 'transfer',
+                  amount: String(body.amount),
+                  recipient_account: body.toAccountNumber,
+                  status: 'completed',
+                },
+              ]);
           } else {
-            await supabase.from('transactions').insert([{ account_id: body.fromAccountId, type: 'transfer', amount: String(body.amount), recipient_account: body.toAccountNumber, status: 'completed' }]);
+            await supabase
+              .from('transactions')
+              .insert([
+                {
+                  account_id: body.fromAccountId,
+                  type: 'transfer',
+                  amount: String(body.amount),
+                  recipient_account: body.toAccountNumber,
+                  status: 'completed',
+                },
+              ]);
           }
           return res.status(200).json({ success: true, simulated: false });
         }
