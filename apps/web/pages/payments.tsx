@@ -28,7 +28,7 @@ export default function Payments() {
   useEffect(() => {
     api
       .get('/accounts')
-      .then((r) => setAccounts(r.data || r.data?.accounts || []))
+      .then((r) => setAccounts(r.data?.accounts || r.data || []))
       .catch(() => {});
   }, []);
 
@@ -36,9 +36,9 @@ export default function Payments() {
     setMsg(null);
     try {
       const from = accounts?.[0]?.id || values.to; // fallback
-      const resp = await api.post('/transactions/transfer', {
+      const resp = await api.post('/transfer', {
         fromAccountId: from,
-        toAccountNumber: values.to,
+        toAccountId: values.to,
         amount: values.amount,
       });
       if (resp.data && (resp.data.success || resp.data.tx)) {

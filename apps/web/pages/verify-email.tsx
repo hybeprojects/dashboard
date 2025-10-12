@@ -34,14 +34,10 @@ export default function VerifyEmail() {
     if (email) {
       (async () => {
         try {
-          const resp = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/link-status?email=${encodeURIComponent(String(email))}`,
-          );
-          if (resp.ok) {
-            const json = await resp.json();
-            setLastSent(json.lastSent || null);
-            setAttemptsToday(Number(json.attemptsToday || 0));
-          }
+          const resp = await (await import('../lib/api')).default.get(`/auth/link-status?email=${encodeURIComponent(String(email))}`);
+          const json = resp.data;
+          setLastSent(json.lastSent || null);
+          setAttemptsToday(Number(json.attemptsToday || 0));
         } catch (err) {
           console.warn('link status check failed', err);
         }
@@ -55,12 +51,8 @@ export default function VerifyEmail() {
     setStatus(null);
     try {
       // ask backend if allowed
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const json = await resp.json();
+      const api = (await import('../lib/api')).default;
+      const { data: json } = await api.post('/auth/resend', { email });
       if (!json.ok) {
         setStatus(json.message || 'Rate limit');
         return;

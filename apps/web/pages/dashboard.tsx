@@ -27,7 +27,7 @@ export default function Dashboard() {
   const fetchAccounts = useCallback(async () => {
     try {
       const res = await api.get('/accounts');
-      setAccounts(res.data || res.data?.accounts || []);
+      setAccounts(res.data?.accounts || res.data || []);
     } catch (err) {
       console.error('Failed to fetch accounts', err);
     }
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const fetchTransactions = useCallback(async () => {
     try {
       const res = await api.get('/transactions');
-      setTransactions(res.data || res.data?.transactions || []);
+      setTransactions(res.data?.transactions || res.data || []);
     } catch (err) {
       console.error('Failed to fetch transactions', err);
     }
@@ -48,7 +48,7 @@ export default function Dashboard() {
     (async () => {
       try {
         const resp = await api.get('/notifications');
-        setNotifications(resp.data || resp.data?.notifications || []);
+        setNotifications(resp.data?.notifications || resp.data || []);
       } catch (err) {
         console.warn('Failed to fetch notifications', err);
       }
