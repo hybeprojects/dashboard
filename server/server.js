@@ -8,7 +8,7 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 app.use(cors({ origin: CLIENT_URL }));
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
+cconst PORT = process.env.PORT || 5000;
 
 // initialize DB
 const db = require('./utils/db');
