@@ -9,7 +9,7 @@ export default function useCurrentUser() {
     let mounted = true;
     (async () => {
       try {
-        const res = await api.get('/api/auth/me');
+        const res = await api.get('/auth/me');
         if (!mounted) return;
         const data = res.data;
         if (data && data.user) {

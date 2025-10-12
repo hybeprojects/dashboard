@@ -26,8 +26,8 @@ export default function Dashboard() {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const res = await api.get('/api/accounts');
-      setAccounts(res.data.accounts || []);
+      const res = await api.get('/accounts');
+      setAccounts(res.data || res.data?.accounts || []);
     } catch (err) {
       console.error('Failed to fetch accounts', err);
     }
@@ -35,8 +35,8 @@ export default function Dashboard() {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const res = await api.get('/api/transactions');
-      setTransactions(res.data.transactions || []);
+      const res = await api.get('/transactions');
+      setTransactions(res.data || res.data?.transactions || []);
     } catch (err) {
       console.error('Failed to fetch transactions', err);
     }
@@ -47,8 +47,8 @@ export default function Dashboard() {
     fetchTransactions();
     (async () => {
       try {
-        const resp = await api.get('/api/notifications');
-        setNotifications(resp.data.notifications || []);
+        const resp = await api.get('/notifications');
+        setNotifications(resp.data || resp.data?.notifications || []);
       } catch (err) {
         console.warn('Failed to fetch notifications', err);
       }
@@ -57,8 +57,9 @@ export default function Dashboard() {
 
   const totalBalance = useMemo(() => {
     return accounts.reduce((sum, a) => {
-      const v = Number(a?.raw?.accountBalance?.amount ?? 0);
-      return sum + (isNaN(v) ? 0 : v);
+      const rawAmt = Number(a?.raw?.accountBalance?.amount ?? 0);
+      const bal = Number((a as any).balance ?? rawAmt);
+      return sum + (isNaN(bal) ? 0 : bal);
     }, 0);
   }, [accounts]);
 
@@ -115,7 +116,7 @@ export default function Dashboard() {
                     transactions.slice(0, 6).map((tx) => (
                       <div key={tx.id} className="flex justify-between">
                         <div className="text-sm">
-                          {tx.fromAccountId} → {tx.toAccountId}
+                          {(tx.fromAccountId || tx.account_id || tx.accountId || '—')} → {(tx.toAccountId || tx.recipient_account || '—')}
                         </div>
                         <div className="font-medium">${tx.amount}</div>
                       </div>
@@ -138,7 +139,7 @@ export default function Dashboard() {
                     notifications.slice(0, 8).map((n) => (
                       <div
                         key={n.id}
-                        className={`p-2 rounded ${n.read ? 'bg-gray-100' : 'bg-green-50'}`}
+                        className={`p-2 rounded ${(n.read || n.is_read) ? 'bg-gray-100' : 'bg-green-50'}`}
                       >
                         {n.message || JSON.stringify(n)}
                       </div>
