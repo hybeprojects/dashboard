@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-import Link from 'next/link';
-
 export default function Sidebar() {
   const items = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -9,7 +7,7 @@ export default function Sidebar() {
     { href: '/transactions', label: 'Transactions' },
     { href: '/payments', label: 'Payments' },
     { href: '/profile', label: 'Profile' },
-    { href: '/settings', label: 'Settings' }
+    { href: '/settings', label: 'Settings' },
   ];
   return (
     <aside className="sidebar" aria-label="Primary">
