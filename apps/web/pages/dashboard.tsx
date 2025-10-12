@@ -238,24 +238,34 @@ export default function Dashboard() {
         <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <ul className="grid grid-cols-5 text-xs">
             <li className="flex flex-col items-center py-2 text-red-600">
-              <Icon d={icons.eye} />
-              <span>Accounts</span>
+              <Link href="/accounts" className="flex flex-col items-center">
+                <Icon d={icons.eye} />
+                <span>Accounts</span>
+              </Link>
             </li>
             <li className="flex flex-col items-center py-2 text-gray-500">
-              <Icon d={icons.arrows} />
-              <span>Transfer</span>
+              <Link href="/transfer" className="flex flex-col items-center">
+                <Icon d={icons.arrows} />
+                <span>Transfer</span>
+              </Link>
             </li>
             <li className="flex flex-col items-center py-2 text-gray-500">
-              <Icon d={icons.bill} />
-              <span>Bill Pay</span>
+              <Link href="/bill-pay" className="flex flex-col items-center">
+                <Icon d={icons.bill} />
+                <span>Bill Pay</span>
+              </Link>
             </li>
             <li className="flex flex-col items-center py-2 text-gray-500">
-              <Icon d={icons.camera} />
-              <span>Deposit</span>
+              <Link href="/deposit" className="flex flex-col items-center">
+                <Icon d={icons.camera} />
+                <span>Deposit</span>
+              </Link>
             </li>
             <li className="flex flex-col items-center py-2 text-gray-500">
-              <Icon d={icons.chart} />
-              <span>Invest</span>
+              <Link href="/invest" className="flex flex-col items-center">
+                <Icon d={icons.chart} />
+                <span>Invest</span>
+              </Link>
             </li>
           </ul>
         </nav>
