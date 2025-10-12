@@ -170,8 +170,8 @@ export default function Dashboard() {
                         className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
                       />
                     ))
-                  ) : accounts.length ? (
-                    accounts.map((acct: any) => (
+                  ) : accountsArr.length ? (
+                    accountsArr.map((acct: any) => (
                       <motion.div
                         key={acct.id}
                         initial={{ opacity: 0, y: 6 }}
