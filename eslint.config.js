@@ -7,6 +7,15 @@ import globals from 'globals';
 export default [
   js.configs.recommended,
   {
+    ignores: [
+      '**/dist/**',
+      '**/.next/**',
+      '**/node_modules/**',
+      '**/build/**',
+      '**/*.min.js',
+    ],
+  },
+  {
     files: ['**/*.{js,ts,tsx}'],
     languageOptions: {
       parser: typescriptParser,
