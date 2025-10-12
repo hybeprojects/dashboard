@@ -2,59 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
-
-      - name: Cache Next build
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/.next/cache
-            **/.next
-            ~/.cache/yarn
-            node_modules
-          key: ${{ runner.os }}-next-build-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-next-build-
-
+          node-version: 20
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Build API
-        run: npm run build -w apps/api
-
-      - name: Build Web
-        run: npm run build -w apps/web
-
-      - name: Build Admin
-        run: npm run build -w apps/admin
-
-      - name: Upload artifacts (build outputs)
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-build-artifacts
-          path: |
-            apps/web/.next
-            apps/admin/.next
-            apps/api/dist
+      - name: Build all
+        run: npm run build

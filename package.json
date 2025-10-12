@@ -13,7 +13,9 @@
     "format": "prettier --write .",
     "typecheck": "tsc -b",
     "test": "echo 'No tests yet' && exit 0",
-    "db:setup": "yarn workspace premium-banking-api db:setup"
+    "db:setup": "npm --workspace=premium-banking-api run db:setup",
+    "ci": "npm ci && npm run lint && npm run typecheck && npm run build",
+    "start:prod": "npm --workspace=apps/api run build && npm --workspace=apps/web run build && (npm --workspace=apps/api run start & npm --workspace=apps/web run start)"
   },
   "devDependencies": {
     "eslint": "^9.37.0",
