@@ -27,7 +27,7 @@ export default function Dashboard() {
   const fetchAccounts = useCallback(async () => {
     try {
       const res = await api.get('/accounts');
-      setAccounts(res.data || res.data?.accounts || []);
+      setAccounts(res.data?.accounts || res.data || []);
     } catch (err) {
       console.error('Failed to fetch accounts', err);
     }
