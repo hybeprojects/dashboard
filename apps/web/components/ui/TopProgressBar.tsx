@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import Router from 'next/router';
 import { useState, useEffect } from 'react';
+import Router from 'next/router';
 
 export default function TopProgressBar() {
   const [progress, setProgress] = useState(0);
