@@ -8,7 +8,3 @@ export default function ServerError() {
     </div>
   );
 }
-
-export async function getServerSideProps() {
-  return { props: {} };
-}
