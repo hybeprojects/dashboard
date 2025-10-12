@@ -28,7 +28,7 @@ export default function Payments() {
   useEffect(() => {
     api
       .get('/accounts')
-      .then((r) => setAccounts(r.data || r.data?.accounts || []))
+      .then((r) => setAccounts(r.data?.accounts || r.data || []))
       .catch(() => {});
   }, []);
 
