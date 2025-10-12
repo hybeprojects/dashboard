@@ -62,6 +62,18 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (db && db.isAvailable && db.isAvailable()) {
+      const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+      const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE email = ? LIMIT 1;`, [email]);
+      const user = rows && rows[0];
+      if (!user) return res.status(401).json({ error: 'invalid credentials' });
+      const ok = await bcrypt.compare(password, user.password_hash);
+      if (!ok) return res.status(401).json({ error: 'invalid credentials' });
+      const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+      return res.json({ accessToken: token, user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name } });
+    }
+
     const users = await loadUsers();
     const user = users.find((u) => u.email === email);
     if (!user) return res.status(401).json({ error: 'invalid credentials' });
