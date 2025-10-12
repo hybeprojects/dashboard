@@ -4,14 +4,14 @@ import { User } from '../users/user.entity';
 @Entity('refresh_tokens')
 export class RefreshToken {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @Column()
-  token_hash: string;
+  token_hash!: string;
 
   @Column()
-  expires_at: Date;
+  expires_at!: Date;
 }
