@@ -19,16 +19,40 @@ const donut = [
 ];
 
 async function fetchAccounts() {
-  const res = await api.get('/accounts');
-  return res.data?.accounts || res.data || [];
+  try {
+    const res = await api.get('/accounts');
+    return res.data?.accounts || res.data || [];
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn('/accounts endpoint not found (404). Returning empty accounts array. Set NEXT_PUBLIC_API_URL to your API server if needed.');
+      return [];
+    }
+    throw err;
+  }
 }
 async function fetchTransactions() {
-  const res = await api.get('/transactions');
-  return res.data?.transactions || res.data || [];
+  try {
+    const res = await api.get('/transactions');
+    return res.data?.transactions || res.data || [];
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn('/transactions endpoint not found (404). Returning empty transactions array.');
+      return [];
+    }
+    throw err;
+  }
 }
 async function fetchNotifications() {
-  const res = await api.get('/notifications');
-  return res.data?.notifications || res.data || [];
+  try {
+    const res = await api.get('/notifications');
+    return res.data?.notifications || res.data || [];
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      console.warn('/notifications endpoint not found (404). Returning empty notifications array.');
+      return [];
+    }
+    throw err;
+  }
 }
 
 export default function Dashboard() {
