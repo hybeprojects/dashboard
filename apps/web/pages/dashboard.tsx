@@ -199,7 +199,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="p-0 overflow-hidden">
-            <div className="px-4 pt-3 pb-2 text-white" style={{ background: '#b91c1c' }}>
+            <div className="px-4 pt-3 pb-2 text-white bg-primary">
               <div className="font-semibold">PremierBank</div>
             </div>
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
