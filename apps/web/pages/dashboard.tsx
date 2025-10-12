@@ -126,7 +126,6 @@ export default function Dashboard() {
     }
   });
 
-
   const primary = 'bg-red-600 text-white';
 
   return (
@@ -174,7 +173,9 @@ export default function Dashboard() {
           <Card className="p-0">
             <button className="w-full flex items-center justify-between px-4 py-4">
               <div className="text-left">
-                <div className="text-sm text-gray-500">Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}</div>
+                <div className="text-sm text-gray-500">
+                  Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}
+                </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
             </button>
@@ -183,7 +184,9 @@ export default function Dashboard() {
                 <Icon d={icons.radio} className="text-blue-600" />
                 <div className="text-left">
                   <div className="font-medium">PremierBank Life Plan</div>
-                  <div className="text-xs text-gray-500">Set and track goals with personalized guidance</div>
+                  <div className="text-xs text-gray-500">
+                    Set and track goals with personalized guidance
+                  </div>
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
@@ -199,23 +202,26 @@ export default function Dashboard() {
               <div className="font-semibold">PremierBank</div>
             </div>
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {(accLoading ? [undefined, undefined] : accountsArr.slice(0, 2)).map((acct: any, i: number) => (
-                <div key={i} className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <div className="text-sm text-gray-500">
-                      {acct?.name || acct?.accountName || `Account ${i + 1}`} {acct?.number ? `- ${String(acct.number).slice(-4)}` : ''}
+              {(accLoading ? [undefined, undefined] : accountsArr.slice(0, 2)).map(
+                (acct: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <div className="text-sm text-gray-500">
+                        {acct?.name || acct?.accountName || `Account ${i + 1}`}{' '}
+                        {acct?.number ? `- ${String(acct.number).slice(-4)}` : ''}
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {accLoading ? (
+                          <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                        ) : (
+                          `$${Number(acct?.balance ?? acct?.raw?.accountBalance?.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        )}
+                      </div>
                     </div>
-                    <div className="text-2xl font-bold">
-                      {accLoading ? (
-                        <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
-                      ) : (
-                        `$${Number(acct?.balance ?? acct?.raw?.accountBalance?.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      )}
-                    </div>
+                    <button className="text-blue-700 font-semibold text-sm">VIEW</button>
                   </div>
-                  <button className="text-blue-700 font-semibold text-sm">VIEW</button>
-                </div>
-              ))}
+                ),
+              )}
             </div>
             <div className="px-4 py-3">
               <button className="text-blue-700 font-semibold text-sm">OPEN NEW ACCOUNT</button>
@@ -252,7 +258,6 @@ export default function Dashboard() {
           </ul>
         </nav>
       </div>
-
     </div>
   );
 }
