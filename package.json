@@ -13,7 +13,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc -b",
     "test": "echo 'No tests yet' && exit 0",
-    "db:setup": "yarn workspace premium-banking-api db:setup"
+    "db:setup": "npm --workspace=premium-banking-api run db:setup"
   },
   "devDependencies": {
     "eslint": "^9.37.0",
