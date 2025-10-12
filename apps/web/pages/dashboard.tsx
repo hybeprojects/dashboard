@@ -9,6 +9,7 @@ import AccountCard from '../components/AccountCard';
 import useWebSocket from '../hooks/useWebSocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useAuthStore } from '../state/useAuthStore';
 
 const area = Array.from({ length: 12 }, (_, i) => ({
   name: `M${i + 1}`,
@@ -28,7 +29,6 @@ function normalizeToArray(payload: any, key?: string) {
     if (Array.isArray(payload.accounts)) return payload.accounts;
     if (Array.isArray(payload.transactions)) return payload.transactions;
     if (Array.isArray(payload.notifications)) return payload.notifications;
-    // Convert object map to array of values
     const vals = Object.values(payload);
     if (vals.every((v) => typeof v !== 'undefined')) return vals;
     return [];
@@ -75,8 +75,32 @@ async function fetchNotifications() {
   }
 }
 
+function Icon({ d, className = '' }: { d: string; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`w-5 h-5 ${className}`} aria-hidden="true">
+      <path d={d} fill="currentColor" />
+    </svg>
+  );
+}
+
+const icons = {
+  menu: 'M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z',
+  inbox: 'M20 4H4a2 2 0 00-2 2v7h5l2 3h6l2-3h5V6a2 2 0 00-2-2z',
+  products: 'M4 8l8-4 8 4-8 4-8-4zm0 4l8 4 8-4M4 16l8 4 8-4',
+  power: 'M12 2v10m5.657-7.657a8 8 0 11-11.314 0',
+  search: 'M11 4a7 7 0 105.293 12.293l3.707 3.707 1.414-1.414-3.707-3.707A7 7 0 0011 4z',
+  chevronR: 'M9 18l6-6-6-6',
+  radio: 'M12 4a8 8 0 100 16 8 8 0 000-16zm0 4a4 4 0 110 8 4 4 0 010-8z',
+  eye: 'M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 10a3 3 0 110-6 3 3 0 010 6z',
+  arrows: 'M7 7h10l-3-3m3 3l-3 3M17 17H7l3 3m-3-3l3-3',
+  bill: 'M6 2h12v20l-6-3-6 3V2z',
+  camera: 'M4 7h3l2-2h6l2 2h3v12H4V7z',
+  chart: 'M5 19h14M7 17V9m5 8V5m5 12v-6',
+};
+
 export default function Dashboard() {
   const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   const { data: accounts = [], isLoading: accLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
@@ -121,143 +145,270 @@ export default function Dashboard() {
 
   const statVariants = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } };
 
+  const primary = 'bg-red-600 text-white';
+
   return (
     <div className="container-page">
-      <Navbar />
-      <div className="section grid md:grid-cols-[16rem_1fr] gap-6 py-6">
-        <Sidebar />
-        <main className="space-y-6" aria-labelledby="dashboard-heading">
-          <h1 id="dashboard-heading" className="sr-only">
-            Dashboard
-          </h1>
+      {/* Mobile banking template */}
+      <div className="md:hidden min-h-screen pb-20">
+        <header className="px-4 pt-3">
+          <div className="flex items-center justify-between">
+            <button className="flex items-center gap-1 text-sm" aria-label="Menu">
+              <Icon d={icons.menu} />
+              <span>Menu</span>
+            </button>
+            <div className="text-sm text-gray-500">Dashboard</div>
+            <div className="flex items-center gap-4">
+              <button aria-label="Inbox" className="text-gray-600 dark:text-gray-300">
+                <Icon d={icons.inbox} />
+              </button>
+              <button aria-label="Products" className="text-gray-600 dark:text-gray-300">
+                <Icon d={icons.products} />
+              </button>
+              <button aria-label="Log out" className="text-gray-600 dark:text-gray-300">
+                <Icon d={icons.power} />
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-6 border-b border-gray-200 dark:border-gray-800 text-sm">
+            <button className="-mb-px pb-2 border-b-2 border-red-600 font-medium">Accounts</button>
+            <button className="pb-2 text-gray-500">Dashboard</button>
+          </div>
+          <div className="mt-3">
+            <label className="relative block">
+              <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
+                <Icon d={icons.search} />
+              </span>
+              <input
+                className="w-full rounded-full bg-gray-100 dark:bg-gray-800 pl-10 pr-4 py-2 text-sm outline-none"
+                placeholder="How can we help?"
+                aria-label="Search"
+              />
+            </label>
+          </div>
+        </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              { label: 'Total Balance', value: `$${totalBalance.toFixed(2)}`, loading: accLoading },
-              { label: 'Accounts', value: accounts.length, loading: accLoading },
-              { label: 'Recent Transactions', value: transactions.length, loading: txLoading },
-            ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                animate="show"
-                transition={{ delay: i * 0.05 }}
-                variants={statVariants}
-              >
-                <Card aria-live="polite" aria-busy={s.loading}>
-                  <div className="text-sm text-gray-500">{s.label}</div>
-                  <div className="text-2xl font-bold">
-                    {s.loading ? (
-                      <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        <main className="px-4 py-4 space-y-3">
+          <Card className="p-0">
+            <button className="w-full flex items-center justify-between px-4 py-4">
+              <div className="text-left">
+                <div className="text-sm text-gray-500">Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}</div>
+              </div>
+              <Icon d={icons.chevronR} className="text-gray-400" />
+            </button>
+            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex items-start gap-3">
+                <Icon d={icons.radio} className="text-primary-600" />
+                <div className="text-left">
+                  <div className="font-medium">PremierBank Life Plan</div>
+                  <div className="text-xs text-gray-500">Set and track goals with personalized guidance</div>
+                </div>
+              </div>
+              <Icon d={icons.chevronR} className="text-gray-400" />
+            </button>
+            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="text-left">My Rewards</div>
+              <Icon d={icons.chevronR} className="text-gray-400" />
+            </button>
+          </Card>
+
+          <Card className="p-0 overflow-hidden">
+            <div className="px-4 pt-3 pb-2 text-white" style={{ background: '#b91c1c' }}>
+              <div className="font-semibold">PremierBank</div>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {(accLoading ? [undefined, undefined] : accountsArr.slice(0, 2)).map((acct: any, i: number) => (
+                <div key={i} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <div className="text-sm text-gray-500">
+                      {acct?.name || acct?.accountName || `Account ${i + 1}`} {acct?.number ? `- ${String(acct.number).slice(-4)}` : ''}
+                    </div>
+                    <div className="text-2xl font-bold">
+                      {accLoading ? (
+                        <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                      ) : (
+                        `$${Number(acct?.balance ?? acct?.raw?.accountBalance?.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      )}
+                    </div>
+                  </div>
+                  <button className="text-blue-700 font-semibold text-sm">VIEW</button>
+                </div>
+              ))}
+            </div>
+            <div className="px-4 py-3">
+              <button className="text-blue-700 font-semibold text-sm">OPEN NEW ACCOUNT</button>
+            </div>
+          </Card>
+
+          <button className={`${primary} w-full rounded-xl px-4 py-4 text-center font-semibold`}>
+            Open a savings account
+          </button>
+        </main>
+
+        <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <ul className="grid grid-cols-5 text-xs">
+            <li className="flex flex-col items-center py-2 text-red-600">
+              <Icon d={icons.eye} />
+              <span>Accounts</span>
+            </li>
+            <li className="flex flex-col items-center py-2 text-gray-500">
+              <Icon d={icons.arrows} />
+              <span>Transfer</span>
+            </li>
+            <li className="flex flex-col items-center py-2 text-gray-500">
+              <Icon d={icons.bill} />
+              <span>Bill Pay</span>
+            </li>
+            <li className="flex flex-col items-center py-2 text-gray-500">
+              <Icon d={icons.camera} />
+              <span>Deposit</span>
+            </li>
+            <li className="flex flex-col items-center py-2 text-gray-500">
+              <Icon d={icons.chart} />
+              <span>Invest</span>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      {/* Desktop: keep original analytical dashboard */}
+      <div className="hidden md:block">
+        <Navbar />
+        <div className="section grid md:grid-cols-[16rem_1fr] gap-6 py-6">
+          <Sidebar />
+          <main className="space-y-6" aria-labelledby="dashboard-heading">
+            <h1 id="dashboard-heading" className="sr-only">
+              Dashboard
+            </h1>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { label: 'Total Balance', value: `$${totalBalance.toFixed(2)}`, loading: accLoading },
+                { label: 'Accounts', value: accounts.length, loading: accLoading },
+                { label: 'Recent Transactions', value: transactions.length, loading: txLoading },
+              ].map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial="hidden"
+                  animate="show"
+                  transition={{ delay: i * 0.05 }}
+                  variants={statVariants}
+                >
+                  <Card aria-live="polite" aria-busy={s.loading}>
+                    <div className="text-sm text-gray-500">{s.label}</div>
+                    <div className="text-2xl font-bold">
+                      {s.loading ? (
+                        <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                      ) : (
+                        s.value
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Accounts</h2>
+                  <div className="space-y-3">
+                    {accLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
+                        />
+                      ))
+                    ) : accountsArr.length ? (
+                      accountsArr.map((acct: any) => (
+                        <motion.div
+                          key={acct.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <AccountCard account={acct} />
+                        </motion.div>
+                      ))
                     ) : (
-                      s.value
+                      <div className="text-sm text-gray-500">No accounts yet</div>
                     )}
                   </div>
                 </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Accounts</h2>
-                <div className="space-y-3">
-                  {accLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-16 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
-                      />
-                    ))
-                  ) : accountsArr.length ? (
-                    accountsArr.map((acct: any) => (
-                      <motion.div
-                        key={acct.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                      >
-                        <AccountCard account={acct} />
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500">No accounts yet</div>
-                  )}
-                </div>
-              </Card>
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Recent Transactions</h2>
-                <div className="space-y-2">
-                  {txLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
-                      />
-                    ))
-                  ) : transactionsArr.length ? (
-                    transactionsArr.slice(0, 6).map((tx: any, i: number) => (
-                      <motion.div
-                        key={
-                          tx.id ??
-                          `${tx.fromAccountId}-${tx.toAccountId}-${tx.amount}-${tx.createdAt ?? i}`
-                        }
-                        className="flex justify-between"
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                      >
-                        <div className="text-sm">
-                          {tx.fromAccountId || tx.account_id || tx.accountId || '—'} →{' '}
-                          {tx.toAccountId || tx.recipient_account || '—'}
-                        </div>
-                        <div className="font-medium">${tx.amount}</div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500">No transactions</div>
-                  )}
-                </div>
-              </Card>
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Recent Transactions</h2>
+                  <div className="space-y-2">
+                    {txLoading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
+                        />
+                      ))
+                    ) : transactionsArr.length ? (
+                      transactionsArr.slice(0, 6).map((tx: any, i: number) => (
+                        <motion.div
+                          key={
+                            tx.id ??
+                            `${tx.fromAccountId}-${tx.toAccountId}-${tx.amount}-${tx.createdAt ?? i}`
+                          }
+                          className="flex justify-between"
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <div className="text-sm">
+                            {tx.fromAccountId || tx.account_id || tx.accountId || '—'} →{' '}
+                            {tx.toAccountId || tx.recipient_account || '—'}
+                          </div>
+                          <div className="font-medium">${tx.amount}</div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">No transactions</div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+              <div className="space-y-4">
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Cashflow</h2>
+                  <OverviewChart data={area} />
+                </Card>
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Notifications</h2>
+                  <div className="space-y-2" role="region" aria-live="polite">
+                    {notifLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
+                        />
+                      ))
+                    ) : notificationsArr.length ? (
+                      notificationsArr.slice(0, 8).map((n: any) => (
+                        <motion.div
+                          key={n.id}
+                          className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100 dark:bg-gray-800/60' : 'bg-green-50 dark:bg-green-900/30'}`}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          {n.message || JSON.stringify(n)}
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">No notifications</div>
+                    )}
+                  </div>
+                </Card>
+              </div>
             </div>
-            <div className="space-y-4">
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Cashflow</h2>
-                <OverviewChart data={area} />
-              </Card>
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Notifications</h2>
-                <div className="space-y-2" role="region" aria-live="polite">
-                  {notifLoading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
-                      />
-                    ))
-                  ) : notificationsArr.length ? (
-                    notificationsArr.slice(0, 8).map((n: any) => (
-                      <motion.div
-                        key={n.id}
-                        className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100 dark:bg-gray-800/60' : 'bg-green-50 dark:bg-green-900/30'}`}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                      >
-                        {n.message || JSON.stringify(n)}
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500">No notifications</div>
-                  )}
-                </div>
-              </Card>
-            </div>
-          </div>
 
-          <Card>
-            <h2 className="text-lg font-semibold mb-4">Spending breakdown</h2>
-            <DonutChart data={donut} />
-          </Card>
-        </main>
+            <Card>
+              <h2 className="text-lg font-semibold mb-4">Spending breakdown</h2>
+              <DonutChart data={donut} />
+            </Card>
+          </main>
+        </div>
       </div>
     </div>
   );
