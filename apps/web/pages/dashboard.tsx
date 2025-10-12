@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import Card from '../components/ui/Card';
 import OverviewChart from '../components/charts/OverviewChart';
 import DonutChart from '../components/charts/DonutChart';
