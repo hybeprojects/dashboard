@@ -1,45 +1,139 @@
 const axios = require('axios');
-const base = process.env.FINERACT_BASE_URL || 'http://localhost:8080/fineract-provider/api/v1';
-const user = process.env.FINERACT_USER || 'mifos';
-const pass = process.env.FINERACT_PASSWORD || 'password';
+require('dotenv').config();
 
-function authHeader() {
-  const token = Buffer.from(`${user}:${pass}`).toString('base64');
-  return { Authorization: `Basic ${token}` };
+const {
+  FINERACT_BASE_URL,
+  FINERACT_USERNAME,
+  FINERACT_PASSWORD,
+  FINERACT_TENANT,
+} = process.env;
+
+// Create a preconfigured Axios instance
+const fineract = axios.create({
+  baseURL: FINERACT_BASE_URL,
+  headers: {
+    'Fineract-Platform-TenantId': FINERACT_TENANT || 'default',
+    'Content-Type': 'application/json',
+  },
+  auth: {
+    username: FINERACT_USERNAME,
+    password: FINERACT_PASSWORD,
+  },
+});
+
+// ─────────────────────────────
+// 🔑 AUTH / CONNECTION TEST
+// ─────────────────────────────
+async function testConnection() {
+  try {
+    const res = await fineract.get('/clients');
+    console.log('✅ Connected to Apache Fineract:', res.status);
+    return true;
+  } catch (err) {
+    console.error('❌ Fineract connection failed:', err.response?.data || err.message || err);
+    return false;
+  }
 }
 
-async function createClient(payload) {
-  // payload: { firstname, lastname, officeId }
-  const url = `${base}/clients`;
-  const res = await axios.post(url, payload, { headers: authHeader() });
-  return res.data;
+// ─────────────────────────────
+// 👤 CREATE CLIENT
+// ─────────────────────────────
+async function createClient(user) {
+  try {
+    const payload = {
+      firstname: user.firstName,
+      lastname: user.lastName || 'User',
+      externalId: user.email,
+      activationDate: new Date().toISOString().split('T')[0],
+      dateFormat: 'yyyy-MM-dd',
+      locale: 'en',
+      submittedOnDate: new Date().toISOString().split('T')[0],
+      officeId: 1, // default office
+    };
+
+    const { data } = await fineract.post('/clients', payload);
+    console.log('✅ Client created:', data.clientId);
+    return data;
+  } catch (err) {
+    console.error('❌ Error creating client:', err.response?.data || err.message || err);
+    throw err;
+  }
 }
 
-async function createSavingsAccount(payload) {
-  // payload must follow Fineract savings account create contract
-  const url = `${base}/savingsaccounts`;
-  const res = await axios.post(url, payload, { headers: authHeader() });
-  return res.data;
+// ─────────────────────────────
+// 💰 CREATE SAVINGS ACCOUNT
+// ─────────────────────────────
+async function createSavingsAccount(clientId) {
+  try {
+    const payload = {
+      clientId,
+      productId: 1, // Adjust to your Fineract product ID for checking accounts
+      locale: 'en',
+      dateFormat: 'yyyy-MM-dd',
+      submittedOnDate: new Date().toISOString().split('T')[0],
+      nominalAnnualInterestRate: 0,
+      interestCompoundingPeriodType: 1,
+      interestPostingPeriodType: 1,
+      interestCalculationType: 1,
+      interestCalculationDaysInYearType: 365,
+      minRequiredOpeningBalance: 0,
+      lockinPeriodFrequency: 0,
+      lockinPeriodFrequencyType: 0,
+      withdrawalFeeForTransfers: false,
+      enforceMinRequiredBalance: false,
+    };
+
+    const { data } = await fineract.post('/savingsaccounts', payload);
+    console.log('✅ Savings account created:', data.savingsId);
+    return data;
+  } catch (err) {
+    console.error('❌ Error creating savings account:', err.response?.data || err.message || err);
+    throw err;
+  }
 }
 
-async function getSavingsAccount(accountId) {
-  const url = `${base}/savingsaccounts/${accountId}`;
-  const res = await axios.get(url, { headers: authHeader() });
-  return res.data;
+// ─────────────────────────────
+// 💸 TRANSFER FUNDS
+// ─────────────────────────────
+async function transferFunds(fromAccountId, toAccountId, amount) {
+  try {
+    const payload = {
+      fromAccountId,
+      toAccountId,
+      transferAmount: amount,
+      transferDescription: `Transfer of $${amount}`,
+      dateFormat: 'yyyy-MM-dd',
+      locale: 'en',
+      transferDate: new Date().toISOString().split('T')[0],
+    };
+
+    const { data } = await fineract.post('/savingsaccounts/transfer', payload);
+    console.log('✅ Transfer completed:', data);
+    return data;
+  } catch (err) {
+    console.error('❌ Transfer failed:', err.response?.data || err.message || err);
+    throw err;
+  }
 }
 
-async function transferSavings({ fromAccountId, toAccountId, transferAmount }) {
-  // Fineract may expose an endpoint for transfer - use savingsaccounts/transfer
-  const url = `${base}/savingsaccounts/transfer`;
-  const body = { fromSavingAccountId: fromAccountId, toSavingAccountId: toAccountId, transferAmount };
-  const res = await axios.post(url, body, { headers: authHeader() });
-  return res.data;
+// ─────────────────────────────
+// 💵 GET ACCOUNT BALANCE
+// ─────────────────────────────
+async function getAccountBalance(accountId) {
+  try {
+    const { data } = await fineract.get(`/savingsaccounts/${accountId}`);
+    const balance = data?.summary?.accountBalance || 0;
+    return balance;
+  } catch (err) {
+    console.error('❌ Error fetching account balance:', err.response?.data || err.message || err);
+    throw err;
+  }
 }
 
-async function getClient(clientId) {
-  const url = `${base}/clients/${clientId}`;
-  const res = await axios.get(url, { headers: authHeader() });
-  return res.data;
-}
-
-module.exports = { createClient, createSavingsAccount, getSavingsAccount, transferSavings, getClient };
+module.exports = {
+  testConnection,
+  createClient,
+  createSavingsAccount,
+  transferFunds,
+  getAccountBalance,
+};
