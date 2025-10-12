@@ -6,24 +6,59 @@ export default function Footer() {
       <div className="section py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="text-xl font-semibold text-primary">PremierBank</div>
-          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Secure, modern banking for individuals and businesses. FDIC-insured partner banks. 24/7 support.</p>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            Secure, modern banking for individuals and businesses. FDIC-insured partner banks. 24/7
+            support.
+          </p>
         </div>
         <div>
           <div className="font-semibold mb-3">Products</div>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/accounts" className="hover:underline">Checking</Link></li>
-            <li><Link href="/accounts" className="hover:underline">Savings</Link></li>
-            <li><Link href="/payments" className="hover:underline">Payments</Link></li>
-            <li><Link href="/dashboard" className="hover:underline">Analytics</Link></li>
+            <li>
+              <Link href="/accounts" className="hover:underline">
+                Checking
+              </Link>
+            </li>
+            <li>
+              <Link href="/accounts" className="hover:underline">
+                Savings
+              </Link>
+            </li>
+            <li>
+              <Link href="/payments" className="hover:underline">
+                Payments
+              </Link>
+            </li>
+            <li>
+              <Link href="/dashboard" className="hover:underline">
+                Analytics
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
           <div className="font-semibold mb-3">Company</div>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/about" className="hover:underline">About</Link></li>
-            <li><Link href="/security" className="hover:underline">Security</Link></li>
-            <li><Link href="/support" className="hover:underline">Support</Link></li>
-            <li><Link href="/legal" className="hover:underline">Legal</Link></li>
+            <li>
+              <Link href="/about" className="hover:underline">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link href="/security" className="hover:underline">
+                Security
+              </Link>
+            </li>
+            <li>
+              <Link href="/support" className="hover:underline">
+                Support
+              </Link>
+            </li>
+            <li>
+              <Link href="/legal" className="hover:underline">
+                Legal
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
@@ -34,7 +69,9 @@ export default function Footer() {
             <li>Mon–Fri, 8am–6pm</li>
           </ul>
           <div className="mt-4">
-            <Link href="/register" className="btn-primary text-sm">Open Account</Link>
+            <Link href="/register" className="btn-primary text-sm">
+              Open Account
+            </Link>
           </div>
         </div>
       </div>

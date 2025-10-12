@@ -7,8 +7,10 @@ export default function useWebSocket(onEvent: (event: string, payload: any) => v
 
   useEffect(() => {
     // connect to same origin/relative API by default; fall back to localhost:5000
-  const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  const socket = io(url, { auth: { token: typeof window !== 'undefined' ? localStorage.getItem('token') : null } });
+    const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const socket = io(url, {
+      auth: { token: typeof window !== 'undefined' ? localStorage.getItem('token') : null },
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {

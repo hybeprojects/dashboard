@@ -18,8 +18,8 @@ export default function Navbar() {
     }
     try {
       await backendLogout();
-    } catch {}
-    finally {
+    } catch {
+    } finally {
       logout();
     }
   }
