@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Notification } from '../notifications/notification.entity';
+import { KycDetail } from '../kyc/kyc-detail.entity';
 
 @Entity('users')
 export class User {
@@ -22,4 +24,7 @@ export class User {
   
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications!: Notification[];
+
+  @OneToOne(() => KycDetail, (kycDetail) => kycDetail.user)
+  kycDetail!: KycDetail;
 }

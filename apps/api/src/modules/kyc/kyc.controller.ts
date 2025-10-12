@@ -20,6 +20,7 @@ export class KycController {
   constructor(private readonly svc: KycService) {}
 
   @Post('submit')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -30,8 +31,8 @@ export class KycController {
       { storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } },
     ),
   )
-  submit(@Body() body: any, @UploadedFiles() files: any) {
-    return this.svc.submit(body, files);
+  submit(@Req() req: any, @Body() body: any, @UploadedFiles() files: any) {
+    return this.svc.submit(req.user, body, files);
   }
 
   // Admin: list submissions

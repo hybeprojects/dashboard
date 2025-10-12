@@ -1,18 +1,43 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { KycSubmission } from './kyc.entity';
+import { KycDetail } from './kyc-detail.entity';
 import { supabaseAdmin } from '../../lib/supabase.client';
 import { v4 as uuidv4 } from 'uuid';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { KycSubmitDto } from './dto/kyc-submit.dto';
+import * as crypto from 'crypto';
+
+const ENCRYPTION_KEY = process.env.KYC_ENCRYPTION_KEY;
+
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
+  throw new Error('KYC_ENCRYPTION_KEY environment variable must be set and be 32 characters long.');
+}
+
+function encrypt(text: string): string {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY as string), iv);
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
+
+function decrypt(text: string): string {
+  const textParts = text.split(':');
+  const iv = Buffer.from(textParts.shift() as string, 'hex');
+  const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY as string), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
 
 @Injectable()
 export class KycService {
-  constructor(@InjectRepository(KycSubmission) private repo: Repository<KycSubmission>) {}
+  constructor(@InjectRepository(KycDetail) private detailRepo: Repository<KycDetail>) {}
 
-  async submit(body: any, files: any) {
+  async submit(user: any, body: any, files: any) {
     // basic validation via class-validator
     const dto = plainToInstance(KycSubmitDto, body || {});
     const errors = await validate(dto, { whitelist: true, forbidNonWhitelisted: false });
@@ -72,46 +97,50 @@ export class KycService {
       }
     }
 
-    const submission = this.repo.create({
-      userId: body.userId || null,
-      accountType,
-      data: body,
-      files: uploaded,
-      status: 'submitted',
-    } as any);
-    const saved = await this.repo.save(submission as any);
+    const detail = new KycDetail();
+    detail.userId = user.sub;
+    detail.accountType = accountType;
+    detail.fullName = body.fullName;
+    detail.dob = body.dob;
+    detail.ssnEncrypted = body.ssn ? encrypt(body.ssn) : undefined;
+    detail.address = body.address;
+    detail.businessName = body.businessName;
+    detail.taxIdEncrypted = body.taxId ? encrypt(body.taxId) : undefined;
+    detail.businessAddress = body.businessAddress;
+    detail.files = uploaded;
+    const savedDetail = await this.detailRepo.save(detail);
 
-    // if business account, initiate micro-deposit verification (placeholder)
-    if (accountType === 'business') {
-      // create two micro-deposits (in cents) and store in the data for manual verification
-      const amt1 = Math.floor(Math.random() * 90) + 1; // 1-90 cents
-      const amt2 = Math.floor(Math.random() * 90) + 1;
-      saved.data = { ...saved.data, microDeposits: { amt1, amt2, status: 'pending' } };
-      await this.repo.save(saved as any);
-    }
-
-    return { status: 'submitted', id: saved.id };
+    return { status: 'submitted', id: savedDetail.id };
   }
 
   async list(status?: string) {
     const where = status ? { status } : {};
-    return this.repo.find({ where, order: { createdAt: 'DESC' } });
+    const details = await this.detailRepo.find({ where, order: { createdAt: 'DESC' } });
+    return details.map((detail) => {
+      if (detail.ssnEncrypted) {
+        detail.ssn = decrypt(detail.ssnEncrypted);
+      }
+      if (detail.taxIdEncrypted) {
+        detail.taxId = decrypt(detail.taxIdEncrypted);
+      }
+      return detail;
+    });
   }
 
   async approve(id: string) {
-    const sub = await this.repo.findOne({ where: { id } });
-    if (!sub) throw new NotFoundException('Submission not found');
-    sub.status = 'approved';
-    await this.repo.save(sub as any);
-    return { id: sub.id, status: sub.status };
+    const detail = await this.detailRepo.findOne({ where: { id } });
+    if (!detail) throw new NotFoundException('Submission not found');
+    detail.status = 'approved';
+    await this.detailRepo.save(detail);
+    return { id: detail.id, status: detail.status };
   }
 
   async reject(id: string, reason?: string) {
-    const sub = await this.repo.findOne({ where: { id } });
-    if (!sub) throw new NotFoundException('Submission not found');
-    sub.status = 'rejected';
-    sub.data = { ...sub.data, rejectReason: reason || null };
-    await this.repo.save(sub as any);
-    return { id: sub.id, status: sub.status };
+    const detail = await this.detailRepo.findOne({ where: { id } });
+    if (!detail) throw new NotFoundException('Submission not found');
+    detail.status = 'rejected';
+    detail.rejectReason = reason;
+    await this.detailRepo.save(detail);
+    return { id: detail.id, status: detail.status };
   }
 }

@@ -15,10 +15,12 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async register(dto: CreateUserDto) {
+  async register(
+    dto: CreateUserDto,
+  ): Promise<{ id: string; email: string; accessToken: string }> {
     // create user in Supabase Auth
     const { data: existing } = await supabaseAdmin.auth.admin.listUsers();
-    const exists = existing?.users?.find((u: any) => u.email === dto.email);
+    const exists = existing?.users?.find((u) => u.email === dto.email);
     if (exists) throw new UnauthorizedException('Email already registered');
 
     // create supabase user
@@ -27,25 +29,22 @@ export class AuthService {
       password: dto.password,
       user_metadata: { firstName: dto.firstName, lastName: dto.lastName },
     });
-    if (error) throw new UnauthorizedException('Could not create user');
+    if (error || !supabaseData.user) throw new UnauthorizedException('Could not create user');
 
     // store in local users table for MFA and additional metadata
     const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
     // use Supabase user's id as the local id so RLS can use auth.uid() directly
-    const localId =
-      (supabaseData && (supabaseData as any).user && (supabaseData as any).user.id) || undefined;
+    const localId = supabaseData.user.id;
     const local = this.users.create({
       id: localId,
       email: dto.email,
       passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,
-    } as DeepPartial<User>) as User;
+    });
     await this.users.save(local);
     // log to audit via Supabase table
-    await supabaseAdmin
-      .from('audit_logs')
-      .insert([{ action: 'register', user_id: (local as any).id, ip_address: null }]);
+    await supabaseAdmin.from('audit_logs').insert([{ action: 'register', user_id: local.id, ip_address: null }]);
 
     // create a default checking account
     await supabaseAdmin.from('accounts').insert([
@@ -61,7 +60,7 @@ export class AuthService {
       { sub: local.id, email: local.email },
       { expiresIn: '15m' },
     );
-    return { id: (local as any).id, email: (local as any).email, accessToken };
+    return { id: local.id, email: local.email, accessToken };
   }
 
   async login({ email, password, otp }: { email: string; password: string; otp?: string }) {

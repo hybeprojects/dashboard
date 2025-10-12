@@ -92,4 +92,30 @@ CREATE POLICY "users_transactions_insert" ON public.transactions FOR INSERT WITH
 CREATE POLICY "users_notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "users_notifications_update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 
+-- kyc_details
+CREATE TABLE IF NOT EXISTS public.kyc_details (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.users(id) ON DELETE CASCADE,
+  account_type text NOT NULL, -- 'personal' or 'business'
+  -- Personal details
+  full_name text,
+  dob text,
+  ssn_encrypted text,
+  address text,
+  -- Business details
+  business_name text,
+  tax_id_encrypted text,
+  business_address text,
+  -- Common fields
+  status kyc_status_enum DEFAULT 'pending',
+  files jsonb,
+  reject_reason text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kyc_details_user_id_idx ON public.kyc_details(user_id);
+
+ALTER TABLE public.kyc_details ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users_kyc_details" ON public.kyc_details FOR SELECT USING (auth.uid() = user_id);
+
 -- Note: Further policies might be needed depending on application logic
