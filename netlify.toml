@@ -4,7 +4,7 @@
 [build]
   base = "apps/web"
   publish = ".next"
-  command = "yarn build"
+  command = "npm run build"
 
 # Use a supported Node version for the build (change in Netlify UI if needed)
 [build.environment]
@@ -15,5 +15,5 @@
   package = "@netlify/plugin-nextjs@5.9.1"
 
 # IMPORTANT: Do NOT store secrets or keys in this file. Set all environment variables
-# (especially non-public secrets) in the Netlify UI: Site settings → Build & deploy → Environment.
+# (especially non-public secrets) in the Netlify UI: Site settings → Build & deploy �� Environment.
 # Only expose public environment variables that must be available in the browser as NEXT_PUBLIC_* via the Netlify UI.
