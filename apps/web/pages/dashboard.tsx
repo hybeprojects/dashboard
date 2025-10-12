@@ -195,8 +195,8 @@ export default function Dashboard() {
                         className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
                       />
                     ))
-                  ) : transactions.length ? (
-                    transactions.slice(0, 6).map((tx: any, i: number) => (
+                  ) : transactionsArr.length ? (
+                    transactionsArr.slice(0, 6).map((tx: any, i: number) => (
                       <motion.div
                         key={
                           tx.id ??
