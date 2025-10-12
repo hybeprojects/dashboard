@@ -234,8 +234,8 @@ export default function Dashboard() {
                         className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse"
                       />
                     ))
-                  ) : notifications.length ? (
-                    notifications.slice(0, 8).map((n: any) => (
+                  ) : notificationsArr.length ? (
+                    notificationsArr.slice(0, 8).map((n: any) => (
                       <motion.div
                         key={n.id}
                         className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100 dark:bg-gray-800/60' : 'bg-green-50 dark:bg-green-900/30'}`}
