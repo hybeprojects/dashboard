@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Router from 'next/router';
 
 export default function TopProgressBar() {

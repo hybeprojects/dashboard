@@ -7,13 +7,17 @@ export default function Sidebar() {
     { href: '/transactions', label: 'Transactions' },
     { href: '/payments', label: 'Payments' },
     { href: '/profile', label: 'Profile' },
-    { href: '/settings', label: 'Settings' }
+    { href: '/settings', label: 'Settings' },
   ];
   return (
     <aside className="sidebar" aria-label="Primary">
       <nav className="flex flex-col gap-1">
         {items.map((i) => (
-          <Link key={i.href} href={i.href} className="rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Link
+            key={i.href}
+            href={i.href}
+            className="rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
             {i.label}
           </Link>
         ))}
