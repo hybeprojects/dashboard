@@ -93,13 +93,17 @@ export default function Dashboard() {
     staleTime: 15_000,
   });
 
+  const accountsArr = Array.isArray(accounts) ? accounts : [];
+  const transactionsArr = Array.isArray(transactions) ? transactions : [];
+  const notificationsArr = Array.isArray(notifications) ? notifications : [];
+
   const totalBalance = useMemo(() => {
-    return accounts.reduce((sum: number, a: any) => {
+    return accountsArr.reduce((sum: number, a: any) => {
       const rawAmt = Number(a?.raw?.accountBalance?.amount ?? 0);
       const bal = Number(a.balance ?? rawAmt);
       return sum + (isNaN(bal) ? 0 : bal);
     }, 0);
-  }, [accounts]);
+  }, [accountsArr]);
 
   useWebSocket((event, payload) => {
     if (event === 'transfer') {
