@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import getSupabase from '../lib/supabase';
 import { useAuthStore } from '../state/useAuthStore';
 import api from '../lib/api';
+import { useEffect } from 'react';
 
 export function useSupabaseSession() {
   const setUser = useAuthStore((s) => s.setUser);

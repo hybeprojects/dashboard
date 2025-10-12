@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import api from '../lib/api';
 import { useAuthStore } from '../state/useAuthStore';
+import { useEffect } from 'react';
 
 export default function useCurrentUser() {
   const setUser = useAuthStore((s) => s.setUser);
