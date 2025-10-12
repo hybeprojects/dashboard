@@ -48,7 +48,7 @@ export default function Dashboard() {
     (async () => {
       try {
         const resp = await api.get('/notifications');
-        setNotifications(resp.data || resp.data?.notifications || []);
+        setNotifications(resp.data?.notifications || resp.data || []);
       } catch (err) {
         console.warn('Failed to fetch notifications', err);
       }
