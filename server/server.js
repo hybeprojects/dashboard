@@ -10,6 +10,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
+// initialize DB
+const db = require('./utils/db');
+(async () => { await db.init(); })();
+
 // mount routes
 app.use('/auth', require('./routes/auth'));
 app.use('/accounts', require('./routes/accounts'));
@@ -18,7 +22,7 @@ app.use('/notifications', require('./routes/notifications'));
 app.use('/transfer', require('./routes/transfer'));
 
 app.get('/api/health', (req, res) => {
-  return res.json({ status: 'ok' });
+  return res.json({ status: 'ok', db: db.isAvailable() });
 });
 
 app.use((req, res) => {
