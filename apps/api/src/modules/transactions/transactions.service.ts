@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { supabaseAdmin } from '../../lib/supabase.client';
 import Decimal from 'decimal.js';
-import { CreateDepositDto } from './dto/create-deposit.dto';
-import { CreateTransferDto } from './dto/create-transfer.dto';
-import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -17,7 +14,10 @@ export class TransactionsService {
     return data;
   }
 
-  async transfer(userId: string, dto: CreateTransferDto) {
+  async transfer(
+    userId: string,
+    dto: { fromAccountId: string; toAccountNumber: string; amount: number },
+  ) {
     // basic transfer flow
     const { data: fromAcc } = await supabaseAdmin
       .from('accounts')
@@ -56,7 +56,7 @@ export class TransactionsService {
     return { success: true };
   }
 
-  async deposit(userId: string, dto: CreateDepositDto) {
+  async deposit(userId: string, dto: { accountId: string; amount: number }) {
     const { data: acc } = await supabaseAdmin
       .from('accounts')
       .select('*')
@@ -88,7 +88,7 @@ export class TransactionsService {
     return { success: true };
   }
 
-  async withdraw(userId: string, dto: CreateWithdrawalDto) {
+  async withdraw(userId: string, dto: { accountId: string; amount: number }) {
     const { data: acc } = await supabaseAdmin
       .from('accounts')
       .select('*')
