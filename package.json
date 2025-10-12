@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "npm --prefix apps/web run dev",
-    "build": "npm run build -w apps/api && npm run build -w apps/web && npm run build -w apps/admin",
+    "build": "npm run build -w apps/api && npm run build -w apps/web",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "format": "prettier --write .",
     "typecheck": "tsc -b",

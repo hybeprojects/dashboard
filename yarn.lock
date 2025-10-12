@@ -575,6 +575,11 @@
   dependencies:
     uuid "9.0.1"
 
+"@netlify/plugin-nextjs@^5.9.1":
+  version "5.13.5"
+  resolved "https://registry.yarnpkg.com/@netlify/plugin-nextjs/-/plugin-nextjs-5.13.5.tgz#19e736767cbf9666e9803f6f72cc07bebd742b30"
+  integrity sha512-zuP4sqckaeJ8rtiNYwoOpQnEb/8E4Ewf+FJDxts2s6gfgmXGuk4W5ViKZtITWWjuzxqbxG+p4t20PXltIyeJBA==
+
 "@next/env@14.2.33":
   version "14.2.33"
   resolved "https://registry.npmjs.org/@next/env/-/env-14.2.33.tgz"
