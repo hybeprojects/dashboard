@@ -2,12 +2,7 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 
-const {
-  DB_HOST = 'localhost',
-  DB_PORT = 3306,
-  DB_USER = 'root',
-  DB_PASSWORD = '',
-} = process.env;
+const { DB_HOST = 'localhost', DB_PORT = 3306, DB_USER = 'root', DB_PASSWORD = '' } = process.env;
 
 const personalSchema = 'personal_users_db';
 const businessSchema = 'business_users_db';
@@ -23,7 +18,9 @@ async function run() {
 
   try {
     console.log('Dropping schemas if they exist...');
-    await connection.query(`DROP DATABASE IF EXISTS ${personalSchema}; DROP DATABASE IF EXISTS ${businessSchema};`);
+    await connection.query(
+      `DROP DATABASE IF EXISTS ${personalSchema}; DROP DATABASE IF EXISTS ${businessSchema};`,
+    );
 
     console.log('Creating schemas...');
     await connection.query(`CREATE DATABASE ${personalSchema}; CREATE DATABASE ${businessSchema};`);
@@ -72,26 +69,62 @@ async function run() {
 
     console.log('Seeding initial users...');
     const seedUsers = [
-      { id: '11111111-1111-1111-1111-111111111111', first: 'Personal1', last: 'User', email: 'personal1@example.com', pwd: 'password123' },
-      { id: '22222222-2222-2222-2222-222222222222', first: 'Personal2', last: 'User', email: 'personal2@example.com', pwd: 'password123' },
-      { id: '33333333-3333-3333-3333-333333333333', business: 'Demo Business LLC', contact: 'BizOwner', email: 'business@example.com', pwd: 'password123' },
+      {
+        id: '11111111-1111-1111-1111-111111111111',
+        first: 'Personal1',
+        last: 'User',
+        email: 'personal1@example.com',
+        pwd: 'password123',
+      },
+      {
+        id: '22222222-2222-2222-2222-222222222222',
+        first: 'Personal2',
+        last: 'User',
+        email: 'personal2@example.com',
+        pwd: 'password123',
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        business: 'Demo Business LLC',
+        contact: 'BizOwner',
+        email: 'business@example.com',
+        pwd: 'password123',
+      },
     ];
 
     const hashed1 = await bcrypt.hash(seedUsers[0].pwd, 10);
     const hashed2 = await bcrypt.hash(seedUsers[1].pwd, 10);
     const hashedBiz = await bcrypt.hash(seedUsers[2].pwd, 10);
 
-    await connection.query(`INSERT INTO ${personalSchema}.users (id, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`, [seedUsers[0].id, seedUsers[0].first, seedUsers[0].last, seedUsers[0].email, hashed1]);
-    await connection.query(`INSERT INTO ${personalSchema}.users (id, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`, [seedUsers[1].id, seedUsers[1].first, seedUsers[1].last, seedUsers[1].email, hashed2]);
+    await connection.query(
+      `INSERT INTO ${personalSchema}.users (id, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`,
+      [seedUsers[0].id, seedUsers[0].first, seedUsers[0].last, seedUsers[0].email, hashed1],
+    );
+    await connection.query(
+      `INSERT INTO ${personalSchema}.users (id, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`,
+      [seedUsers[1].id, seedUsers[1].first, seedUsers[1].last, seedUsers[1].email, hashed2],
+    );
 
     // business user
-    await connection.query(`INSERT INTO ${businessSchema}.users (id, business_name, contact_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`, [seedUsers[2].id, seedUsers[2].business, seedUsers[2].contact, seedUsers[2].email, hashedBiz]);
+    await connection.query(
+      `INSERT INTO ${businessSchema}.users (id, business_name, contact_name, email, password_hash) VALUES (?, ?, ?, ?, ?);`,
+      [seedUsers[2].id, seedUsers[2].business, seedUsers[2].contact, seedUsers[2].email, hashedBiz],
+    );
 
     console.log('Creating accounts and funding business...');
     // create accounts rows and set balances (business gets $500,000)
-    const [res1] = await connection.query(`INSERT INTO ${personalSchema}.accounts (user_id, balance) VALUES (?, ?);`, [seedUsers[0].id, 0]);
-    const [res2] = await connection.query(`INSERT INTO ${personalSchema}.accounts (user_id, balance) VALUES (?, ?);`, [seedUsers[1].id, 0]);
-    const [res3] = await connection.query(`INSERT INTO ${businessSchema}.accounts (business_user_id, balance) VALUES (?, ?);`, [seedUsers[2].id, 500000]);
+    const [res1] = await connection.query(
+      `INSERT INTO ${personalSchema}.accounts (user_id, balance) VALUES (?, ?);`,
+      [seedUsers[0].id, 0],
+    );
+    const [res2] = await connection.query(
+      `INSERT INTO ${personalSchema}.accounts (user_id, balance) VALUES (?, ?);`,
+      [seedUsers[1].id, 0],
+    );
+    const [res3] = await connection.query(
+      `INSERT INTO ${businessSchema}.accounts (business_user_id, balance) VALUES (?, ?);`,
+      [seedUsers[2].id, 500000],
+    );
 
     console.log('DB setup complete');
   } catch (err) {
