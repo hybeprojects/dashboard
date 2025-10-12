@@ -1,33 +1,73 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
-// Use relative URLs so Next.js rewrites/proxy handles routing to the Node wrapper (avoid hard-coded dev API URL)
-const BASE = '';
-const api = axios.create({ baseURL: BASE, timeout: 10000 });
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
+  timeout: 10000,
+  withCredentials: true,
+});
 
-// attach token
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = Cookies.get('XSRF-TOKEN');
+  if (token) {
+    config.headers['X-XSRF-TOKEN'] = token;
   }
   return config;
 });
 
-// simple retry interceptor for network errors
-api.interceptors.response.use(
-  (r) => r,
-  async (error) => {
-    const config = error.config;
-    if (!config) return Promise.reject(error);
-    config.__retryCount = config.__retryCount || 0;
-    const maxRetries = 2;
-    const shouldRetry =
-      (!error.response || error.code === 'ECONNABORTED') && config.__retryCount < maxRetries;
-    if (shouldRetry) {
-      config.__retryCount += 1;
-      await new Promise((r) => setTimeout(r, 300 * config.__retryCount));
-      return api(config);
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
     }
+  });
+
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            return axios(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      return new Promise(function (resolve, reject) {
+        api
+          .post('/auth/refresh')
+          .then(({ data }) => {
+            processQueue(null, data.accessToken);
+            resolve(axios(originalRequest));
+          })
+          .catch((err) => {
+            processQueue(err, null);
+            reject(err);
+          })
+          .then(() => {
+            isRefreshing = false;
+          });
+      });
+    }
+
     return Promise.reject(error);
   },
 );

@@ -10,67 +10,64 @@ import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // basic secure headers
-  app.use(helmet());
-  // Content Security Policy
-  const cspDirectives = {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'", 'https:'],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
-    imgSrc: ["'self'", 'data:', 'https:'],
-    connectSrc: ["'self'", 'https:', 'wss:'],
-    frameAncestors: ["'none'"],
-  };
+
+  // Sentry initialization
+  const dsn = process.env.SENTRY_DSN;
+  if (dsn) {
+    Sentry.init({ dsn, tracesSampleRate: 0.1 });
+  }
+
+  // Helmet security headers
   app.use(
-    helmet.contentSecurityPolicy({
-      useDefaults: false,
-      directives: cspDirectives as any,
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https:'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'", 'https:', 'wss:'],
+          frameAncestors: ["'none'"],
+        },
+      },
+      referrerPolicy: { policy: 'no-referrer-when-downgrade' },
     }),
   );
 
   if (!process.env.JWT_SECRET) {
-    console.error(
-      'JWT_SECRET is required for the API. Set a server-only JWT_SECRET and do NOT expose it to client envs.',
-    );
+    console.error('JWT_SECRET is required. Set a server-only JWT_SECRET.');
     throw new Error('JWT_SECRET is required');
   }
 
-  app.enableCors({ origin: process.env.CORS_ORIGIN || true, credentials: true });
-  app.use(cookieParser());
-
-  // additional security headers
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-    next();
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN?.split(',') || true,
+    credentials: true,
   });
 
-  // CSRF protection for state-changing requests using cookies
-  try {
-    app.use(
-      csurf({
-        cookie: {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: (process.env.SESSION_SAME_SITE as any) || 'lax',
-        },
-      }),
-    );
-  } catch (e) {
-    // csurf may throw if not applicable in some environments
-  }
+  app.use(cookieParser());
+
+  // CSRF protection
+  const csrfProtection = csurf({
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: (process.env.CSRF_COOKIE_SAME_SITE as any) || 'lax',
+    },
+  });
+  app.use(csrfProtection);
+
+  // Middleware to set CSRF token
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.csrfToken) {
+      res.cookie('XSRF-TOKEN', req.csrfToken());
+    }
+    next();
+  });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  const dsn = process.env.SENTRY_DSN;
-  if (dsn) {
-    (Sentry as any).init({ dsn, tracesSampleRate: 0.1 });
-  }
-
-  const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
   await app.listen(port);
 }
 bootstrap();
