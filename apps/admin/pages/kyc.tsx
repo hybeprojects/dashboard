@@ -118,3 +118,7 @@ export default function KYC() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}
