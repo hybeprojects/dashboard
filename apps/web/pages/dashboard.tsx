@@ -225,7 +225,7 @@ export default function Dashboard() {
               )}
             </div>
             <div className="px-4 py-3">
-              <button className="text-blue-700 font-semibold text-sm">OPEN NEW ACCOUNT</button>
+              <Link href="/open-account" className="text-blue-700 font-semibold text-sm">OPEN NEW ACCOUNT</Link>
             </div>
           </Card>
 
