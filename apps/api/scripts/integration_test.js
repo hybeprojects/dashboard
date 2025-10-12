@@ -7,13 +7,13 @@
     { method: 'GET', path: '/' },
     {
       method: 'POST',
-      path: '/transactions/deposit',
-      body: { accountId: 'a4f22c5a-5a30-4e4b-8a8a-8a8a8a8a8a8a', amount: -100 },
-    },
-    {
-      method: 'POST',
-      path: '/transactions/withdraw',
-      body: { accountId: 'a4f22c5a-5a30-4e4b-8a8a-8a8a8a8a8a8a', amount: -100 },
+      path: '/auth/register',
+      body: {
+        email: `test-${Date.now()}@example.com`,
+        password: 'password123',
+        firstName: 'Test',
+        lastName: 'User',
+      },
     },
   ];
 
@@ -52,6 +52,15 @@
       }
       console.log(`\n[${e.method}] ${url} -> ${res.status} ${res.statusText}`);
       console.log('Body:', typeof body === 'string' ? body.slice(0, 1000) : JSON.stringify(body, null, 2));
+
+      if (e.path === '/auth/register') {
+        if (res.status === 201 && body.accessToken) {
+          console.log('✅ Registration test passed');
+        } else {
+          console.error('❌ Registration test failed');
+          process.exit(1);
+        }
+      }
     } catch (err) {
       console.error(`\n[${e.method}] ${url} -> ERROR:`, err.message || err);
     }

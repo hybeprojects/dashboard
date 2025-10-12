@@ -46,7 +46,22 @@ export class AuthService {
     await supabaseAdmin
       .from('audit_logs')
       .insert([{ action: 'register', user_id: (local as any).id, ip_address: null }]);
-    return { id: (local as any).id, email: (local as any).email };
+
+    // create a default checking account
+    await supabaseAdmin.from('accounts').insert([
+      {
+        user_id: local.id,
+        type: 'checking',
+        balance: '0',
+      },
+    ]);
+
+    // issue backend JWT
+    const accessToken = await this.jwt.signAsync(
+      { sub: local.id, email: local.email },
+      { expiresIn: '15m' },
+    );
+    return { id: (local as any).id, email: (local as any).email, accessToken };
   }
 
   async login({ email, password, otp }: { email: string; password: string; otp?: string }) {
