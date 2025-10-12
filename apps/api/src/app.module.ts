@@ -19,8 +19,10 @@ import { HealthModule } from './modules/health/health.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        ttl: config.get<number>('THROTTLE_TTL', 60),
-        limit: config.get<number>('THROTTLE_LIMIT', 10),
+        throttlers: [{
+          ttl: config.get<number>('THROTTLE_TTL', 60) * 1000, // Convert to milliseconds
+          limit: config.get<number>('THROTTLE_LIMIT', 10),
+        }],
       }),
     }),
     DatabaseModule,

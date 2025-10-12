@@ -4,17 +4,17 @@ import { User } from '../users/user.entity';
 @Entity('audit_logs')
 export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  action: string;
+  action!: string;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @Column()
-  ip_address: string;
+  ip_address!: string;
 
   @CreateDateColumn()
-  timestamp: Date;
+  timestamp!: Date;
 }

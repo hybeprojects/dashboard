@@ -4,20 +4,20 @@ import { User } from '../users/user.entity';
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => User, (user) => user.notifications)
-  user: User;
+  user!: User;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  message: string;
+  message!: string;
 
   @Column({ default: false })
-  is_read: boolean;
+  is_read!: boolean;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }
