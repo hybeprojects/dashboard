@@ -126,7 +126,6 @@ export default function Dashboard() {
     }
   });
 
-  const statVariants = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } };
 
   const primary = 'bg-red-600 text-white';
 
