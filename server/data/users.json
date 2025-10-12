@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "a5fc2448-6624-454b-a3b1-6bf44314a54e",
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "testuser_1760254128285@example.com",
+    "password": "$2a$10$QpgzufTJyt0kmi6uwlgn8OO/ICBnQZ0eqPmwXJpwbPl61SIgAtlBK",
+    "fineractClientId": null,
+    "accountId": null
+  },
+  {
+    "id": "38667ec2-81b8-4926-a5bf-f89aa534470d",
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "testuser_1760254143339@example.com",
+    "password": "$2a$10$YSWe2GbeR9/139i2PzToxOkIrThmbW1MGhhKGZLxTxzyJwPJSfJsS",
+    "fineractClientId": null,
+    "accountId": 12345
+  },
+  {
+    "id": "ada51b40-e580-4fa9-af5d-2c8bb5ffeed2",
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "testuser_1760254191542@example.com",
+    "password": "$2a$10$XLwtDnOSobtdejIJoF59aOiEL5OTk8DXGkEyp9BlnbLRUisjwsGFi",
+    "fineractClientId": null,
+    "accountId": 12345
+  }
+]
