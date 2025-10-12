@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar';
-import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
