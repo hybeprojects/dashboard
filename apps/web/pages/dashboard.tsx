@@ -36,7 +36,7 @@ export default function Dashboard() {
   const fetchTransactions = useCallback(async () => {
     try {
       const res = await api.get('/transactions');
-      setTransactions(res.data || res.data?.transactions || []);
+      setTransactions(res.data?.transactions || res.data || []);
     } catch (err) {
       console.error('Failed to fetch transactions', err);
     }
