@@ -117,15 +117,47 @@ async function transferFunds(fromAccountId, toAccountId, amount) {
 }
 
 // ─────────────────────────────
+// 📄 GET SAVINGS ACCOUNT (raw)
+// ─────────────────────────────
+async function getSavingsAccount(accountId) {
+  try {
+    const { data } = await fineract.get(`/savingsaccounts/${accountId}`);
+    return data;
+  } catch (err) {
+    console.error('❌ Error fetching savings account:', err.response?.data || err.message || err);
+    throw err;
+  }
+}
+
+// ─────────────────────────────
 // 💵 GET ACCOUNT BALANCE
 // ─────────────────────────────
 async function getAccountBalance(accountId) {
   try {
     const { data } = await fineract.get(`/savingsaccounts/${accountId}`);
-    const balance = data?.summary?.accountBalance || 0;
-    return balance;
+    const balance = data?.summary?.availableBalance ?? data?.summary?.accountBalance ?? 0;
+    return Number(balance) || 0;
   } catch (err) {
     console.error('❌ Error fetching account balance:', err.response?.data || err.message || err);
+    throw err;
+  }
+}
+
+// ─────────────────────────────
+// ➕ DEPOSIT INTO SAVINGS
+// ─────────────────────────────
+async function depositToSavings(accountId, amount) {
+  try {
+    const payload = {
+      transactionDate: new Date().toISOString().split('T')[0],
+      dateFormat: 'yyyy-MM-dd',
+      locale: 'en',
+      transactionAmount: Number(amount),
+    };
+    const { data } = await fineract.post(`/savingsaccounts/${accountId}/transactions?command=deposit`, payload);
+    return data;
+  } catch (err) {
+    console.error('❌ Deposit failed:', err.response?.data || err.message || err);
     throw err;
   }
 }
@@ -136,4 +168,6 @@ module.exports = {
   createSavingsAccount,
   transferFunds,
   getAccountBalance,
+  getSavingsAccount,
+  depositToSavings,
 };
