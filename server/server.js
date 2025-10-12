@@ -10,28 +10,30 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-// initialize DB
+// Initialize DB
 const db = require('./utils/db');
 (async () => {
   await db.init();
 })();
 
-// mount routes
+// Mount routes
 app.use('/auth', require('./routes/auth'));
 app.use('/accounts', require('./routes/accounts'));
 app.use('/transactions', require('./routes/transactions'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/transfer', require('./routes/transfer'));
 
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   return res.json({ status: 'ok', db: db.isAvailable() });
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'not found' });
 });
 
-app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Dashboard server listening on http://localhost:${PORT}`);
+// Listen on all interfaces (important for Codespaces/Docker)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Dashboard server listening on port ${PORT}`);
 });
