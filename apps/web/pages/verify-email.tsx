@@ -51,12 +51,8 @@ export default function VerifyEmail() {
     setStatus(null);
     try {
       // ask backend if allowed
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/resend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const json = await resp.json();
+      const api = (await import('../lib/api')).default;
+      const { data: json } = await api.post('/auth/resend', { email });
       if (!json.ok) {
         setStatus(json.message || 'Rate limit');
         return;
