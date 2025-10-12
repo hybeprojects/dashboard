@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import getSupabase from '../lib/supabase';
 import { useAuthStore } from '../state/useAuthStore';
 import api from '../lib/api';
-import { useEffect } from 'react';
 
 export function useSupabaseSession() {
   const setUser = useAuthStore((s) => s.setUser);
@@ -15,8 +14,8 @@ export function useSupabaseSession() {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
         // exchange supabase token with backend
-        if (session.access_token) {
-          backendLoginWithSupabase(session.access_token).catch(() => {});
+        if ((session as any).access_token) {
+          backendLoginWithSupabase((session as any).access_token).catch(() => {});
         }
       }
     });
@@ -24,8 +23,8 @@ export function useSupabaseSession() {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
-        if (session.access_token) {
-          backendLoginWithSupabase(session.access_token).catch(() => {});
+        if ((session as any).access_token) {
+          backendLoginWithSupabase((session as any).access_token).catch(() => {});
         }
       } else {
         setUser(null);
