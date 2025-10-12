@@ -12,7 +12,9 @@ const PORT = process.env.PORT || 3001;
 
 // initialize DB
 const db = require('./utils/db');
-(async () => { await db.init(); })();
+(async () => {
+  await db.init();
+})();
 
 // mount routes
 app.use('/auth', require('./routes/auth'));

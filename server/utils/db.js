@@ -1,12 +1,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const {
-  DB_HOST = 'localhost',
-  DB_PORT = 3306,
-  DB_USER = 'root',
-  DB_PASSWORD = '',
-} = process.env;
+const { DB_HOST = 'localhost', DB_PORT = 3306, DB_USER = 'root', DB_PASSWORD = '' } = process.env;
 
 let pool = null;
 let available = false;

@@ -40,19 +40,38 @@ router.post('/signup', async (req, res) => {
     if (db && db.isAvailable && db.isAvailable()) {
       const userId = uuidv4();
       const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
-      await db.query(`INSERT INTO ${schema}.users (id, first_name, last_name, email, password_hash, fineract_client_id) VALUES (?, ?, ?, ?, ?, ?);`, [userId, firstName || null, lastName || null, email, hashed, clientId]);
-      const [acctRes] = await db.query(`INSERT INTO ${schema}.accounts (user_id, fineract_account_id, balance) VALUES (?, ?, ?);`, [userId, accountId || null, 0]);
-      const token = jwt.sign({ sub: userId, email }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+      await db.query(
+        `INSERT INTO ${schema}.users (id, first_name, last_name, email, password_hash, fineract_client_id) VALUES (?, ?, ?, ?, ?, ?);`,
+        [userId, firstName || null, lastName || null, email, hashed, clientId],
+      );
+      const [acctRes] = await db.query(
+        `INSERT INTO ${schema}.accounts (user_id, fineract_account_id, balance) VALUES (?, ?, ?);`,
+        [userId, accountId || null, 0],
+      );
+      const token = jwt.sign({ sub: userId, email }, JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+      });
       return res.json({ accessToken: token, user: { id: userId, email, firstName, lastName } });
     }
 
     const users = await loadUsers();
     if (users.find((u) => u.email === email)) return res.status(400).json({ error: 'user exists' });
-    const user = { id: uuidv4(), firstName, lastName, email, password: hashed, fineractClientId: clientId, accountId };
+    const user = {
+      id: uuidv4(),
+      firstName,
+      lastName,
+      email,
+      password: hashed,
+      fineractClientId: clientId,
+      accountId,
+    };
     users.push(user);
     await saveUsers(users);
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ accessToken: token, user: { id: user.id, email: user.email, firstName, lastName } });
+    return res.json({
+      accessToken: token,
+      user: { id: user.id, email: user.email, firstName, lastName },
+    });
   } catch (e) {
     console.error('signup error', e.message || e);
     return res.status(500).json({ error: 'signup failed' });
@@ -65,13 +84,25 @@ router.post('/login', async (req, res) => {
 
     if (db && db.isAvailable && db.isAvailable()) {
       const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
-      const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE email = ? LIMIT 1;`, [email]);
+      const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE email = ? LIMIT 1;`, [
+        email,
+      ]);
       const user = rows && rows[0];
       if (!user) return res.status(401).json({ error: 'invalid credentials' });
       const ok = await bcrypt.compare(password, user.password_hash);
       if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-      const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
-      return res.json({ accessToken: token, user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name } });
+      const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+      });
+      return res.json({
+        accessToken: token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+        },
+      });
     }
 
     const users = await loadUsers();
@@ -80,7 +111,10 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ accessToken: token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
+    return res.json({
+      accessToken: token,
+      user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
+    });
   } catch (e) {
     console.error('login error', e);
     return res.status(500).json({ error: 'login failed' });
@@ -89,8 +123,12 @@ router.post('/login', async (req, res) => {
 
 // resend / link-status simple implementation
 const RESEND_FILE = path.join(__dirname, '..', 'data', 'resend.json');
-async function loadResend() { return fs.readJson(RESEND_FILE).catch(() => ({})); }
-async function saveResend(r) { return fs.writeJson(RESEND_FILE, r, { spaces: 2 }); }
+async function loadResend() {
+  return fs.readJson(RESEND_FILE).catch(() => ({}));
+}
+async function saveResend(r) {
+  return fs.writeJson(RESEND_FILE, r, { spaces: 2 });
+}
 
 router.post('/resend', async (req, res) => {
   const { email } = req.body;
@@ -132,7 +170,14 @@ router.get('/me', async (req, res) => {
     const users = await loadUsers();
     const user = users.find((u) => u.id === decoded.sub);
     if (!user) return res.json({ user: null });
-    return res.json({ user: { id: user.id, email: user.email, firstName: user.firstName || null, lastName: user.lastName || null } });
+    return res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+      },
+    });
   } catch (e) {
     return res.json({ user: null });
   }
