@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../../security/jwt.guard';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { CreateDepositDto } from './dto/create-deposit.dto';
+import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -21,13 +23,13 @@ export class TransactionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('deposit')
-  deposit(@Req() req: any, @Body() dto: { accountId: string; amount: number }) {
+  deposit(@Req() req: any, @Body() dto: CreateDepositDto) {
     return this.svc.deposit(req.user.sub, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('withdraw')
-  withdraw(@Req() req: any, @Body() dto: { accountId: string; amount: number }) {
+  withdraw(@Req() req: any, @Body() dto: CreateWithdrawalDto) {
     return this.svc.withdraw(req.user.sub, dto);
   }
 }

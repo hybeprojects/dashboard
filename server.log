@@ -1,8 +1,6 @@
 
-> premium-banking-monorepo@1.0.0 dev
-> npm --prefix apps/web run dev
+> premium-banking-api@0.0.0 dev
+> nest start --watch
 
-
-> premium-banking-web@0.0.0 dev
-> next dev -p 3000
+[2J[3J[H[[90m6:04:33 PM[0m] Starting compilation in watch mode...
 
