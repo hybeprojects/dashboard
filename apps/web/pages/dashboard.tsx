@@ -1,24 +1,9 @@
 import React, { useMemo } from 'react';
 import Card from '../components/ui/Card';
-import OverviewChart from '../components/charts/OverviewChart';
-import DonutChart from '../components/charts/DonutChart';
 import api from '../lib/api';
-import AccountCard from '../components/AccountCard';
 import useWebSocket from '../hooks/useWebSocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { useAuthStore } from '../state/useAuthStore';
-
-const area = Array.from({ length: 12 }, (_, i) => ({
-  name: `M${i + 1}`,
-  value: Math.round(Math.random() * 1000),
-}));
-const donut = [
-  { name: 'Payments', value: 400 },
-  { name: 'Transfers', value: 300 },
-  { name: 'Cards', value: 200 },
-  { name: 'Other', value: 100 },
-];
 
 function normalizeToArray(payload: any, key?: string) {
   if (Array.isArray(payload)) return payload;
