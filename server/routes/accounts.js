@@ -29,12 +29,12 @@ router.post('/', auth, async (req, res) => {
   const users = await loadUsers();
   const user = users.find((u) => u.id === req.user.sub);
   if (!user) return res.status(404).json({ error: 'user not found' });
-  const payload = { clientId: user.fineractClientId, productId: 1, accountNo: `SAV-${Date.now()}`, fieldOfficerId: 1 };
-  const savings = await createSavingsAccount(payload).catch((e) => null);
+  const savings = await createSavingsAccount(user.fineractClientId).catch((e) => null);
   if (!savings) return res.status(500).json({ error: 'could not create account' });
-  user.accountId = savings.savingsId;
+  const newId = savings.savingsId || savings.resourceId || savings.id;
+  user.accountId = newId;
   await saveUsers(users);
-  return res.json({ accountId: savings.savingsId });
+  return res.json({ accountId: newId });
 });
 
 module.exports = router;
