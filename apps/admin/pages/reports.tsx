@@ -11,3 +11,7 @@ export default function Reports() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}
