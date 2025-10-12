@@ -9,10 +9,20 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SYS_FILE = path.join(DATA_DIR, 'system.json');
 
-async function loadUsers() { return fs.readJson(USERS_FILE).catch(() => []); }
-async function saveUsers(u) { await fs.ensureDir(DATA_DIR); return fs.writeJson(USERS_FILE, u, { spaces: 2 }); }
-async function loadSys() { return fs.readJson(SYS_FILE).catch(() => ({})); }
-async function saveSys(s) { await fs.ensureDir(DATA_DIR); return fs.writeJson(SYS_FILE, s, { spaces: 2 }); }
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  await fs.ensureDir(DATA_DIR);
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
+async function loadSys() {
+  return fs.readJson(SYS_FILE).catch(() => ({}));
+}
+async function saveSys(s) {
+  await fs.ensureDir(DATA_DIR);
+  return fs.writeJson(SYS_FILE, s, { spaces: 2 });
+}
 
 async function ensureClearingAccount() {
   const sys = await loadSys();
@@ -23,7 +33,11 @@ async function ensureClearingAccount() {
   }
   if (sys.clearingAccountId) return sys.clearingAccountId;
   // create a bank-controlled client and savings as clearing
-  const client = await createClient({ firstName: 'Bank', lastName: 'Clearing', email: `clearing-${Date.now()}@example.com` });
+  const client = await createClient({
+    firstName: 'Bank',
+    lastName: 'Clearing',
+    email: `clearing-${Date.now()}@example.com`,
+  });
   const savings = await createSavingsAccount(client.clientId);
   const id = savings.savingsId || savings.resourceId || savings.id;
   sys.clearingAccountId = id;
@@ -40,7 +54,13 @@ async function ensureUser(firstName, email, openingDeposit = 0) {
     return user;
   }
   if (!user) {
-    user = { id: uuidv4(), firstName, lastName: 'Demo', email, password: await bcrypt.hash('password123', 10) };
+    user = {
+      id: uuidv4(),
+      firstName,
+      lastName: 'Demo',
+      email,
+      password: await bcrypt.hash('password123', 10),
+    };
     users.push(user);
   }
   const client = await createClient({ firstName, lastName: 'Demo', email });

@@ -11,17 +11,31 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const TX_FILE = path.join(DATA_DIR, 'transactions.json');
 const SYS_FILE = path.join(DATA_DIR, 'system.json');
 
-async function loadUsers() { return fs.readJson(USERS_FILE).catch(() => []); }
-async function saveUsers(u) { return fs.writeJson(USERS_FILE, u, { spaces: 2 }); }
-async function loadTx() { return fs.readJson(TX_FILE).catch(() => []); }
-async function saveTx(t) { return fs.writeJson(TX_FILE, t, { spaces: 2 }); }
-async function loadSys() { return fs.readJson(SYS_FILE).catch(() => ({})); }
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
+async function loadTx() {
+  return fs.readJson(TX_FILE).catch(() => []);
+}
+async function saveTx(t) {
+  return fs.writeJson(TX_FILE, t, { spaces: 2 });
+}
+async function loadSys() {
+  return fs.readJson(SYS_FILE).catch(() => ({}));
+}
 
 const SETTLEMENT_DELAY_MS = Number(process.env.SETTLEMENT_DELAY_MS || 10000);
 const MAX_SETTLEMENT_RETRIES = Number(process.env.MAX_SETTLEMENT_RETRIES || 3);
 
 function emit(io, userId, event, payload) {
-  try { io.to(userId).emit(event, payload); } catch (_) { /* noop */ }
+  try {
+    io.to(userId).emit(event, payload);
+  } catch (_) {
+    /* noop */
+  }
 }
 
 async function scheduleSettlement(io, tx) {
@@ -40,8 +54,14 @@ async function scheduleSettlement(io, tx) {
       await saveTx(txs);
       // balances for receiver
       let receiverBalance = null;
-      try { receiverBalance = await getAccountBalance(tx.toAccountId); } catch(_) {}
-      emit(io, tx.toUserId, 'transfer', { ...rec, newBalance: receiverBalance, type: 'transfer:completed' });
+      try {
+        receiverBalance = await getAccountBalance(tx.toAccountId);
+      } catch (_) {}
+      emit(io, tx.toUserId, 'transfer', {
+        ...rec,
+        newBalance: receiverBalance,
+        type: 'transfer:completed',
+      });
       emit(io, tx.fromUserId, 'transfer', { ...rec, type: 'transfer:settled' });
     } catch (e) {
       attempts += 1;
@@ -56,7 +76,15 @@ async function scheduleSettlement(io, tx) {
           rec.error = e?.message || 'settlement failed';
         }
         await saveTx(txs);
-        emit(io, tx.toUserId, 'notification', { id: uuidv4(), userId: tx.toUserId, type: 'error', message: 'Incoming transfer failed to settle.', data: { txId: tx.id }, read: false, createdAt: new Date().toISOString() });
+        emit(io, tx.toUserId, 'notification', {
+          id: uuidv4(),
+          userId: tx.toUserId,
+          type: 'error',
+          message: 'Incoming transfer failed to settle.',
+          data: { txId: tx.id },
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
       }
     }
   };
@@ -66,12 +94,15 @@ async function scheduleSettlement(io, tx) {
 router.post('/', auth, async (req, res) => {
   try {
     const { fromAccountId, toAccountId, amount, memo } = req.body;
-    if (!fromAccountId || !toAccountId || !amount) return res.status(400).json({ error: 'missing fields' });
+    if (!fromAccountId || !toAccountId || !amount)
+      return res.status(400).json({ error: 'missing fields' });
     const amt = Number(amount);
     if (!isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'invalid amount' });
 
     const users = await loadUsers();
-    const sender = users.find((u) => u.id === req.user.sub || String(u.accountId) === String(fromAccountId));
+    const sender = users.find(
+      (u) => u.id === req.user.sub || String(u.accountId) === String(fromAccountId),
+    );
     const receiver = users.find((u) => String(u.accountId) === String(toAccountId));
     if (!sender) return res.status(404).json({ error: 'sender not found' });
     if (!receiver) return res.status(404).json({ error: 'receiver not found' });
@@ -111,12 +142,25 @@ router.post('/', auth, async (req, res) => {
 
     // balances
     let senderBal = null;
-    try { senderBal = await getAccountBalance(fromAccountId); } catch(_) {}
+    try {
+      senderBal = await getAccountBalance(fromAccountId);
+    } catch (_) {}
 
     // emit events
     const io = req.app.get('io');
     emit(io, sender.id, 'transfer', { ...tx, newBalance: senderBal, type: 'transfer:posted' });
-    emit(io, receiver.id, 'transfer', { id: tx.id, fromName: sender.firstName || sender.email, amount: amt, status: 'pending', createdAt: tx.createdAt, toUserId: receiver.id, toAccountId: toAccountId, fromUserId: sender.id, fromAccountId: fromAccountId, type: 'transfer:incoming_pending' });
+    emit(io, receiver.id, 'transfer', {
+      id: tx.id,
+      fromName: sender.firstName || sender.email,
+      amount: amt,
+      status: 'pending',
+      createdAt: tx.createdAt,
+      toUserId: receiver.id,
+      toAccountId: toAccountId,
+      fromUserId: sender.id,
+      fromAccountId: fromAccountId,
+      type: 'transfer:incoming_pending',
+    });
 
     // schedule settlement
     scheduleSettlement(io, tx);

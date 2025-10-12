@@ -1,12 +1,7 @@
 const axios = require('axios');
 require('dotenv').config();
 
-const {
-  FINERACT_BASE_URL,
-  FINERACT_USERNAME,
-  FINERACT_PASSWORD,
-  FINERACT_TENANT,
-} = process.env;
+const { FINERACT_BASE_URL, FINERACT_USERNAME, FINERACT_PASSWORD, FINERACT_TENANT } = process.env;
 
 // Create a preconfigured Axios instance
 const fineract = axios.create({
@@ -154,7 +149,10 @@ async function depositToSavings(accountId, amount) {
       locale: 'en',
       transactionAmount: Number(amount),
     };
-    const { data } = await fineract.post(`/savingsaccounts/${accountId}/transactions?command=deposit`, payload);
+    const { data } = await fineract.post(
+      `/savingsaccounts/${accountId}/transactions?command=deposit`,
+      payload,
+    );
     return data;
   } catch (err) {
     console.error('❌ Deposit failed:', err.response?.data || err.message || err);

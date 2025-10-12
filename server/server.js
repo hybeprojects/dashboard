@@ -56,7 +56,10 @@ app.get(['/health', '/api/health'], async (req, res) => {
   const ok = await testConnection();
   const sysFile = path.join(DATA_DIR, 'system.json');
   const sys = await fs.readJson(sysFile).catch(() => ({}));
-  return res.json({ ok, clearingAccountId: process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId || null });
+  return res.json({
+    ok,
+    clearingAccountId: process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId || null,
+  });
 });
 
 app.use('/auth', authRoutes);

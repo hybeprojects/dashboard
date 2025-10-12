@@ -7,8 +7,12 @@ const { v4: uuidv4 } = require('uuid');
 const { getSavingsAccount, createSavingsAccount } = require('../utils/fineractAPI');
 
 const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
-async function loadUsers() { return fs.readJson(USERS_FILE).catch(() => []); }
-async function saveUsers(u){ return fs.writeJson(USERS_FILE,u,{spaces:2}); }
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
 
 // list accounts for authenticated user
 router.get('/', auth, async (req, res) => {
@@ -21,7 +25,15 @@ router.get('/', auth, async (req, res) => {
     acct = await getSavingsAccount(user.accountId).catch(() => null);
   }
   // return app-level account object
-  return res.json({ accounts: [ { id: user.accountId || null, balance: acct?.summary?.availableBalance || 0, owner: { id: user.id, email: user.email } } ] });
+  return res.json({
+    accounts: [
+      {
+        id: user.accountId || null,
+        balance: acct?.summary?.availableBalance || 0,
+        owner: { id: user.id, email: user.email },
+      },
+    ],
+  });
 });
 
 // create a new savings account for user
