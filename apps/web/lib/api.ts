@@ -4,7 +4,8 @@ import Cookies from 'js-cookie';
 // Resolve a sensible base URL for the API in the browser/dev/prod.
 // Priority: NEXT_PUBLIC_API_URL env var -> window.location.origin (same origin APIs) -> http://localhost:5000
 const inferredOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-const RESOLVED_BASE = process.env.NEXT_PUBLIC_API_URL || (inferredOrigin ? inferredOrigin : 'http://localhost:5000');
+const RESOLVED_BASE =
+  process.env.NEXT_PUBLIC_API_URL || (inferredOrigin ? inferredOrigin : 'http://localhost:5000');
 
 const api = axios.create({
   baseURL: RESOLVED_BASE,
@@ -58,8 +59,16 @@ api.interceptors.response.use(
     if (!error.response) {
       // Provide a clearer error for the UI/logs
       // eslint-disable-next-line no-console
-      console.error('Network or CORS error when connecting to API at', RESOLVED_BASE, error.message || error);
-      return Promise.reject(new Error(`Network error: failed to reach API at ${RESOLVED_BASE}. Check server availability and CORS settings.`));
+      console.error(
+        'Network or CORS error when connecting to API at',
+        RESOLVED_BASE,
+        error.message || error,
+      );
+      return Promise.reject(
+        new Error(
+          `Network error: failed to reach API at ${RESOLVED_BASE}. Check server availability and CORS settings.`,
+        ),
+      );
     }
 
     const originalRequest = error.config;
