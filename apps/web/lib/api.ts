@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || '';
+// Use relative URLs so Next.js rewrites/proxy handles routing to the Node wrapper (avoid hard-coded dev API URL)
+const BASE = '';
 const api = axios.create({ baseURL: BASE, timeout: 10000 });
 
 // attach token
