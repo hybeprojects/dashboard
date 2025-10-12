@@ -21,10 +21,25 @@ const donut = [
   { name: 'Other', value: 100 },
 ];
 
+function normalizeToArray(payload: any, key?: string) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object') {
+    if (key && Array.isArray(payload[key])) return payload[key];
+    if (Array.isArray(payload.accounts)) return payload.accounts;
+    if (Array.isArray(payload.transactions)) return payload.transactions;
+    if (Array.isArray(payload.notifications)) return payload.notifications;
+    // Convert object map to array of values
+    const vals = Object.values(payload);
+    if (vals.every((v) => typeof v !== 'undefined')) return vals;
+    return [];
+  }
+  return [];
+}
+
 async function fetchAccounts() {
   try {
     const res = await api.get('/accounts');
-    return res.data?.accounts || res.data || [];
+    return normalizeToArray(res.data, 'accounts');
   } catch (err: any) {
     if (err?.response?.status === 404) {
       console.warn(
@@ -38,7 +53,7 @@ async function fetchAccounts() {
 async function fetchTransactions() {
   try {
     const res = await api.get('/transactions');
-    return res.data?.transactions || res.data || [];
+    return normalizeToArray(res.data, 'transactions');
   } catch (err: any) {
     if (err?.response?.status === 404) {
       console.warn('/transactions endpoint not found (404). Returning empty transactions array.');
@@ -50,7 +65,7 @@ async function fetchTransactions() {
 async function fetchNotifications() {
   try {
     const res = await api.get('/notifications');
-    return res.data?.notifications || res.data || [];
+    return normalizeToArray(res.data, 'notifications');
   } catch (err: any) {
     if (err?.response?.status === 404) {
       console.warn('/notifications endpoint not found (404). Returning empty notifications array.');
