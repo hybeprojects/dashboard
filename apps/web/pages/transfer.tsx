@@ -61,10 +61,18 @@ export default function TransferPage() {
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600">From</label>
-            <select value={from} onChange={(e) => setFrom(e.target.value)} className="w-full border rounded p-2">
+            <select
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="w-full border rounded p-2"
+            >
               {accounts.map((a: any) => (
-                <option key={a.id ?? a.accountId ?? a.number} value={a.id ?? a.accountId ?? a.number}>
-                  {a.name || a.accountName} • ${Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}
+                <option
+                  key={a.id ?? a.accountId ?? a.number}
+                  value={a.id ?? a.accountId ?? a.number}
+                >
+                  {a.name || a.accountName} • $
+                  {Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}
                 </option>
               ))}
             </select>
@@ -72,12 +80,20 @@ export default function TransferPage() {
 
           <div>
             <label className="block text-xs text-gray-600">To (account id)</label>
-            <input value={to} onChange={(e) => setTo(e.target.value)} className="w-full border rounded p-2" />
+            <input
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="w-full border rounded p-2"
+            />
           </div>
 
           <div>
             <label className="block text-xs text-gray-600">Amount</label>
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded p-2" />
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full border rounded p-2"
+            />
           </div>
 
           {error && <div className="text-red-600">{error}</div>}

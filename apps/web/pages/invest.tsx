@@ -13,7 +13,9 @@ export default function InvestPage() {
       </div>
 
       <Card>
-        <div className="text-sm text-gray-600">Investment products and portfolio (simulated). Coming soon.</div>
+        <div className="text-sm text-gray-600">
+          Investment products and portfolio (simulated). Coming soon.
+        </div>
       </Card>
     </div>
   );

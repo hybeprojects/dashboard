@@ -14,7 +14,9 @@ async function fetchAccounts() {
 }
 
 export default function AccountsPage() {
-  const { data: accounts = [], isLoading } = useQuery(['accounts'], fetchAccounts, { staleTime: 30_000 });
+  const { data: accounts = [], isLoading } = useQuery(['accounts'], fetchAccounts, {
+    staleTime: 30_000,
+  });
   return (
     <div className="container-page p-4">
       <div className="flex items-center justify-between mb-4">
@@ -32,10 +34,17 @@ export default function AccountsPage() {
             <Card key={a.id} className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-500">{a.name || a.accountName || 'Account'}</div>
-                  <div className="font-medium">${Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}</div>
+                  <div className="text-sm text-gray-500">
+                    {a.name || a.accountName || 'Account'}
+                  </div>
+                  <div className="font-medium">
+                    ${Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}
+                  </div>
                 </div>
-                <Link href={`/accounts/${a.id ?? a.accountId ?? a.number ?? '0'}`} className="text-blue-600 text-sm font-semibold">
+                <Link
+                  href={`/accounts/${a.id ?? a.accountId ?? a.number ?? '0'}`}
+                  className="text-blue-600 text-sm font-semibold"
+                >
                   View
                 </Link>
               </div>
@@ -47,7 +56,10 @@ export default function AccountsPage() {
       </div>
 
       <div className="mt-6">
-        <Link href="/open-account" className="block text-center bg-red-600 text-white rounded-xl py-3">
+        <Link
+          href="/open-account"
+          className="block text-center bg-red-600 text-white rounded-xl py-3"
+        >
           Open New Account
         </Link>
       </div>

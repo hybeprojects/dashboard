@@ -13,7 +13,9 @@ export default function BillPayPage() {
       </div>
 
       <Card>
-        <div className="text-sm text-gray-600">Create and manage one-time or scheduled bill payments. (Coming soon)</div>
+        <div className="text-sm text-gray-600">
+          Create and manage one-time or scheduled bill payments. (Coming soon)
+        </div>
       </Card>
     </div>
   );

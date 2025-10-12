@@ -13,7 +13,9 @@ export default function DepositPage() {
       </div>
 
       <Card>
-        <div className="text-sm text-gray-600">Upload check images to deposit (OCR/stubbed). Coming soon.</div>
+        <div className="text-sm text-gray-600">
+          Upload check images to deposit (OCR/stubbed). Coming soon.
+        </div>
       </Card>
     </div>
   );
