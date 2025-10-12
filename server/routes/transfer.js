@@ -2,47 +2,170 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs-extra');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const auth = require('../middleware/auth');
-const { transferSavings, getSavingsAccount } = require('../utils/fineractAPI');
+const { transferFunds, getAccountBalance, getSavingsAccount } = require('../utils/fineractAPI');
 
-const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
-const TX_FILE = path.join(__dirname, '..', 'data', 'transactions.json');
-async function loadUsers(){ return fs.readJson(USERS_FILE).catch(()=>[]); }
-async function saveUsers(u){ return fs.writeJson(USERS_FILE,u,{spaces:2}); }
-async function loadTx(){ return fs.readJson(TX_FILE).catch(()=>[]); }
-async function saveTx(t){ return fs.writeJson(TX_FILE,t,{spaces:2}); }
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const TX_FILE = path.join(DATA_DIR, 'transactions.json');
+const SYS_FILE = path.join(DATA_DIR, 'system.json');
 
-// transfer endpoint
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
+async function loadTx() {
+  return fs.readJson(TX_FILE).catch(() => []);
+}
+async function saveTx(t) {
+  return fs.writeJson(TX_FILE, t, { spaces: 2 });
+}
+async function loadSys() {
+  return fs.readJson(SYS_FILE).catch(() => ({}));
+}
+
+const SETTLEMENT_DELAY_MS = Number(process.env.SETTLEMENT_DELAY_MS || 10000);
+const MAX_SETTLEMENT_RETRIES = Number(process.env.MAX_SETTLEMENT_RETRIES || 3);
+
+function emit(io, userId, event, payload) {
+  try {
+    io.to(userId).emit(event, payload);
+  } catch (_) {
+    /* noop */
+  }
+}
+
+async function scheduleSettlement(io, tx) {
+  let attempts = 0;
+  const doSettle = async () => {
+    try {
+      const sys = await loadSys();
+      const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
+      await transferFunds(Number(clearingId), Number(tx.toAccountId), Number(tx.amount));
+      const txs = await loadTx();
+      const rec = txs.find((x) => x.id === tx.id);
+      if (rec) {
+        rec.status = 'completed';
+        rec.settledAt = new Date().toISOString();
+      }
+      await saveTx(txs);
+      // balances for receiver
+      let receiverBalance = null;
+      try {
+        receiverBalance = await getAccountBalance(tx.toAccountId);
+      } catch (_) {}
+      emit(io, tx.toUserId, 'transfer', {
+        ...rec,
+        newBalance: receiverBalance,
+        type: 'transfer:completed',
+      });
+      emit(io, tx.fromUserId, 'transfer', { ...rec, type: 'transfer:settled' });
+    } catch (e) {
+      attempts += 1;
+      if (attempts < MAX_SETTLEMENT_RETRIES) {
+        const backoff = SETTLEMENT_DELAY_MS * Math.pow(2, attempts);
+        setTimeout(doSettle, backoff);
+      } else {
+        const txs = await loadTx();
+        const rec = txs.find((x) => x.id === tx.id);
+        if (rec) {
+          rec.status = 'failed';
+          rec.error = e?.message || 'settlement failed';
+        }
+        await saveTx(txs);
+        emit(io, tx.toUserId, 'notification', {
+          id: uuidv4(),
+          userId: tx.toUserId,
+          type: 'error',
+          message: 'Incoming transfer failed to settle.',
+          data: { txId: tx.id },
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
+  };
+  setTimeout(doSettle, SETTLEMENT_DELAY_MS);
+}
+
 router.post('/', auth, async (req, res) => {
   try {
-    const { fromAccountId, toAccountId, amount } = req.body;
-    if (!fromAccountId || !toAccountId || !amount) return res.status(400).json({ error: 'missing fields' });
+    const { fromAccountId, toAccountId, amount, memo } = req.body;
+    if (!fromAccountId || !toAccountId || !amount)
+      return res.status(400).json({ error: 'missing fields' });
+    const amt = Number(amount);
+    if (!isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'invalid amount' });
+
     const users = await loadUsers();
-    const sender = users.find((u) => u.id === req.user.sub || u.accountId == fromAccountId);
+    const sender = users.find(
+      (u) => u.id === req.user.sub || String(u.accountId) === String(fromAccountId),
+    );
+    const receiver = users.find((u) => String(u.accountId) === String(toAccountId));
     if (!sender) return res.status(404).json({ error: 'sender not found' });
-    const receiver = users.find((u) => u.accountId == toAccountId);
     if (!receiver) return res.status(404).json({ error: 'receiver not found' });
-    // validate balance via fineract
-    const fromAccount = await getSavingsAccount(fromAccountId).catch(() => null);
-    const bal = Number(fromAccount?.summary?.availableBalance || 0);
-    if (bal < Number(amount)) return res.status(400).json({ error: 'insufficient funds' });
-    // call fineract transfer
-    const out = await transferSavings({ fromAccountId: Number(fromAccountId), toAccountId: Number(toAccountId), transferAmount: Number(amount) }).catch((e)=>{ throw e; });
-    // record transaction locally
+
+    const sys = await loadSys();
+    const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
+    if (!clearingId) return res.status(500).json({ error: 'clearing account not configured' });
+
+    // balance check
+    const available = await getAccountBalance(fromAccountId).catch(() => 0);
+    if (Number(available) < amt) return res.status(400).json({ error: 'insufficient funds' });
+
+    // 1) immediate: sender -> clearing
+    const clearingRef = await transferFunds(Number(fromAccountId), Number(clearingId), amt);
+
+    // create app transaction (posted for sender, pending for receiver)
+    const tx = {
+      id: uuidv4(),
+      fromUserId: sender.id,
+      fromAccountId: Number(fromAccountId),
+      toUserId: receiver.id,
+      toAccountId: Number(toAccountId),
+      amount: amt,
+      currency: 'USD',
+      status: 'posted_sent',
+      createdAt: new Date().toISOString(),
+      postedAt: new Date().toISOString(),
+      settledAt: null,
+      fineractClearingRef: clearingRef,
+      fineractSettlementRef: null,
+      memo: memo || null,
+      retries: 0,
+    };
     const txs = await loadTx();
-    const tx = { id: Date.now().toString(), fromUserId: sender.id, toUserId: receiver.id, fromAccountId, toAccountId, amount, date: new Date().toISOString() };
     txs.unshift(tx);
     await saveTx(txs);
 
-    // emit via socket.io if available
-    const io = req.app.get('io');
-    if (io) {
-      io.to(receiver.id).emit('notification', { message: `You received $${amount} from ${sender.firstName || sender.email}` });
-      io.to(sender.id).emit('transfer', { ...tx, newBalance: (bal - Number(amount)) });
-      io.to(receiver.id).emit('transfer', { ...tx, newBalance: null });
-    }
+    // balances
+    let senderBal = null;
+    try {
+      senderBal = await getAccountBalance(fromAccountId);
+    } catch (_) {}
 
-    return res.json({ success: true, fineract: out, tx });
+    // emit events
+    const io = req.app.get('io');
+    emit(io, sender.id, 'transfer', { ...tx, newBalance: senderBal, type: 'transfer:posted' });
+    emit(io, receiver.id, 'transfer', {
+      id: tx.id,
+      fromName: sender.firstName || sender.email,
+      amount: amt,
+      status: 'pending',
+      createdAt: tx.createdAt,
+      toUserId: receiver.id,
+      toAccountId: toAccountId,
+      fromUserId: sender.id,
+      fromAccountId: fromAccountId,
+      type: 'transfer:incoming_pending',
+    });
+
+    // schedule settlement
+    scheduleSettlement(io, tx);
+
+    return res.json({ ok: true, tx });
   } catch (e) {
     console.error('transfer error', e?.response?.data || e.message || e);
     return res.status(500).json({ error: 'transfer failed', details: e?.message || e });
