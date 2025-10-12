@@ -1,10 +1,10 @@
 import Navbar from '../components/Navbar';
+import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
-import Navbar from '../components/Navbar';
 
 export default function Transactions() {
   const [txs, setTxs] = useState<any[]>([]);
