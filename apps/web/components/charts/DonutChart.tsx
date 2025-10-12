@@ -18,17 +18,26 @@ export default function DonutChart({ data }: { data: { name: string; value: numb
     <div className="h-64" role="img" aria-label="Spending breakdown donut chart">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={4}>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={60}
+            outerRadius={90}
+            paddingAngle={4}
+          >
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip content={<DonutTooltip />} />
-          <Legend formatter={(value, _entry, index) => {
-            const v = data[index]?.value ?? 0;
-            const pct = total ? Math.round((v / total) * 100) : 0;
-            return `${value} • ${pct}%`;
-          }} />
+          <Legend
+            formatter={(value, _entry, index) => {
+              const v = data[index]?.value ?? 0;
+              const pct = total ? Math.round((v / total) * 100) : 0;
+              return `${value} • ${pct}%`;
+            }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
