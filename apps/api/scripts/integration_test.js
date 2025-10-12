@@ -5,6 +5,16 @@
     { method: 'GET', path: '/accounts' },
     { method: 'GET', path: '/auth/link-status?email=test%40example.com' },
     { method: 'GET', path: '/' },
+    {
+      method: 'POST',
+      path: '/transactions/deposit',
+      body: { accountId: 'a4f22c5a-5a30-4e4b-8a8a-8a8a8a8a8a8a', amount: -100 },
+    },
+    {
+      method: 'POST',
+      path: '/transactions/withdraw',
+      body: { accountId: 'a4f22c5a-5a30-4e4b-8a8a-8a8a8a8a8a8a', amount: -100 },
+    },
   ];
 
   // simple fetch wrapper with fallback to node-fetch
@@ -21,8 +31,17 @@
 
   async function doReq(e) {
     const url = `${base}${e.path}`;
+    const options = {
+      method: e.method,
+      timeout: 5000,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (e.body) {
+      options.body = JSON.stringify(e.body);
+    }
+
     try {
-      const res = await _fetch(url, { method: e.method, timeout: 5000 });
+      const res = await _fetch(url, options);
       const ct = res.headers.get ? res.headers.get('content-type') : '';
       let body;
       try {
