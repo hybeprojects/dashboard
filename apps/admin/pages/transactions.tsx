@@ -11,3 +11,7 @@ export default function AdminTransactions() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: {} };
+}
