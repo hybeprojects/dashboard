@@ -110,7 +110,7 @@ export default function Dashboard() {
                       <div key={i} className="h-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
                     ))
                   ) : transactions.length ? (
-                    transactions.slice(0, 6).map((tx: any) => (
+                    transactions.slice(0, 6).map((tx: any, i: number) => (
                       <motion.div key={tx.id ?? `${tx.fromAccountId}-${tx.toAccountId}-${tx.amount}-${tx.createdAt ?? i}` } className="flex justify-between" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="text-sm">
                           {tx.fromAccountId || tx.account_id || tx.accountId || '—'} → {tx.toAccountId || tx.recipient_account || '—'}
