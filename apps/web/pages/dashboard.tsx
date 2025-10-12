@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -117,8 +116,7 @@ export default function Dashboard() {
                     transactions.slice(0, 6).map((tx) => (
                       <div key={tx.id} className="flex justify-between">
                         <div className="text-sm">
-                          {tx.fromAccountId || tx.account_id || tx.accountId || '—'} →{' '}
-                          {tx.toAccountId || tx.recipient_account || '—'}
+                          {(tx.fromAccountId || tx.account_id || tx.accountId || '—')} → {(tx.toAccountId || tx.recipient_account || '—')}
                         </div>
                         <div className="font-medium">${tx.amount}</div>
                       </div>
@@ -141,7 +139,7 @@ export default function Dashboard() {
                     notifications.slice(0, 8).map((n) => (
                       <div
                         key={n.id}
-                        className={`p-2 rounded ${n.read || n.is_read ? 'bg-gray-100' : 'bg-green-50'}`}
+                        className={`p-2 rounded ${(n.read || n.is_read) ? 'bg-gray-100' : 'bg-green-50'}`}
                       >
                         {n.message || JSON.stringify(n)}
                       </div>
