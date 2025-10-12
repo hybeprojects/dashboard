@@ -4,39 +4,36 @@ import '../styles/globals.css';
 import * as Sentry from '@sentry/react';
 import { AppQueryProvider } from '../lib/query';
 import TopProgressBar from '../components/ui/TopProgressBar';
-import useCurrentUser from '../hooks/useCurrentUser';
+import { ErrorBoundary } from 'react-error-boundary';
+import { Suspense } from 'react';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
 }
 
-function AppInner({
-  Component,
-  pageProps,
-}: {
-  Component: AppProps['Component'];
-  pageProps: AppProps['pageProps'];
-}) {
-  useCurrentUser();
-  return <Component {...pageProps} />;
-}
-
-import NextApp from 'next/app';
-
-function MyApp({ Component, pageProps }: AppProps) {
+function ErrorFallback({ error, resetErrorBoundary }: any) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AppQueryProvider>
-        <TopProgressBar />
-        <AppInner Component={Component} pageProps={pageProps} />
-      </AppQueryProvider>
-    </ThemeProvider>
+    <div role="alert">
+      <p>Something went wrong:</p>
+      <pre>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>Try again</button>
+    </div>
   );
 }
 
-MyApp.getInitialProps = async (appContext: any) => {
-  const appProps = await NextApp.getInitialProps(appContext);
-  return { ...appProps };
-};
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <Suspense fallback={<TopProgressBar />}>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AppQueryProvider>
+            <TopProgressBar />
+            <Component {...pageProps} />
+          </AppQueryProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </Suspense>
+  );
+}
 
 export default MyApp;

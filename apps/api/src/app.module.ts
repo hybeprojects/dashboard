@@ -1,6 +1,6 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -10,15 +10,18 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { KycModule } from './modules/kyc/kyc.module';
 import { AuditMiddleware } from './common/middleware/audit.middleware';
-import { JwtAuthGuard } from './security/jwt.guard';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET || 'secret',
-      signOptions: { expiresIn: '15m' },
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        ttl: config.get<number>('THROTTLE_TTL', 60),
+        limit: config.get<number>('THROTTLE_LIMIT', 10),
+      }),
     }),
     DatabaseModule,
     RedisModule,
@@ -28,8 +31,8 @@ import { JwtAuthGuard } from './security/jwt.guard';
     AnalyticsModule,
     NotificationsModule,
     KycModule,
+    HealthModule,
   ],
-  providers: [JwtAuthGuard],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

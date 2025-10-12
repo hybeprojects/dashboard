@@ -1,6 +1,8 @@
 
-> dashboard-server@1.0.0 dev
-> node server.js
+> premium-banking-monorepo@1.0.0 dev
+> npm --prefix apps/web run dev
 
-🚀 Dashboard server listening on port 5000
-⚠️ MySQL not available: connect ECONNREFUSED 127.0.0.1:3306
+
+> premium-banking-web@0.0.0 dev
+> next dev -p 3000
+
