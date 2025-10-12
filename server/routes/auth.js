@@ -68,4 +68,59 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// resend / link-status simple implementation
+const RESEND_FILE = path.join(__dirname, '..', 'data', 'resend.json');
+async function loadResend() { return fs.readJson(RESEND_FILE).catch(() => ({})); }
+async function saveResend(r) { return fs.writeJson(RESEND_FILE, r, { spaces: 2 }); }
+
+router.post('/resend', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ ok: false, message: 'email required' });
+  const key = String(email).toLowerCase();
+  const store = await loadResend();
+  const now = Date.now();
+  const rec = store[key] || { perMin: 0, perDay: 0, lastSent: null, lastTs: 0 };
+  // reset per-minute if >60s
+  if (rec.lastTs && now - rec.lastTs > 60000) rec.perMin = 0;
+  // reset perDay if past 24h
+  if (rec.lastTs && now - rec.lastTs > 24 * 60 * 60 * 1000) rec.perDay = 0;
+  rec.perMin += 1;
+  rec.perDay += 1;
+  rec.lastTs = now;
+  rec.lastSent = new Date(now).toISOString();
+  store[key] = rec;
+  await saveResend(store);
+  return res.json({ ok: true, message: 'sent', lastSent: rec.lastSent });
+});
+
+router.get('/link-status', async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.json({ attemptsToday: 0, lastSent: null });
+  const key = String(email).toLowerCase();
+  const store = await loadResend();
+  const rec = store[key] || { perMin: 0, perDay: 0, lastSent: null };
+  return res.json({ attemptsToday: rec.perDay || 0, lastSent: rec.lastSent || null });
+});
+
+// minimal me endpoint
+router.get('/me', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.json({ user: null });
+  const parts = auth.split(' ');
+  if (parts.length !== 2) return res.json({ user: null });
+  try {
+    const decoded = jwt.verify(parts[1], JWT_SECRET);
+    const users = await loadUsers();
+    const user = users.find((u) => u.id === decoded.sub);
+    if (!user) return res.json({ user: null });
+    return res.json({ user: { id: user.id, email: user.email, firstName: user.firstName || null, lastName: user.lastName || null } });
+  } catch (e) {
+    return res.json({ user: null });
+  }
+});
+
+router.post('/logout', async (req, res) => {
+  return res.json({ success: true });
+});
+
 module.exports = router;
