@@ -219,7 +219,7 @@ export default function Dashboard() {
                         )}
                       </div>
                     </div>
-                    <Link href={`/accounts/${acct.id ?? acct.accountId ?? acct.number ?? i}`} className="text-blue-700 font-semibold text-sm">VIEW</Link>
+                    <Link href={`/accounts/${acct ? (acct.id ?? acct.accountId ?? acct.number ?? i) : i}`} className="text-blue-700 font-semibold text-sm">VIEW</Link>
                   </div>
                 ),
               )}
