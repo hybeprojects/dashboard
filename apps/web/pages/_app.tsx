@@ -21,14 +21,25 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
   );
 }
 
+import DashboardLayout from '../components/layout/DashboardLayout';
+import { useRouter } from 'next/router';
+import React from 'react';
+
 function MyApp({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const isDashboardPage = router.pathname.startsWith('/dashboard') || ['/accounts', '/transfers', '/profile'].includes(router.pathname);
+
+  const Layout = isDashboardPage ? DashboardLayout : React.Fragment;
+
   return (
     <Suspense fallback={<TopProgressBar />}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppQueryProvider>
             <TopProgressBar />
-            <Component {...pageProps} />
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
           </AppQueryProvider>
         </ThemeProvider>
       </ErrorBoundary>
