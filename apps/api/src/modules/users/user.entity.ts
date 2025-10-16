@@ -14,7 +14,6 @@ import { KycDetail } from '../kyc/kyc-detail.entity';
 export class User {
   @PrimaryGeneratedColumn('uuid') id!: string;
   @Column({ unique: true }) email!: string;
-  @Column() passwordHash!: string;
   @Column({ default: false }) mfaEnabled!: boolean;
   @Column({ type: 'text', nullable: true }) mfaSecret?: string | null;
   @Column({ type: 'text', nullable: true }) firstName?: string | null;
