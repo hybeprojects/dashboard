@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { User } from '../users/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import * as speakeasy from 'speakeasy';
 import { supabaseAdmin } from '../../lib/supabase.client';
@@ -32,13 +31,11 @@ export class AuthService {
     if (error || !supabaseData.user) throw new UnauthorizedException('Could not create user');
 
     // store in local users table for MFA and additional metadata
-    const passwordHash = await argon2.hash(dto.password, { type: argon2.argon2id });
     // use Supabase user's id as the local id so RLS can use auth.uid() directly
     const localId = supabaseData.user.id;
     const local = this.users.create({
       id: localId,
       email: dto.email,
-      passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,
     });
@@ -64,15 +61,17 @@ export class AuthService {
   }
 
   async login({ email, password, otp }: { email: string; password: string; otp?: string }) {
-    // verify against local user table
-    const user = await this.users.findOne({ where: { email } });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-    const ok = await argon2.verify(user.passwordHash, password);
-    if (!ok) throw new UnauthorizedException('Invalid credentials');
-    if (user.mfaEnabled) {
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    if (error || !data.user) throw new UnauthorizedException('Invalid credentials');
+    const user = data.user;
+
+    const localUser = await this.users.findOne({ where: { email } });
+    if (!localUser) throw new UnauthorizedException('User not found in local database');
+
+    if (localUser.mfaEnabled) {
       if (!otp) throw new UnauthorizedException('MFA required');
       const verified = speakeasy.totp.verify({
-        secret: user.mfaSecret || '',
+        secret: localUser.mfaSecret || '',
         encoding: 'base32',
         token: otp,
         window: 1,
