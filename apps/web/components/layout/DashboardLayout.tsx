@@ -4,9 +4,9 @@ import { useRouter } from 'next/router';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'O' },
-  { href: '/accounts', label: 'Accounts', icon: 'A' },
-  { href: '/transfers', label: 'Transfers', icon: 'T' },
-  { href: '/profile', label: 'Profile', icon: 'P' },
+  { href: '/dashboard/accounts', label: 'Accounts', icon: 'A' },
+  { href: '/dashboard/transfers', label: 'Transfers', icon: 'T' },
+  { href: '/dashboard/profile', label: 'Profile', icon: 'P' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="ml-4 flex items-center md:ml-6">
               <span className="mr-3">User Name</span>
-              <button className="btn-secondary">Logout</button>
+              <button className="btn-secondary" onClick={() => router.push('/api/auth/logout')}>Logout</button>
             </div>
           </div>
         </header>
