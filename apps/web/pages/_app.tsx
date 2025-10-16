@@ -27,9 +27,23 @@ import React from 'react';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const isDashboardPage = router.pathname.startsWith('/dashboard') || ['/accounts', '/transfers', '/profile'].includes(router.pathname);
 
-  const Layout = isDashboardPage ? DashboardLayout : React.Fragment;
+  if (router.pathname.startsWith('/dashboard')) {
+    return (
+      <Suspense fallback={<TopProgressBar />}>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <AppQueryProvider>
+              <TopProgressBar />
+              <DashboardLayout>
+                <Component {...pageProps} />
+              </DashboardLayout>
+            </AppQueryProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={<TopProgressBar />}>
@@ -37,9 +51,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppQueryProvider>
             <TopProgressBar />
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
+            <Component {...pageProps} />
           </AppQueryProvider>
         </ThemeProvider>
       </ErrorBoundary>
