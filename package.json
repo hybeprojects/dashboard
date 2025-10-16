@@ -4,8 +4,7 @@
   "workspaces": [
     "apps/web",
     "apps/admin",
-    "apps/api",
-    "packages/*"
+    "apps/api"
   ],
   "scripts": {
     "dev": "npm --prefix apps/web run dev",
