@@ -7,14 +7,9 @@ import Button from '../../components/ui/Button';
 import api from '../../lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { register as apiRegister } from '../../lib/auth';
-import { useAuthStore } from '../../state/useAuthStore';
 
 type Form = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
+  fullName: string;
   dob: string;
   ssn: string;
   address: string;
@@ -26,7 +21,6 @@ type Form = {
 
 export default function PersonalRegister() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
   const [status, setStatus] = useState<string | null>(null);
   const {
     register,
@@ -37,38 +31,27 @@ export default function PersonalRegister() {
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
-      const data = await apiRegister({
-        email: v.email,
-        password: v.password,
-        firstName: v.firstName,
-        lastName: v.lastName,
-      });
-      if (data && data.accessToken) {
-        if (typeof window !== 'undefined') localStorage.setItem('token', data.accessToken);
-        setUser({ id: '', email: v.email, firstName: v.firstName, lastName: v.lastName });
-        const kycForm = new FormData();
-        Object.entries(v).forEach(([k, val]) => {
-          if (val === undefined || val === null) return;
-          if (k === 'idFront' || k === 'idBack' || k === 'proofAddress') {
-            const files = val as any as FileList;
-            if (files && files[0]) kycForm.append(k, files[0]);
-            return;
-          }
-          kycForm.append(k, String(val));
-        });
-        kycForm.append('accountType', 'personal');
-        kycForm.append('openSavings', v.openSavings ? '1' : '0');
-        await api.post('/kyc/submit', kycForm, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        if (v.openSavings) {
-          await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
+      const form = new FormData();
+      Object.entries(v).forEach(([k, val]) => {
+        if (val === undefined || val === null) return;
+        if (k === 'idFront' || k === 'idBack' || k === 'proofAddress') {
+          const files = val as any as FileList;
+          if (files && files[0]) form.append(k, files[0]);
+          return;
         }
-        setStatus('Submitted — verification in progress');
-        router.push('/dashboard');
-      } else {
-        setStatus('Account created but no token returned');
+        form.append(k, String(val));
+      });
+      form.append('accountType', 'personal');
+      form.append('openSavings', v.openSavings ? '1' : '0');
+      await api.post('/kyc/submit', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (v.openSavings) {
+        // create linked savings via API (best-effort placeholder)
+        await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
       }
+      setStatus('Submitted — verification in progress');
+      router.push('/register/complete?type=personal');
     } catch (err: any) {
       setStatus(err?.message || 'Submission failed');
     }
@@ -83,30 +66,22 @@ export default function PersonalRegister() {
           No monthly fees. Complete KYC to open your account. Optionally add a linked savings
           account during signup.
         </p>
-        <form className="card-surface p-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-          <FormInput label="First name" {...register('firstName')} error={errors.firstName} />
-          <FormInput label="Last name" {...register('lastName')} error={errors.lastName} />
-          <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
-          <FormInput
-            label="Password"
-            type="password"
-            {...register('password')}
-            error={errors.password}
-          />
+        <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
+          <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
           <FormInput label="Date of birth" type="date" {...register('dob')} error={errors.dob} />
           <FormInput label="SSN" {...register('ssn')} error={errors.ssn} />
           <FormInput label="Address" {...register('address')} error={errors.address} />
 
-          <div className="md:col-span-2">
+          <div>
             <label className="inline-flex items-center gap-2">
               <input type="checkbox" {...register('openSavings' as any)} />
               <span className="text-sm">Also open a Premier Free Savings account</span>
             </label>
           </div>
 
-          <hr className="my-4 md:col-span-2" />
+          <hr className="my-4" />
 
-          <div className="text-lg font-semibold md:col-span-2">Verification documents</div>
+          <div className="text-lg font-semibold">Verification documents</div>
           <div>
             <label className="block text-sm mb-1">ID document (front)</label>
             <input type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
@@ -122,12 +97,12 @@ export default function PersonalRegister() {
             <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
           </div>
 
-          <div className="md:col-span-2 flex justify-end">
+          <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Personal Account'}
             </Button>
           </div>
-          {status && <div className="md:col-span-2 text-sm mt-2 text-primary">{status}</div>}
+          {status && <div className="text-sm mt-2 text-primary">{status}</div>}
         </form>
       </main>
     </div>
