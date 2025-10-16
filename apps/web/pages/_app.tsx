@@ -28,22 +28,14 @@ import React from 'react';
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
-  if (router.pathname.startsWith('/dashboard')) {
-    return (
-      <Suspense fallback={<TopProgressBar />}>
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <AppQueryProvider>
-              <TopProgressBar />
-              <DashboardLayout>
-                <Component {...pageProps} />
-              </DashboardLayout>
-            </AppQueryProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
-      </Suspense>
-    );
-  }
+  const getLayout =
+    (Component as any).getLayout ||
+    ((page: React.ReactNode) =>
+      router.pathname.startsWith('/dashboard') ? (
+        <DashboardLayout>{page}</DashboardLayout>
+      ) : (
+        page
+      ));
 
   return (
     <Suspense fallback={<TopProgressBar />}>
@@ -51,7 +43,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppQueryProvider>
             <TopProgressBar />
-            <Component {...pageProps} />
+            {getLayout(<Component {...pageProps} />)}
           </AppQueryProvider>
         </ThemeProvider>
       </ErrorBoundary>
