@@ -18,7 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
           <div className="flex items-center justify-center h-16 bg-white dark:bg-gray-800">
-            <span className="text-2xl font-bold">BankLogo</span>
+            <img src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png" alt="Bank Logo" className="h-8 w-auto" />
           </div>
           <nav className="flex-1 px-2 py-4 space-y-1 bg-white dark:bg-gray-800">
             {navItems.map((item) => (

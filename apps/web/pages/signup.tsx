@@ -65,6 +65,7 @@ export default function SignupPage() {
               value="personal"
               {...register('userType')}
               className="mr-2"
+              name="userType"
             />
             <label htmlFor="personal">Personal</label>
           </div>
@@ -75,6 +76,7 @@ export default function SignupPage() {
               value="business"
               {...register('userType')}
               className="mr-2"
+              name="userType"
             />
             <label htmlFor="business">Business</label>
           </div>

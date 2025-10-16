@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 const loginSchema = yup.object().shape({
   email: yup.string().email().required(),
   password: yup.string().required(),
+  otp: yup.string(),
 });
 
 export default function LoginPage() {
@@ -52,6 +53,13 @@ export default function LoginPage() {
             type="password"
             {...register('password')}
             error={errors.password}
+          />
+          <FormInput
+            label="2FA Code (if enabled)"
+            type="text"
+            inputMode="numeric"
+            {...register('otp')}
+            error={errors.otp}
           />
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Logging in...' : 'Login'}

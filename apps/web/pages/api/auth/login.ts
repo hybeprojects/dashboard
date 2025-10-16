@@ -4,7 +4,7 @@ import * as bcrypt from 'bcryptjs';
 
 export default withSessionRoute(async (req, res) => {
   if (req.method === 'POST') {
-    const { email, password } = req.body;
+    const { email, password, otp } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
@@ -20,6 +20,8 @@ export default withSessionRoute(async (req, res) => {
       if (!isPasswordValid) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
+
+      // 2FA/OTP check would go here if implemented
 
       req.session.user = { id: user.id, email: user.email };
       await req.session.save();
