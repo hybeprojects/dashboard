@@ -7,14 +7,8 @@ import Button from '../../components/ui/Button';
 import api from '../../lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { register as apiRegister } from '../../lib/auth';
-import { useAuthStore } from '../../state/useAuthStore';
 
 type Form = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
   businessName: string;
   businessAddress: string;
   taxId: string;
@@ -31,7 +25,6 @@ type Form = {
 
 export default function BusinessRegister() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
   const [status, setStatus] = useState<string | null>(null);
   const {
     register,
@@ -42,34 +35,23 @@ export default function BusinessRegister() {
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
-      const data = await apiRegister({
-        email: v.email,
-        password: v.password,
-        firstName: v.firstName,
-        lastName: v.lastName,
+      const form = new FormData();
+      Object.entries(v).forEach(([k, val]) => {
+        if (val === undefined || val === null) return;
+        if (k === 'idFront' || k === 'idBack' || k === 'proofAddress') {
+          const files = val as any as FileList;
+          if (files && files[0]) form.append(k, files[0]);
+          return;
+        }
+        form.append(k, String(val));
       });
-      if (data && data.accessToken) {
-        if (typeof window !== 'undefined') localStorage.setItem('token', data.accessToken);
-        setUser({ id: '', email: v.email, firstName: v.firstName, lastName: v.lastName });
-        const kycForm = new FormData();
-        Object.entries(v).forEach(([k, val]) => {
-          if (val === undefined || val === null) return;
-          if (k === 'idFront' || k === 'idBack' || k === 'proofAddress') {
-            const files = val as any as FileList;
-            if (files && files[0]) kycForm.append(k, files[0]);
-            return;
-          }
-          kycForm.append(k, String(val));
-        });
-        kycForm.append('accountType', 'business');
-        await api.post('/kyc/submit', kycForm, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        setStatus('Submitted — verification in progress');
-        router.push('/dashboard');
-      } else {
-        setStatus('Account created but no token returned');
-      }
+      // include account type
+      form.append('accountType', 'business');
+      await api.post('/kyc/submit', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setStatus('Submitted — verification in progress');
+      router.push('/register/complete?type=business');
     } catch (err: any) {
       setStatus(err?.message || 'Submission failed');
     }
@@ -84,16 +66,7 @@ export default function BusinessRegister() {
           Minimum initial deposit: $500. Provide business details and verification documents to
           speed up onboarding.
         </p>
-        <form className="card-surface p-4 sm:p-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-          <FormInput label="First name" {...register('firstName')} error={errors.firstName} />
-          <FormInput label="Last name" {...register('lastName')} error={errors.lastName} />
-          <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
-          <FormInput
-            label="Password"
-            type="password"
-            {...register('password')}
-            error={errors.password}
-          />
+        <form className="card-surface p-4 sm:p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             label="Business name"
             {...register('businessName')}
@@ -127,8 +100,8 @@ export default function BusinessRegister() {
             {...register('initialDeposit')}
             error={errors.initialDeposit}
           />
-          <hr className="my-4 md:col-span-2" />
-          <div className="text-lg font-semibold md:col-span-2">Authorized representative</div>
+          <hr className="my-4" />
+          <div className="text-lg font-semibold">Authorized representative</div>
           <FormInput
             label="Full name"
             {...register('representativeName')}
@@ -139,7 +112,7 @@ export default function BusinessRegister() {
             {...register('representativeSsn')}
             error={errors.representativeSsn}
           />
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm mb-1">ID document (front)</label>
             <input
               className="w-full"
@@ -148,7 +121,7 @@ export default function BusinessRegister() {
               {...register('idFront' as any)}
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm mb-1">ID document (back)</label>
             <input
               className="w-full"
@@ -157,7 +130,7 @@ export default function BusinessRegister() {
               {...register('idBack' as any)}
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm mb-1">
               Proof of address (utility bill or bank statement)
             </label>
@@ -168,12 +141,12 @@ export default function BusinessRegister() {
               {...register('proofAddress' as any)}
             />
           </div>
-          <div className="md:col-span-2 flex">
+          <div className="flex">
             <Button className="w-full sm:w-auto" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Business Account'}
             </Button>
           </div>
-          {status && <div className="md:col-span-2 text-sm mt-2 text-primary">{status}</div>}
+          {status && <div className="text-sm mt-2 text-primary">{status}</div>}
         </form>
       </main>
     </div>
