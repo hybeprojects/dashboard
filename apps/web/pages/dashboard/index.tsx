@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { GetServerSidePropsContext } from 'next';
 import { Account } from '../../lib/supabase/types';
 import Link from 'next/link';
@@ -42,21 +42,7 @@ export default function DashboardPage({ accounts }: DashboardPageProps) {
 }
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => context.req.cookies[name],
-        set: (name, value, options) => {
-          context.res.setHeader('Set-Cookie', serialize(name, value, options));
-        },
-        remove: (name, options) => {
-          context.res.setHeader('Set-Cookie', serialize(name, '', options));
-        },
-      },
-    }
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   const {
     data: { session },
