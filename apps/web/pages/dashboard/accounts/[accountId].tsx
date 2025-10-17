@@ -19,7 +19,10 @@ export default function AccountDetailsPage({ account }: AccountDetailsPageProps)
       <h2 className="text-2xl font-bold mb-4">Transaction History</h2>
       <div className="space-y-4">
         {account.transactions.map((transaction) => (
-          <div key={transaction.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex justify-between items-center">
+          <div
+            key={transaction.id}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex justify-between items-center"
+          >
             <div>
               <p className="font-bold">{transaction.description}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -41,7 +44,10 @@ export default function AccountDetailsPage({ account }: AccountDetailsPageProps)
 }
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
 
   const {
     data: { session },
