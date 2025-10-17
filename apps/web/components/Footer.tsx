@@ -7,7 +7,11 @@ export default function Footer() {
         <div>
           <div className="text-xl font-semibold text-primary">
             <Link href="/">
-              <img src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png" alt="PremierBank" className="h-8" />
+              <img
+                src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
+                alt="PremierBank"
+                className="h-8"
+              />
             </Link>
           </div>
           <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">

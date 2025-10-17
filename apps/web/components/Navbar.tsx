@@ -27,7 +27,11 @@ export default function Navbar() {
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-16 items-center justify-between">
         <Link href="/" className="text-lg font-semibold text-primary">
-          <img src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png" alt="PremierBank" className="h-8" />
+          <img
+            src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
+            alt="PremierBank"
+            className="h-8"
+          />
         </Link>
         <div className="hidden md:flex items-center gap-4">
           {user ? (
