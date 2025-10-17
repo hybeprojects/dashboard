@@ -5,7 +5,11 @@ export default function Footer() {
     <footer className="mt-16 border-t border-gray-200 dark:border-gray-800">
       <div className="section py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <div className="text-xl font-semibold text-primary">PremierBank</div>
+          <div className="text-xl font-semibold text-primary">
+            <Link href="/">
+              <img src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png" alt="PremierBank" className="h-8" />
+            </Link>
+          </div>
           <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
             Secure, modern banking for individuals and businesses. FDIC-insured partner banks. 24/7
             support.
