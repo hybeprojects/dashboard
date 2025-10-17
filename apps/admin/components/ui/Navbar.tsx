@@ -9,7 +9,7 @@ export default function Navbar() {
           <img
             src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
             alt="PremierBank"
-            className="h-6 inline-block align-middle"
+            className="h-8 inline-block align-middle w-auto object-contain"
           />
         </Link>
         <div className="ml-auto flex gap-4 text-sm">
