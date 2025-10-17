@@ -14,7 +14,8 @@
     "@supabase/supabase-js": "^2.0.0",
     "next": "^13.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "framer-motion": "^10.12.16"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.9.1",
