@@ -1,57 +1,56 @@
-import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { registerSchema } from '../hooks/useFormSchemas';
+import * as yup from 'yup';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
-import Navbar from '../components/Navbar';
-import { register as apiRegister } from '../lib/auth';
-import { useRouter } from 'next/router';
-import { useAuthStore } from '../state/useAuthStore';
+import { useState } from 'react';
 import Alert from '../components/ui/Alert';
+import Navbar from '../components/Navbar';
+
+const signupSchema = yup.object().shape({
+  email: yup.string().email().required(),
+  password: yup.string().required(),
+  firstName: yup.string().required(),
+  lastName: yup.string().required(),
+  userType: yup.string().oneOf(['personal', 'business']).required(),
+});
 
 export default function Register() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
+  const [msg, setMsg] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<{ firstName: string; lastName: string; email: string; password: string }>({
-    resolver: yupResolver(registerSchema),
+  } = useForm({
+    resolver: yupResolver(signupSchema),
   });
-  const [msg, setMsg] = useState<string | null>(null);
+
+  const onSubmit = async (data: any) => {
+    setMsg(null);
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      router.push('/dashboard');
+    } else {
+      const { error } = await res.json();
+      setMsg(error);
+    }
+  };
 
   return (
     <div className="container-page">
       <Navbar />
-      <main className="section py-10">
+      <main className="section py-10 max-w-md mx-auto">
         <h2 className="text-2xl font-bold mb-4">Open your account</h2>
-        <form
-          className="card-surface p-6 grid gap-4 md:grid-cols-2"
-          onSubmit={handleSubmit(async (v) => {
-            setMsg(null);
-            try {
-              const data = await apiRegister({
-                email: v.email,
-                password: v.password,
-                firstName: v.firstName,
-                lastName: v.lastName,
-              });
-              if (data && data.accessToken) {
-                if (typeof window !== 'undefined') localStorage.setItem('token', data.accessToken);
-                setUser({ id: '', email: v.email, firstName: v.firstName, lastName: v.lastName });
-                router.push('/dashboard');
-              } else {
-                setMsg('Account created but no token returned');
-              }
-            } catch (err: any) {
-              setMsg(err?.response?.data?.error || err?.message || 'Account creation failed');
-            }
-          })}
-        >
-          <FormInput label="First name" {...register('firstName')} error={errors.firstName} />
-          <FormInput label="Last name" {...register('lastName')} error={errors.lastName} />
+        <form className="card-surface p-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <FormInput label="First Name" {...register('firstName')} error={errors.firstName} />
+          <FormInput label="Last Name" {...register('lastName')} error={errors.lastName} />
           <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
           <FormInput
             label="Password"
@@ -59,16 +58,32 @@ export default function Register() {
             {...register('password')}
             error={errors.password}
           />
-          <div className="md:col-span-2">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating…' : 'Create Account'}
-            </Button>
+          <div className="flex items-center">
+            <input
+              type="radio"
+              id="personal"
+              value="personal"
+              {...register('userType')}
+              className="mr-2"
+              name="userType"
+            />
+            <label htmlFor="personal">Personal</label>
           </div>
-          {msg && (
-            <div className="md:col-span-2">
-              <Alert kind="error">{msg}</Alert>
-            </div>
-          )}
+          <div className="flex items-center">
+            <input
+              type="radio"
+              id="business"
+              value="business"
+              {...register('userType')}
+              className="mr-2"
+              name="userType"
+            />
+            <label htmlFor="business">Business</label>
+          </div>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating…' : 'Create Account'}
+          </Button>
+          {msg && <Alert kind="error">{msg}</Alert>}
         </form>
       </main>
     </div>
