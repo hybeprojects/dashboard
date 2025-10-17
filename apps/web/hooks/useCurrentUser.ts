@@ -1,16 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api';
 import { useAuthStore } from '../state/useAuthStore';
 import { useEffect } from 'react';
-
-const fetchUser = async () => {
-  const { data } = await api.get('/auth/me');
-  return data.user;
-};
+import { createClient } from '../lib/supabase/client';
 
 export default function useCurrentUser() {
+  const supabase = createClient();
   const setUser = useAuthStore((s) => s.setUser);
-  const { data: user, error } = useQuery(['currentUser'], fetchUser, {
+
+  const { data: user, error } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
     retry: false,
     refetchOnWindowFocus: false,
   });

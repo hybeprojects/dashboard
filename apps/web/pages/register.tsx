@@ -29,17 +29,17 @@ export default function Register() {
 
   const onSubmit = async (data: any) => {
     setMsg(null);
-    const res = await fetch('/api/auth/signup', {
+    const res = await fetch('http://localhost:3001/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
 
     if (res.ok) {
-      router.push('/dashboard');
+      router.push('/login');
     } else {
-      const { error } = await res.json();
-      setMsg(error);
+      const { message } = await res.json();
+      setMsg(message);
     }
   };
 

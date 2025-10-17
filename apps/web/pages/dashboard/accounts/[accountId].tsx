@@ -1,24 +1,58 @@
 import { createClient } from '@supabase/supabase-js';
 import { GetServerSidePropsContext } from 'next';
-import { Account, Transaction } from '../../../lib/supabase/types';
 import { serialize } from 'cookie';
 
-type AccountDetailsPageProps = {
-  account: Account & { transactions: Transaction[] };
+// Define types inline instead of importing
+type Account = {
+  id: string;
+  user_id: string;
+  account_number: string;
+  type: 'checking' | 'savings' | 'business' | 'loan';
+  name: string;
+  balance: number;
+  available_balance: number;
+  currency: string;
+  status: string;
+  interest_rate: number;
+  overdraft_limit: number;
+  transfer_limit_tier: 'basic' | 'standard' | 'premium' | 'unlimited';
+  daily_transfer_limit: number;
+  monthly_transfer_limit: number;
+  used_daily_limit: number;
+  used_monthly_limit: number;
+  opened_at: string;
+  created_at: string;
 };
 
-export default function AccountDetailsPage({ account }: AccountDetailsPageProps) {
+type Transaction = {
+  id: string;
+  account_id: string;
+  amount: number;
+  type: 'debit' | 'credit' | 'transfer' | 'payment' | 'fee';
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  description: string;
+  reference: string;
+  running_balance: number;
+  created_at: string;
+};
+
+type AccountDetailsPageProps = {
+  account: Account;
+  transactions: Transaction[];
+};
+
+export default function AccountDetailsPage({ account, transactions }: AccountDetailsPageProps) {
   return (
     <div>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <h1 className="text-3xl font-bold capitalize">{account.type} Account</h1>
-        <p className="text-gray-500 dark:text-gray-400 font-mono">{account.accountNumber}</p>
+        <p className="text-gray-500 dark:text-gray-400 font-mono">{account.account_number}</p>
         <p className="text-4xl font-bold mt-4">${account.balance.toFixed(2)}</p>
       </div>
 
       <h2 className="text-2xl font-bold mb-4">Transaction History</h2>
       <div className="space-y-4">
-        {account.transactions.map((transaction) => (
+        {transactions.map((transaction) => (
           <div
             key={transaction.id}
             className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex justify-between items-center"
@@ -26,7 +60,7 @@ export default function AccountDetailsPage({ account }: AccountDetailsPageProps)
             <div>
               <p className="font-bold">{transaction.description}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {new Date(transaction.createdAt).toLocaleDateString()}
+                {new Date(transaction.created_at).toLocaleDateString()}
               </p>
             </div>
             <p
@@ -64,15 +98,21 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   const accountId = context.params?.accountId as string;
 
-  const { data: account, error } = await supabase
+  const { data: account, error: accountError } = await supabase
     .from('accounts')
-    .select('*, transactions(*)')
+    .select('*')
     .eq('id', accountId)
     .eq('user_id', session.user.id)
     .single();
 
-  if (error || !account) {
-    console.error('Error fetching account details:', error);
+  const { data: transactions, error: transactionsError } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('account_id', accountId)
+    .order('created_at', { ascending: false });
+
+  if (accountError || !account) {
+    console.error('Error fetching account details:', accountError);
     return {
       notFound: true,
     };
@@ -81,6 +121,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   return {
     props: {
       account,
+      transactions: transactions || [],
     },
   };
 };

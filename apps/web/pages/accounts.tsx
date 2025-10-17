@@ -1,20 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api';
 import Card from '../components/ui/Card';
-
-async function fetchAccounts() {
-  try {
-    const res = await api.get('/accounts');
-    return Array.isArray(res.data) ? res.data : res.data?.accounts || [];
-  } catch (e) {
-    return [];
-  }
-}
+import { createClient } from '../lib/supabase/client';
 
 export default function AccountsPage() {
-  const { data: accounts = [], isLoading } = useQuery(['accounts'], fetchAccounts, {
+  const supabase = createClient();
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('accounts').select('*');
+      return data;
+    },
     staleTime: 30_000,
   });
   return (
@@ -29,7 +26,7 @@ export default function AccountsPage() {
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-sm text-gray-500">Loading…</div>
-        ) : accounts.length ? (
+        ) : accounts && accounts.length > 0 ? (
           accounts.map((a: any) => (
             <Card key={a.id} className="p-3">
               <div className="flex items-center justify-between">

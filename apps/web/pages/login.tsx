@@ -26,17 +26,20 @@ export default function Login() {
 
   const onSubmit = async (data: any) => {
     setMsg(null);
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch('http://localhost:3001/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
 
     if (res.ok) {
+      const { accessToken } = await res.json();
+      // Store the token and redirect
+      localStorage.setItem('access_token', accessToken);
       router.push('/dashboard');
     } else {
-      const { error } = await res.json();
-      setMsg(error);
+      const { message } = await res.json();
+      setMsg(message);
     }
   };
 

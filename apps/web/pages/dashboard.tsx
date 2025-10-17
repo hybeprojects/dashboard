@@ -1,63 +1,9 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Card from '../components/ui/Card';
-import api from '../lib/api';
-import useWebSocket from '../hooks/useWebSocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
-
-function normalizeToArray(payload: any, key?: string) {
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === 'object') {
-    if (key && Array.isArray(payload[key])) return payload[key];
-    if (Array.isArray(payload.accounts)) return payload.accounts;
-    if (Array.isArray(payload.transactions)) return payload.transactions;
-    if (Array.isArray(payload.notifications)) return payload.notifications;
-    const vals = Object.values(payload);
-    if (vals.every((v) => typeof v !== 'undefined')) return vals;
-    return [];
-  }
-  return [];
-}
-
-async function fetchAccounts() {
-  try {
-    const res = await api.get('/accounts');
-    return normalizeToArray(res.data, 'accounts');
-  } catch (err: any) {
-    if (err?.response?.status === 404) {
-      console.warn(
-        '/accounts endpoint not found (404). Returning empty accounts array. Set NEXT_PUBLIC_API_URL to your API server if needed.',
-      );
-      return [];
-    }
-    throw err;
-  }
-}
-async function fetchTransactions() {
-  try {
-    const res = await api.get('/transactions');
-    return normalizeToArray(res.data, 'transactions');
-  } catch (err: any) {
-    if (err?.response?.status === 404) {
-      console.warn('/transactions endpoint not found (404). Returning empty transactions array.');
-      return [];
-    }
-    throw err;
-  }
-}
-async function fetchNotifications() {
-  try {
-    const res = await api.get('/notifications');
-    return normalizeToArray(res.data, 'notifications');
-  } catch (err: any) {
-    if (err?.response?.status === 404) {
-      console.warn('/notifications endpoint not found (404). Returning empty notifications array.');
-      return [];
-    }
-    throw err;
-  }
-}
+import { createClient } from '../lib/supabase/client';
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {
   return (
@@ -85,19 +31,30 @@ const icons = {
 export default function Dashboard() {
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const supabase = createClient();
+
   const { data: accounts = [], isLoading: accLoading } = useQuery({
     queryKey: ['accounts'],
-    queryFn: fetchAccounts,
+    queryFn: async () => {
+      const { data } = await supabase.from('accounts').select('*');
+      return data;
+    },
     staleTime: 30_000,
   });
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ['transactions'],
-    queryFn: fetchTransactions,
+    queryFn: async () => {
+      const { data } = await supabase.from('transactions').select('*');
+      return data;
+    },
     staleTime: 15_000,
   });
   const { data: notifications = [], isLoading: notifLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: fetchNotifications,
+    queryFn: async () => {
+      const { data } = await supabase.from('notifications').select('*');
+      return data;
+    },
     staleTime: 15_000,
   });
 
@@ -107,25 +64,10 @@ export default function Dashboard() {
 
   const totalBalance = useMemo(() => {
     return accountsArr.reduce((sum: number, a: any) => {
-      const rawAmt = Number(a?.raw?.accountBalance?.amount ?? 0);
-      const bal = Number(a.balance ?? rawAmt);
+      const bal = Number(a.balance);
       return sum + (isNaN(bal) ? 0 : bal);
     }, 0);
   }, [accountsArr]);
-
-  useWebSocket((event, payload) => {
-    if (event === 'transfer') {
-      qc.setQueryData<any[]>(['transactions'], (prev = []) => [{ ...payload }, ...prev]);
-      qc.invalidateQueries({ queryKey: ['accounts'] });
-      qc.setQueryData<any[]>(['notifications'], (prev = []) => [
-        { id: `n_${Date.now()}`, message: `Transfer of $${payload.amount}`, read: false },
-        ...prev,
-      ]);
-    }
-    if (event === 'notification') {
-      qc.setQueryData<any[]>(['notifications'], (prev = []) => [payload, ...prev]);
-    }
-  });
 
   const primary = 'bg-primary text-white';
 
@@ -175,7 +117,7 @@ export default function Dashboard() {
             <button className="w-full flex items-center justify-between px-4 py-4">
               <div className="text-left">
                 <div className="text-sm text-gray-500">
-                  Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}
+                  Hello{user?.user_metadata?.first_name ? ',' : ''} {user?.user_metadata?.first_name || 'there'}
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
@@ -215,7 +157,7 @@ export default function Dashboard() {
                         {accLoading ? (
                           <span className="inline-block h-6 w-24 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
                         ) : (
-                          `$${Number(acct?.balance ?? acct?.raw?.accountBalance?.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          `$${Number(acct?.balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         )}
                       </div>
                     </div>

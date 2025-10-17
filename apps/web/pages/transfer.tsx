@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../lib/api';
 import Card from '../components/ui/Card';
-
-async function fetchAccounts() {
-  try {
-    const res = await api.get('/accounts');
-    return Array.isArray(res.data) ? res.data : res.data?.accounts || [];
-  } catch (e) {
-    return [];
-  }
-}
+import { createClient } from '../lib/supabase/client';
 
 export default function TransferPage() {
   const qc = useQueryClient();
-  const { data: accounts = [] } = useQuery(['accounts'], fetchAccounts);
-  const [from, setFrom] = useState(accounts[0]?.id ?? '');
+  const supabase = createClient();
+
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('accounts').select('*');
+      return data;
+    },
+  });
+
+  const [from, setFrom] = useState(accounts?.[0]?.id ?? '');
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function TransferPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!from && accounts.length) setFrom(accounts[0].id ?? accounts[0].accountId ?? '');
+    if (!from && accounts && accounts.length > 0) setFrom(accounts[0].id ?? accounts[0].accountId ?? '');
   }, [accounts, from]);
 
   async function submit(e: React.FormEvent) {
@@ -33,12 +33,21 @@ export default function TransferPage() {
     setError(null);
     setSuccess(null);
     try {
-      const payload = { fromAccountId: from, toAccountId: to, amount: Number(amount) };
-      // Post to backend; if not available, fall back to optimistic UI update
-      const res = await api.post('/transactions', payload).catch((err) => ({ data: payload }));
-      // update transactions cache
-      qc.setQueryData<any[]>(['transactions'], (prev = []) => [res.data, ...(prev || [])]);
-      setSuccess('Transfer submitted (simulated)');
+      const { data, error } = await supabase.from('transactions').insert([
+        {
+          from_account_id: from,
+          to_account_id: to,
+          amount: Number(amount),
+          description: `Transfer from ${from} to ${to}`,
+        },
+      ]);
+
+      if (error) {
+        throw error;
+      }
+
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+      setSuccess('Transfer submitted');
       setAmount('');
       setTo('');
     } catch (err: any) {
@@ -66,7 +75,7 @@ export default function TransferPage() {
               onChange={(e) => setFrom(e.target.value)}
               className="w-full border rounded p-2"
             >
-              {accounts.map((a: any) => (
+              {accounts?.map((a: any) => (
                 <option
                   key={a.id ?? a.accountId ?? a.number}
                   value={a.id ?? a.accountId ?? a.number}
