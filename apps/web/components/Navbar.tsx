@@ -30,7 +30,7 @@ export default function Navbar() {
           <img
             src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
             alt="PremierBank"
-            className="h-8"
+            className="h-12 w-auto object-contain"
           />
         </Link>
         <div className="hidden md:flex items-center gap-4">
