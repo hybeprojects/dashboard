@@ -2,40 +2,37 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../lib/api';
 import Card from '../../components/ui/Card';
-
-async function fetchAccounts() {
-  try {
-    const res = await api.get('/accounts');
-    return Array.isArray(res.data) ? res.data : res.data?.accounts || [];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function fetchTransactions() {
-  try {
-    const res = await api.get('/transactions');
-    return Array.isArray(res.data) ? res.data : res.data?.transactions || [];
-  } catch (e) {
-    return [];
-  }
-}
+import { createClient } from '../../lib/supabase/client';
 
 export default function AccountDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { data: accounts = [] } = useQuery(['accounts'], fetchAccounts);
-  const { data: transactions = [] } = useQuery(['transactions'], fetchTransactions);
+  const supabase = createClient();
 
-  const acct = accounts.find(
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('accounts').select('*');
+      return data;
+    },
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: async () => {
+      const { data } = await supabase.from('transactions').select('*');
+      return data;
+    },
+  });
+
+  const acct = accounts?.find(
     (a: any) =>
       String(a.id) === String(id) ||
       String(a.accountId) === String(id) ||
       String(a.number) === String(id),
   );
-  const relatedTx = transactions.filter(
+  const relatedTx = transactions?.filter(
     (t: any) =>
       String(t.fromAccountId) === String(id) ||
       String(t.toAccountId) === String(id) ||
@@ -62,7 +59,7 @@ export default function AccountDetail() {
         </div>
         <div>
           <h3 className="font-medium mb-2">Recent activity</h3>
-          {relatedTx.length ? (
+          {relatedTx && relatedTx.length > 0 ? (
             relatedTx.slice(0, 8).map((t: any) => (
               <div key={t.id || JSON.stringify(t)} className="flex justify-between py-2 border-t">
                 <div className="text-sm">

@@ -3,26 +3,19 @@ import Link from 'next/link';
 import ThemeToggle from '../lib/theme';
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
-import { signOutSupabase } from '../lib/supabase';
-import { logout as backendLogout } from '../lib/auth';
+import { createClient } from '../lib/supabase/client';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const supabase = createClient();
+
   async function handleSignOut() {
-    try {
-      await signOutSupabase();
-    } catch (e) {
-      console.error('Error signing out:', e);
-    }
-    try {
-      await backendLogout();
-    } catch {
-    } finally {
-      logout();
-    }
+    await supabase.auth.signOut();
+    logout();
   }
+
   return (
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-20 items-center justify-between">
@@ -37,7 +30,7 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="text-sm">
-                {user.firstName || user.email}
+                {user.user_metadata.first_name || user.email}
               </Link>
               <button className="text-sm text-primary" onClick={handleSignOut}>
                 Sign out

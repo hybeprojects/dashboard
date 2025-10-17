@@ -2,23 +2,23 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../lib/api';
 import Card from '../../components/ui/Card';
-
-async function fetchTransactions() {
-  try {
-    const res = await api.get('/transactions');
-    return Array.isArray(res.data) ? res.data : res.data?.transactions || [];
-  } catch (e) {
-    return [];
-  }
-}
+import { createClient } from '../../lib/supabase/client';
 
 export default function TransactionDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { data: transactions = [] } = useQuery(['transactions'], fetchTransactions);
-  const tx = transactions.find((t: any) => String(t.id) === String(id));
+  const supabase = createClient();
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: async () => {
+      const { data } = await supabase.from('transactions').select('*');
+      return data;
+    },
+  });
+
+  const tx = transactions?.find((t: any) => String(t.id) === String(id));
 
   if (!tx) {
     return (

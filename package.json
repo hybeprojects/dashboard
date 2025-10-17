@@ -2,9 +2,7 @@
   "name": "premium-banking-monorepo",
   "private": true,
   "workspaces": [
-    "apps/web",
-    "apps/admin",
-    "apps/api"
+    "apps/web"
   ],
   "scripts": {
     "dev": "npm --prefix apps/web run dev",
