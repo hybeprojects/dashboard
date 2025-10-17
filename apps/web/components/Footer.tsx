@@ -10,7 +10,7 @@ export default function Footer() {
               <img
                 src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
                 alt="PremierBank"
-                className="h-8"
+                className="h-10 w-auto object-contain"
               />
             </Link>
           </div>
