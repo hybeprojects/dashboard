@@ -1,18 +1,28 @@
 module.exports = function registerSockets(io) {
+  const cookie = require('cookie');
+  const jwtLib = require('jsonwebtoken');
+
   io.on('connection', (socket) => {
-    const token = socket.handshake.auth?.token;
-    // expect client to send JWT in auth token; we will map to user id via payload
     try {
+      // Prefer token sent in auth payload, fall back to cookie header (httpOnly cookie set by server).
+      const tokenFromAuth = socket.handshake.auth?.token;
+      let token = tokenFromAuth;
+
+      if (!token && socket.request && socket.request.headers && socket.request.headers.cookie) {
+        const cookies = cookie.parse(socket.request.headers.cookie || '');
+        token = cookies?.token;
+      }
+
       if (token) {
-        const jwt = require('jsonwebtoken');
-        const secret = process.env.JWT_SECRET || 'dev_secret';
-        const decoded = jwt.verify(token, secret);
+        const secret = process.env.JWT_SECRET;
+        if (!secret) throw new Error('JWT_SECRET not set');
+        const decoded = jwtLib.verify(token, secret);
         const userId = decoded.sub;
         // join room for this user
         socket.join(userId);
       }
     } catch (e) {
-      // ignore
+      // ignore connection auth errors; socket will remain connected but without user room
     }
 
     socket.on('disconnect', () => {});
