@@ -28,6 +28,7 @@ export default function PersonalRegister() {
     watch: _watch,
     formState: { errors, isSubmitting },
   } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
+
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
@@ -47,7 +48,6 @@ export default function PersonalRegister() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (v.openSavings) {
-        // create linked savings via API (best-effort placeholder)
         await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
       }
       setStatus('Submitted — verification in progress');
@@ -66,43 +66,85 @@ export default function PersonalRegister() {
           No monthly fees. Complete KYC to open your account. Optionally add a linked savings
           account during signup.
         </p>
-        <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-          <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
-          <FormInput label="Date of birth" type="date" {...register('dob')} error={errors.dob} />
-          <FormInput label="SSN" {...register('ssn')} error={errors.ssn} />
-          <FormInput label="Address" {...register('address')} error={errors.address} />
+
+        {/* Use a responsive grid: single column on very small screens, two columns on sm+, with
+            specific fields spanning both columns when appropriate */}
+        <form
+          className="card-surface p-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="sm:col-span-2">
+            <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
+          </div>
 
           <div>
+            <FormInput label="Date of birth" type="date" {...register('dob')} error={errors.dob} />
+          </div>
+
+          <div>
+            <FormInput label="SSN" {...register('ssn')} error={errors.ssn} />
+          </div>
+
+          <div className="sm:col-span-2">
+            <FormInput label="Address" {...register('address')} error={errors.address} />
+          </div>
+
+          <div className="sm:col-span-2">
             <label className="inline-flex items-center gap-2">
               <input type="checkbox" {...register('openSavings' as any)} />
               <span className="text-sm">Also open a Premier Free Savings account</span>
             </label>
           </div>
 
-          <hr className="my-4" />
+          <hr className="my-2 sm:col-span-2" />
 
-          <div className="text-lg font-semibold">Verification documents</div>
-          <div>
-            <label className="block text-sm mb-1">ID document (front)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">ID document (back)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">
-              Proof of address (utility bill or bank statement)
-            </label>
-            <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
+          <div className="sm:col-span-2 text-lg font-semibold">Verification documents</div>
+
+          {/* File inputs laid out compactly: stacked on small screens, side-by-side on larger */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:col-span-2">
+            <div>
+              <label className="block text-sm mb-1">ID document (front)</label>
+              <input
+                className="w-full text-sm text-gray-700 file-input"
+                type="file"
+                accept="image/*,.pdf"
+                {...register('idFront' as any)}
+                aria-label="ID front"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1">ID document (back)</label>
+              <input
+                className="w-full text-sm text-gray-700 file-input"
+                type="file"
+                accept="image/*,.pdf"
+                {...register('idBack' as any)}
+                aria-label="ID back"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1">Proof of address</label>
+              <input
+                className="w-full text-sm text-gray-700 file-input"
+                type="file"
+                accept="image/*,.pdf"
+                {...register('proofAddress' as any)}
+                aria-label="Proof of address"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="sm:col-span-2 flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Personal Account'}
             </Button>
           </div>
-          {status && <div className="text-sm mt-2 text-primary">{status}</div>}
+
+          {status && (
+            <div className="text-sm mt-2 text-primary sm:col-span-2">{status}</div>
+          )}
         </form>
       </main>
     </div>
