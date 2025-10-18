@@ -1,26 +1,5 @@
-import getServerSupabase from '../_serverSupabase';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { serialize } from 'cookie';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).end('Method Not Allowed');
-  }
-
-  const supabase = getServerSupabase();
-  if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
-
-  const { email, password } = req.body;
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-
-  return res.status(200).json(data);
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
+  res.status(410).json({ error: 'Use Supabase client for login (signInWithPassword) and call /auth/setup-profile on the server.' });
 }
