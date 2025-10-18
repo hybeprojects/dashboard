@@ -2,12 +2,14 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 module.exports = async function supabaseAuth(req, res, next) {
   try {
-    const token = (req.headers.authorization && req.headers.authorization.replace('Bearer ', '')) || (req.cookies && req.cookies.token);
+    const token =
+      (req.headers.authorization && req.headers.authorization.replace('Bearer ', '')) ||
+      (req.cookies && req.cookies.token);
 
     if (!token) {
       return res.status(401).json({ error: 'Authentication required' });

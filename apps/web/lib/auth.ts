@@ -7,10 +7,26 @@ export async function login(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   const user = data?.user || null;
-  return { accessToken: data?.session?.access_token, user: user ? { id: user.id, email: user.email, firstName: user.user_metadata?.first_name, lastName: user.user_metadata?.last_name } : null };
+  return {
+    accessToken: data?.session?.access_token,
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          firstName: user.user_metadata?.first_name,
+          lastName: user.user_metadata?.last_name,
+        }
+      : null,
+  };
 }
 
-export async function register(payload: { email: string; password: string; firstName?: string; lastName?: string; userType?: string; }) {
+export async function register(payload: {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  userType?: string;
+}) {
   const { email, password, firstName, lastName } = payload;
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -19,7 +35,17 @@ export async function register(payload: { email: string; password: string; first
   });
   if (error) throw error;
   const user = data?.user || null;
-  return { accessToken: data?.session?.access_token, user: user ? { id: user.id, email: user.email, firstName: user.user_metadata?.first_name, lastName: user.user_metadata?.last_name } : null };
+  return {
+    accessToken: data?.session?.access_token,
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          firstName: user.user_metadata?.first_name,
+          lastName: user.user_metadata?.last_name,
+        }
+      : null,
+  };
 }
 
 export async function logout() {
@@ -31,7 +57,12 @@ export async function me(): Promise<UserProfile | null> {
     const { data, error } = await supabase.auth.getUser();
     const user = data?.user || null;
     if (!user) return null;
-    return { id: user.id, email: user.email, firstName: user.user_metadata?.first_name, lastName: user.user_metadata?.last_name };
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.user_metadata?.first_name,
+      lastName: user.user_metadata?.last_name,
+    };
   } catch (e) {
     return null;
   }
