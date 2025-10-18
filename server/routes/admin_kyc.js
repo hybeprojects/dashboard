@@ -19,7 +19,10 @@ router.get('/submissions', authMiddleware, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
     const offset = (page - 1) * limit;
 
-    const [rows] = await db.query('SELECT * FROM kyc_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?', [limit, offset]);
+    const [rows] = await db.query(
+      'SELECT * FROM kyc_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      [limit, offset],
+    );
     return res.json({ submissions: rows });
   } catch (e) {
     console.error('admin kyc list error', e.message || e);
@@ -34,7 +37,9 @@ router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
 
     const submissionId = req.params.submissionId;
-    const [rows] = await db.query('SELECT * FROM kyc_submissions WHERE submission_id = ? LIMIT 1', [submissionId]);
+    const [rows] = await db.query('SELECT * FROM kyc_submissions WHERE submission_id = ? LIMIT 1', [
+      submissionId,
+    ]);
     const submission = rows && rows[0];
     if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
@@ -44,7 +49,9 @@ router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
     const urls = {};
     for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
       if (submission[key]) {
-        const { data, error } = await supabase.storage.from(bucket).createSignedUrl(submission[key], expiresIn);
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(submission[key], expiresIn);
         if (error) throw error;
         urls[key] = data.signedURL;
       }
@@ -61,10 +68,15 @@ router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
 router.post('/decision', authMiddleware, async (req, res) => {
   try {
     const { submissionId, decision, note } = req.body;
-    if (!submissionId || !decision) return res.status(400).json({ error: 'Missing submissionId or decision' });
-    if (!['approved', 'rejected'].includes(decision)) return res.status(400).json({ error: 'Invalid decision' });
+    if (!submissionId || !decision)
+      return res.status(400).json({ error: 'Missing submissionId or decision' });
+    if (!['approved', 'rejected'].includes(decision))
+      return res.status(400).json({ error: 'Invalid decision' });
 
-    await db.query('UPDATE kyc_submissions SET status = ?, review_note = ?, reviewed_at = NOW() WHERE submission_id = ?', [decision, note || null, submissionId]);
+    await db.query(
+      'UPDATE kyc_submissions SET status = ?, review_note = ?, reviewed_at = NOW() WHERE submission_id = ?',
+      [decision, note || null, submissionId],
+    );
     return res.json({ success: true });
   } catch (e) {
     console.error('admin decision error', e.message || e);

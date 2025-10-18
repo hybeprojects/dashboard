@@ -76,10 +76,17 @@ export default function AdminKyc() {
           <div className="space-y-4">
             {subs.length === 0 && <div>No submissions found.</div>}
             {subs.map((s) => (
-              <div key={s.id} className="card-surface p-4 flex flex-col md:flex-row md:items-center md:justify-between">
+              <div
+                key={s.id}
+                className="card-surface p-4 flex flex-col md:flex-row md:items-center md:justify-between"
+              >
                 <div className="flex-1">
-                  <div className="font-medium">{s.full_name} — {s.email}</div>
-                  <div className="text-sm text-gray-500">Submitted {new Date(s.created_at).toLocaleString()}</div>
+                  <div className="font-medium">
+                    {s.full_name} — {s.email}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Submitted {new Date(s.created_at).toLocaleString()}
+                  </div>
                   <div className="text-sm">Address: {s.address}</div>
                   <div className="text-sm">SSN last4: •••• {s.ssn_last4}</div>
                 </div>
