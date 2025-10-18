@@ -1,28 +1,35 @@
 module.exports = function registerSockets(io) {
   const cookie = require('cookie');
-  const jwtLib = require('jsonwebtoken');
+  const { createClient } = require('@supabase/supabase-js');
 
-  io.on('connection', (socket) => {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  io.on('connection', async (socket) => {
     try {
-      // Prefer token sent in auth payload, fall back to cookie header (httpOnly cookie set by server).
       const tokenFromAuth = socket.handshake.auth?.token;
       let token = tokenFromAuth;
 
       if (!token && socket.request && socket.request.headers && socket.request.headers.cookie) {
         const cookies = cookie.parse(socket.request.headers.cookie || '');
-        token = cookies?.token;
+        token = cookies?.token || cookies['sb-access-token'] || cookies['supabase-auth-token'];
       }
 
       if (token) {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) throw new Error('JWT_SECRET not set');
-        const decoded = jwtLib.verify(token, secret);
-        const userId = decoded.sub;
-        // join room for this user
-        socket.join(userId);
+        try {
+          const { data, error } = await supabase.auth.getUser(token);
+          if (!error && data && data.user) {
+            const userId = data.user.id;
+            socket.join(userId);
+          }
+        } catch (e) {
+          // ignore socket auth errors
+        }
       }
     } catch (e) {
-      // ignore connection auth errors; socket will remain connected but without user room
+      // ignore connection auth errors
     }
 
     socket.on('disconnect', () => {});
