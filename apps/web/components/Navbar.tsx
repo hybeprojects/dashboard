@@ -27,7 +27,6 @@ export default function Navbar() {
             className="h-20 w-auto object-contain"
           />
         </Link>
-        {/* Hide inline nav on all sizes to move everything into hamburger */}
         <div className="hidden items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
