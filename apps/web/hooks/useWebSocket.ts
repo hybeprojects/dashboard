@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { createClient } from '../lib/supabase/client';
 
 export default function useWebSocket(onEvent: (event: string, payload: any) => void) {
   const socketRef = useRef<Socket | null>(null);
