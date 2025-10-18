@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User } from '@supabase/supabase-js';
+import type { UserProfile } from '../types/api';
 
 type AuthState = {
-  user: User | null;
-  setUser: (u: User | null) => void;
+  user: UserProfile | null;
+  setUser: (u: UserProfile | null) => void;
   logout: () => void;
 };
 
