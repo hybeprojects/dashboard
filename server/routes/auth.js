@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs-extra');
 const path = require('path');
-const { createClient, createSavingsAccount, createClient: fineractCreateClient } = require('../utils/fineractAPI');
+const fineractAPI = require('../utils/fineractAPI');
 const { v4: uuidv4 } = require('uuid');
 
 const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
