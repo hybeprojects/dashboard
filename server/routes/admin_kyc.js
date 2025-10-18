@@ -65,7 +65,7 @@ router.get('/signed/:submissionId', adminAuth, async (req, res) => {
 });
 
 // Approve or reject submission
-router.post('/decision', authMiddleware, async (req, res) => {
+router.post('/decision', adminAuth, async (req, res) => {
   try {
     const { submissionId, decision, note } = req.body;
     if (!submissionId || !decision)
