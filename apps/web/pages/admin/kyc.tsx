@@ -53,7 +53,9 @@ export default function AdminKyc() {
       const res = await api.get(`/admin/kyc/signed/${submissionId}`);
       const { urls } = res.data;
       // open each URL in new tab for review
-      Object.values(urls || {}).forEach((u: string) => window.open(u, '_blank'));
+      Object.values(urls || {}).forEach((u: any) => {
+        if (u) window.open(String(u), '_blank');
+      });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('preview error', e);
