@@ -10,6 +10,15 @@ const { v4: uuidv4 } = require('uuid');
 const { JWT_SECRET } = process.env;
 const db = require('../utils/db');
 
+const getAllowedSchema = () => {
+  const allowedSchemas = ['personal_users_db', 'business_users_db'];
+  const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+  if (!allowedSchemas.includes(schema)) {
+    throw new Error(`Invalid schema '${schema}' defined in PERSONAL_SCHEMA`);
+  }
+  return schema;
+};
+
 router.post('/signup', async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -32,7 +41,7 @@ router.post('/signup', async (req, res) => {
     const accountId = savings?.savingsId || null;
 
     const userId = uuidv4();
-    const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+    const schema = getAllowedSchema();
     await db.query(
       `INSERT INTO ${schema}.users (id, first_name, last_name, email, password_hash, fineract_client_id) VALUES (?, ?, ?, ?, ?, ?);`,
       [userId, firstName || null, lastName || null, email, hashed, clientId],
@@ -55,7 +64,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+    const schema = getAllowedSchema();
     const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE email = ? LIMIT 1;`, [
       email,
     ]);
@@ -103,7 +112,7 @@ const authMiddleware = require('../middleware/auth');
 // minimal me endpoint
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
+    const schema = getAllowedSchema();
     const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE id = ? LIMIT 1;`, [
       req.user.sub,
     ]);
