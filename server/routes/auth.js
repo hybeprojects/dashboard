@@ -49,8 +49,8 @@ router.post('/setup-profile', async (req, res) => {
     let fineractClient = null;
     let accountId = null;
     try {
-      fineractClient = await require('../utils/fineractAPI').createClient({ firstName: sbUser.user_metadata?.first_name || sbUser.email?.split('@')[0], lastName: sbUser.user_metadata?.last_name || '' });
-      const savings = await require('../utils/fineractAPI').createSavingsAccount(fineractClient.clientId).catch(() => null);
+      fineractClient = await fineractAPI.createClient({ firstName: sbUser.user_metadata?.first_name || sbUser.email?.split('@')[0], lastName: sbUser.user_metadata?.last_name || '' });
+      const savings = await fineractAPI.createSavingsAccount(fineractClient.clientId).catch(() => null);
       accountId = savings ? (savings.savingsId || savings.resourceId || savings.id) : null;
     } catch (e) {
       // ignore fineract failures but continue
