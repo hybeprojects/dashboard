@@ -21,13 +21,13 @@ export default function Landing() {
             Secure accounts, seamless payments, instant insights. Designed for reliability and
             speed.
           </p>
-          <div className="mt-8 flex gap-4">
-            <Link href="/register" className="btn-primary">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link href="/register" className="btn-primary w-full sm:w-auto">
               Get Started
             </Link>
             <Link
               href="/login"
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 w-full sm:w-auto text-center"
             >
               Sign In
             </Link>
