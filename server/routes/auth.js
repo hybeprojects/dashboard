@@ -2,187 +2,88 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs-extra');
 const path = require('path');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { createClient, createSavingsAccount } = require('../utils/fineractAPI');
+const { createClient, createSavingsAccount, createClient: fineractCreateClient } = require('../utils/fineractAPI');
 const { v4: uuidv4 } = require('uuid');
-const crypto = require('crypto');
 
-const { JWT_SECRET } = process.env;
-const db = require('../utils/db');
-const csrf = require('../middleware/csrf');
-const rateLimit = require('express-rate-limit');
-const logger = require('../utils/logger');
+const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  await fs.ensureDir(path.join(__dirname, '..', 'data'));
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
 
-const getAllowedSchema = () => {
-  const allowedSchemas = ['personal_users_db', 'business_users_db'];
-  const schema = process.env.PERSONAL_SCHEMA || 'personal_users_db';
-  if (!allowedSchemas.includes(schema)) {
-    throw new Error(`Invalid schema '${schema}' defined in PERSONAL_SCHEMA`);
-  }
-  return schema;
-};
+function getSupabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return require('@supabase/supabase-js').createClient(url, key);
+}
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-router.post('/signup', authLimiter, async (req, res) => {
+// POST /auth/setup-profile
+// Expects Authorization: Bearer <supabase_access_token>
+// Creates an app-level user mapping for the Supabase user (new users only)
+router.post('/setup-profile', async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing token' });
+    const token = authHeader.slice(7).trim();
+
+    const supabase = getSupabaseServer();
+    if (!supabase) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const sbUser = data.user;
+
+    // Ensure not already mapped
+    const users = await loadUsers();
+    let appUser = users.find((u) => u.supabaseId === sbUser.id || u.email === sbUser.email);
+    if (appUser) {
+      return res.json({ user: appUser });
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
+
+    // Create Fineract client and savings account where possible
+    let fineractClient = null;
+    let accountId = null;
+    try {
+      fineractClient = await require('../utils/fineractAPI').createClient({ firstName: sbUser.user_metadata?.first_name || sbUser.email?.split('@')[0], lastName: sbUser.user_metadata?.last_name || '' });
+      const savings = await require('../utils/fineractAPI').createSavingsAccount(fineractClient.clientId).catch(() => null);
+      accountId = savings ? (savings.savingsId || savings.resourceId || savings.id) : null;
+    } catch (e) {
+      // ignore fineract failures but continue
+      accountId = null;
     }
-    const hashed = await bcrypt.hash(password, 10);
 
-    // create Fineract client
-    const clientPayload = { firstname: firstName || email.split('@')[0], lastname: lastName || '' };
-    const fineractClient = await createClient(clientPayload).catch((e) => null);
-    const clientId = fineractClient?.clientId || null;
-    // create savings account in Fineract
-    const savingsPayload = { clientId: clientId, productId: 1 };
-    const savings = clientId ? await createSavingsAccount(savingsPayload).catch((e) => null) : null;
-    const accountId = savings?.savingsId || null;
+    // Create app user record
+    const newUser = {
+      id: uuidv4(),
+      email: sbUser.email,
+      firstName: sbUser.user_metadata?.first_name || null,
+      lastName: sbUser.user_metadata?.last_name || null,
+      supabaseId: sbUser.id,
+      fineractClientId: fineractClient?.clientId || null,
+      accountId: accountId || null,
+      createdAt: new Date().toISOString(),
+    };
 
-    const userId = uuidv4();
-    const schema = getAllowedSchema();
-    await db.query(
-      `INSERT INTO ${schema}.users (id, first_name, last_name, email, password_hash, fineract_client_id) VALUES (?, ?, ?, ?, ?, ?);`,
-      [userId, firstName || null, lastName || null, email, hashed, clientId],
-    );
-    const [acctRes] = await db.query(
-      `INSERT INTO ${schema}.accounts (user_id, fineract_account_id, balance) VALUES (?, ?, ?);`,
-      [userId, accountId || null, 0],
-    );
-    const token = jwt.sign({ sub: userId, email }, JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    });
-    return res.json({ accessToken: token, user: { id: userId, email, firstName, lastName } });
+    users.push(newUser);
+    await saveUsers(users);
+
+    return res.json({ user: newUser });
   } catch (e) {
-    logger.error('signup error', e.message || e);
-    return res.status(500).json({ error: 'signup failed' });
+    // eslint-disable-next-line no-console
+    console.error('setup-profile error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Failed to setup profile' });
   }
 });
 
-router.post('/login', authLimiter, async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const schema = getAllowedSchema();
-    const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE email = ? LIMIT 1;`, [
-      email,
-    ]);
-    const user = rows && rows[0];
-    if (!user) return res.status(401).json({ error: 'invalid credentials' });
-    const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-    const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    });
-
-    // Double-submit CSRF cookie
-    const xsrf = crypto.randomBytes(16).toString('hex');
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    // XSRF token is readable by JS to include in headers
-    res.cookie('XSRF-TOKEN', xsrf, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-      },
-      accessToken: token,
-    });
-  } catch (e) {
-    logger.error('login error', e);
-    return res.status(500).json({ error: 'login failed' });
-  }
-});
-
-router.use('/login', authLimiter);
-router.use('/signup', authLimiter);
-
-const authMiddleware = require('../middleware/auth');
-
-// minimal me endpoint
-router.get('/me', authMiddleware, async (req, res) => {
-  try {
-    const schema = getAllowedSchema();
-    const [rows] = await db.query(`SELECT * FROM ${schema}.users WHERE id = ? LIMIT 1;`, [
-      req.user.sub,
-    ]);
-    const user = rows && rows[0];
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    return res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-      },
-    });
-  } catch (e) {
-    logger.error('me error', e);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-router.post('/logout', csrf, async (req, res) => {
-  res.clearCookie('token');
-  res.clearCookie('XSRF-TOKEN');
-  return res.json({ success: true });
-});
-
-router.post('/refresh', csrf, async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  try {
-    // Require a valid token (do not blindly accept expired tokens).
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const newToken = jwt.sign({ sub: decoded.sub, email: decoded.email }, JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    });
-    res.cookie('token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    // rotate XSRF token as well
-    const xsrf = crypto.randomBytes(16).toString('hex');
-    res.cookie('XSRF-TOKEN', xsrf, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    return res.json({ success: true });
-  } catch (e) {
-    // If token verification failed (including expiry), require re-authentication.
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-});
+// Deprecate older JWT routes: respond with guidance
+router.post('/signup', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for signup' }));
+router.post('/login', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for login' }));
+router.post('/refresh', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for session refresh' }));
+router.post('/logout', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for logout' }));
 
 module.exports = router;
