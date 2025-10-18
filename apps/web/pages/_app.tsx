@@ -6,6 +6,7 @@ import { AppQueryProvider } from '../lib/query';
 import TopProgressBar from '../components/ui/TopProgressBar';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Suspense } from 'react';
+import { useSupabaseSession } from '../hooks/useAuth';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
@@ -22,6 +23,8 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
+  useSupabaseSession();
+
   return (
     <Suspense fallback={<TopProgressBar />}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
