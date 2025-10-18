@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import Alert from '../components/ui/Alert';
+import { createClient } from '../lib/supabase/client';
 
 const loginSchema = yup.object().shape({
   email: yup.string().email().required(),
