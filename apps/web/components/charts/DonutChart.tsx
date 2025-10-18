@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, TooltipProps } from 'recharts';
 const COLORS = ['#1e3a8a', '#3b82f6', '#1e40af', '#60a5fa'];
 
-function DonutTooltip({ active, payload }: TooltipProps<number, string>) {
+function DonutTooltip({ active, payload }: any) {
   if (!active || !payload || !payload.length) return null;
   const item = payload[0];
   return (

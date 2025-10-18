@@ -16,12 +16,12 @@
     "start:prod": "npm --workspace=apps/api run build && npm --workspace=apps/web run build && (npm --workspace=apps/api run start & npm --workspace=apps/web run start)"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^8.57.1",
     "@tanstack/react-query-devtools": "^5.90.2",
-    "@typescript-eslint/eslint-plugin": "^8.46.0",
-    "@typescript-eslint/parser": "^8.46.0",
-    "eslint": "^9.37.0",
-    "eslint-config-next": "^15.5.4",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.33",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",
     "prettier": "^3.6.2",

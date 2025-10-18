@@ -8,7 +8,7 @@ import {
   TooltipProps,
 } from 'recharts';
 
-function CurrencyTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CurrencyTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
   const v = payload[0].value as number;
   return (
