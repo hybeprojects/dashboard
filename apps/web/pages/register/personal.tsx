@@ -73,8 +73,8 @@ export default function PersonalRegister() {
           <FormInput label="Address" {...register('address')} error={errors.address} />
 
           <div>
-            <label className="inline-flex items-center gap-2">
-              <input type="checkbox" {...register('openSavings' as any)} />
+            <label className="flex items-center gap-2">
+              <input type="checkbox" className="h-4 w-4" {...register('openSavings' as any)} />
               <span className="text-sm">Also open a Premier Free Savings account</span>
             </label>
           </div>
@@ -82,23 +82,24 @@ export default function PersonalRegister() {
           <hr className="my-4" />
 
           <div className="text-lg font-semibold">Verification documents</div>
-          <div>
-            <label className="block text-sm mb-1">ID document (front)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <div>
+              <label className="block text-sm mb-1">ID document (front)</label>
+              <input className="input-field" type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">ID document (back)</label>
+              <input className="input-field" type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm mb-1">ID document (back)</label>
-            <input type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">
-              Proof of address (utility bill or bank statement)
-            </label>
-            <input type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
+
+          <div className="mt-4">
+            <label className="block text-sm mb-1">Proof of address (utility bill or bank statement)</label>
+            <input className="input-field" type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button className="w-full md:w-auto" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Create Personal Account'}
             </Button>
           </div>
