@@ -83,11 +83,13 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  const hasJwt = Boolean(
-    context.req.headers.cookie && context.req.headers.cookie.includes('token='),
-  );
+  // Check for Supabase auth token in cookies (server-side)
+  const cookiesHeader = context.req.headers.cookie || '';
+  const cookie = require('cookie');
+  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
+  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
 
-  if (!hasJwt) {
+  if (!token) {
     return {
       redirect: {
         destination: '/login',

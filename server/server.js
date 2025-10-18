@@ -2,11 +2,6 @@ require('dotenv').config();
 
 const logger = require('./utils/logger');
 
-if (!process.env.JWT_SECRET) {
-  logger.error('FATAL ERROR: JWT_SECRET is not defined.');
-  process.exit(1);
-}
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

@@ -1,38 +1,69 @@
-import api from './api';
-import { AuthResponse, UserProfile } from '../types/api';
+import { createClient as createBrowserClient } from './supabase/client';
+import { UserProfile } from '../types/api';
 
-export async function login(
-  email: string,
-  password: string,
-  otp?: string,
-): Promise<{ accessToken: string; user: UserProfile }> {
-  const { data } = await api.post('/auth/login', { email, password, otp });
-  return data as { accessToken: string; user: UserProfile };
+const supabase = createBrowserClient();
+
+export async function login(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  const user = data?.user || null;
+  return {
+    accessToken: data?.session?.access_token,
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          firstName: user.user_metadata?.first_name,
+          lastName: user.user_metadata?.last_name,
+        }
+      : null,
+  };
 }
 
 export async function register(payload: {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  userType?: string;
 }) {
-  await api.post('/auth/register', payload);
-  const { data } = await api.post('/auth/login', {
-    email: payload.email,
-    password: payload.password,
+  const { email, password, firstName, lastName } = payload;
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { first_name: firstName, last_name: lastName, user_type: payload.userType } },
   });
-  return { accessToken: data.accessToken || data.token, user: data.user };
+  if (error) throw error;
+  const user = data?.user || null;
+  return {
+    accessToken: data?.session?.access_token,
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          firstName: user.user_metadata?.first_name,
+          lastName: user.user_metadata?.last_name,
+        }
+      : null,
+  };
 }
 
 export async function logout() {
-  await api.post('/auth/logout');
+  await supabase.auth.signOut();
 }
 
 export async function me(): Promise<UserProfile | null> {
   try {
-    const { data } = await api.get('/auth/me');
-    return (data && data.user) || null;
-  } catch {
+    const { data, error } = await supabase.auth.getUser();
+    const user = data?.user || null;
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.user_metadata?.first_name,
+      lastName: user.user_metadata?.last_name,
+    };
+  } catch (e) {
     return null;
   }
 }
