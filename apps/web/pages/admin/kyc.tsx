@@ -74,7 +74,11 @@ export default function AdminKyc() {
       const supabase = createClient();
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token || null;
-      await api.post('/admin/kyc/decision', { submissionId, decision }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      await api.post(
+        '/admin/kyc/decision',
+        { submissionId, decision },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      );
       load();
     } catch (e) {
       // eslint-disable-next-line no-console

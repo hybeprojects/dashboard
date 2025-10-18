@@ -45,39 +45,40 @@ router.post(
     try {
       // basic form fields
       const { fullName, dob, ssn, address, openSavings } = req.body;
-    let { email } = req.body || {};
+      let { email } = req.body || {};
 
-    if (!fullName || !dob || !ssn || !address) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // If email not provided, try to derive from Supabase access token (Authorization header or cookie)
-    if (!email) {
-      const authHeader = req.headers.authorization || '';
-      let token = null;
-      if (authHeader.startsWith('Bearer ')) token = authHeader.slice(7).trim();
-      if (!token && req.headers.cookie) {
-        const cookieParser = require('cookie');
-        const cookies = cookieParser.parse(req.headers.cookie || '');
-        token = cookies['sb-access-token'] || cookies['sb:token'] || cookies['supabase-auth-token'];
+      if (!fullName || !dob || !ssn || !address) {
+        return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      if (token) {
-        const supabase = getSupabaseServer();
-        if (!supabase) return res.status(500).json({ error: 'Server storage not configured' });
-        const { data, error } = await supabase.auth.getUser(token);
-        if (!error && data && data.user) {
-          email = data.user.email;
+      // If email not provided, try to derive from Supabase access token (Authorization header or cookie)
+      if (!email) {
+        const authHeader = req.headers.authorization || '';
+        let token = null;
+        if (authHeader.startsWith('Bearer ')) token = authHeader.slice(7).trim();
+        if (!token && req.headers.cookie) {
+          const cookieParser = require('cookie');
+          const cookies = cookieParser.parse(req.headers.cookie || '');
+          token =
+            cookies['sb-access-token'] || cookies['sb:token'] || cookies['supabase-auth-token'];
+        }
+
+        if (token) {
+          const supabase = getSupabaseServer();
+          if (!supabase) return res.status(500).json({ error: 'Server storage not configured' });
+          const { data, error } = await supabase.auth.getUser(token);
+          if (!error && data && data.user) {
+            email = data.user.email;
+          }
         }
       }
-    }
 
-    if (!email) {
-      return res.status(400).json({ error: 'Missing required email' });
-    }
+      if (!email) {
+        return res.status(400).json({ error: 'Missing required email' });
+      }
 
-    // minimal validation
-    const files = req.files || {};
+      // minimal validation
+      const files = req.files || {};
       const idFront = files.idFront && files.idFront[0];
       const idBack = files.idBack && files.idBack[0];
       const proof = files.proofAddress && files.proofAddress[0];

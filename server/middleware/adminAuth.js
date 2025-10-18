@@ -51,7 +51,10 @@ module.exports = async function adminAuth(req, res, next) {
     const user = data.user;
     // Determine admin: check user_metadata.is_admin or environment ADMIN_EMAILS
     const isAdminMeta = user.user_metadata && user.user_metadata.is_admin === true;
-    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     const isAdminEmail = adminEmails.includes(user.email);
 
     if (!isAdminMeta && !isAdminEmail) {
