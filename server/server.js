@@ -15,7 +15,10 @@ const helmet = require('helmet');
 
 const app = express();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || CLIENT_URL).split(',').map((s) => s.trim()).filter(Boolean);
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || CLIENT_URL)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use((req, res, next) => {
@@ -34,7 +37,13 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN', 'X-CSRF-Token', 'X-Requested-With'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-XSRF-TOKEN',
+      'X-CSRF-Token',
+      'X-Requested-With',
+    ],
   }),
 );
 app.use(express.json());

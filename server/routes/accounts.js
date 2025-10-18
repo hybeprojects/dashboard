@@ -10,10 +10,19 @@ const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 
 const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
-async function loadUsers() { return fs.readJson(USERS_FILE).catch(() => []); }
-async function saveUsers(u) { return fs.writeJson(USERS_FILE, u, { spaces: 2 }); }
+async function loadUsers() {
+  return fs.readJson(USERS_FILE).catch(() => []);
+}
+async function saveUsers(u) {
+  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+}
 
-const createLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+const createLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // list accounts for authenticated user
 router.get('/', auth, async (req, res) => {

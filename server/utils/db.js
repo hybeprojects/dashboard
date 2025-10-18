@@ -2,13 +2,7 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 const logger = require('./logger');
 
-const {
-  DB_HOST,
-  DB_PORT,
-  DB_USER,
-  DB_PASSWORD,
-  DB_NAME,
-} = process.env;
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
 let pool = null;
 let available = false;

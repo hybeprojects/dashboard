@@ -17,7 +17,10 @@ async function connect() {
 }
 
 async function createClient(payload) {
-  const body = { firstname: payload.firstName || payload.first || 'Anon', lastname: payload.lastName || payload.last || '' };
+  const body = {
+    firstname: payload.firstName || payload.first || 'Anon',
+    lastname: payload.lastName || payload.last || '',
+  };
   const res = await fineract.post('/clients', body).catch((e) => ({ data: null, error: e }));
   if (res.error) throw res.error;
   logger.info('Client created');
@@ -26,7 +29,9 @@ async function createClient(payload) {
 
 async function createSavingsAccount(clientId) {
   const payload = { clientId, productId: 1 };
-  const res = await fineract.post('/savingsaccounts', payload).catch((e) => ({ data: null, error: e }));
+  const res = await fineract
+    .post('/savingsaccounts', payload)
+    .catch((e) => ({ data: null, error: e }));
   if (res.error) throw res.error;
   logger.info('Savings account created');
   return res.data;
@@ -34,7 +39,9 @@ async function createSavingsAccount(clientId) {
 
 async function transferFunds(fromId, toId, amount) {
   const payload = { fromId, toId, amount };
-  const res = await fineract.post('/savingsaccounts/transfer', payload).catch((e) => ({ data: null, error: e }));
+  const res = await fineract
+    .post('/savingsaccounts/transfer', payload)
+    .catch((e) => ({ data: null, error: e }));
   if (res.error) throw res.error;
   logger.info('Transfer completed');
   return res.data;

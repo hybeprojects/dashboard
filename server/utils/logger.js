@@ -19,14 +19,16 @@ function maskMessage(msg) {
 }
 
 function formatArgs(args) {
-  return args.map((a) => {
-    if (typeof a === 'string') return maskMessage(a);
-    try {
-      return JSON.stringify(a);
-    } catch (e) {
-      return a;
-    }
-  }).join(' ');
+  return args
+    .map((a) => {
+      if (typeof a === 'string') return maskMessage(a);
+      try {
+        return JSON.stringify(a);
+      } catch (e) {
+        return a;
+      }
+    })
+    .join(' ');
 }
 
 module.exports = {
