@@ -88,6 +88,7 @@ router.post('/login', async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
       },
+      accessToken: token,
     });
   } catch (e) {
     console.error('login error', e);
@@ -142,7 +143,8 @@ router.post('/refresh', async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+    // Require a valid token (do not blindly accept expired tokens).
+    const decoded = jwt.verify(token, JWT_SECRET);
     const newToken = jwt.sign({ sub: decoded.sub, email: decoded.email }, JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
@@ -154,7 +156,8 @@ router.post('/refresh', async (req, res) => {
     });
     return res.json({ success: true });
   } catch (e) {
-    return res.status(401).json({ error: 'Invalid token' });
+    // If token verification failed (including expiry), require re-authentication.
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 });
 

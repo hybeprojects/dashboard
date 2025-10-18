@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import Alert from '../components/ui/Alert';
+import { createClient } from '../lib/supabase/client';
 
 const loginSchema = yup.object().shape({
   email: yup.string().email().required(),
@@ -24,22 +25,24 @@ export default function Login() {
     resolver: yupResolver(loginSchema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (formData: any) => {
     setMsg(null);
-    const res = await fetch('http://localhost:3001/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+    try {
+      const supabase = createClient();
+      const { data: resData, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-    if (res.ok) {
-      const { accessToken } = await res.json();
-      // Store the token and redirect
-      localStorage.setItem('access_token', accessToken);
+      if (error) {
+        setMsg(error.message);
+        return;
+      }
+
+      // Successful sign in; redirect to dashboard. Session is managed by Supabase client.
       router.push('/dashboard');
-    } else {
-      const { message } = await res.json();
-      setMsg(message);
+    } catch (err: any) {
+      setMsg(err.message || 'Sign in failed');
     }
   };
 

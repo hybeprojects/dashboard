@@ -32,6 +32,9 @@ app.use('/accounts', require('./routes/accounts'));
 app.use('/transactions', require('./routes/transactions'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/transfer', require('./routes/transfer'));
+// KYC upload and admin endpoints
+app.use('/kyc', require('./routes/kyc'));
+app.use('/admin/kyc', require('./routes/admin_kyc'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
