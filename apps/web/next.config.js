@@ -21,8 +21,16 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.thirdparty.example https://ejwnecnlvkenmddxjdnn.supabase.co;",
+            value: (() => {
+              const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+              const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+              const parts = ["default-src 'self'", "base-uri 'self'", "frame-ancestors 'none'", "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:"];
+              const connect = ["connect-src 'self'"];
+              if (supabase) connect.push(supabase);
+              if (apiUrl) connect.push(apiUrl);
+              parts.push(connect.join(' '));
+              return parts.join('; ') + ';';
+            })(),
           },
         ],
       },
