@@ -85,17 +85,34 @@ export default function PersonalRegister() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div>
               <label className="block text-sm mb-1">ID document (front)</label>
-              <input className="input-field" type="file" accept="image/*,.pdf" {...register('idFront' as any)} />
+              <input
+                className="input-field"
+                type="file"
+                accept="image/*,.pdf"
+                {...register('idFront' as any)}
+              />
             </div>
             <div>
               <label className="block text-sm mb-1">ID document (back)</label>
-              <input className="input-field" type="file" accept="image/*,.pdf" {...register('idBack' as any)} />
+              <input
+                className="input-field"
+                type="file"
+                accept="image/*,.pdf"
+                {...register('idBack' as any)}
+              />
             </div>
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm mb-1">Proof of address (utility bill or bank statement)</label>
-            <input className="input-field" type="file" accept="image/*,.pdf" {...register('proofAddress' as any)} />
+            <label className="block text-sm mb-1">
+              Proof of address (utility bill or bank statement)
+            </label>
+            <input
+              className="input-field"
+              type="file"
+              accept="image/*,.pdf"
+              {...register('proofAddress' as any)}
+            />
           </div>
 
           <div className="flex justify-end">
