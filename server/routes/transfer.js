@@ -4,7 +4,10 @@ const fs = require('fs-extra');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const auth = require('../middleware/auth');
+const csrf = require('../middleware/csrf');
+const rateLimit = require('express-rate-limit');
 const { transferFunds, getAccountBalance, getSavingsAccount } = require('../utils/fineractAPI');
+const logger = require('../utils/logger');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -27,8 +30,12 @@ async function loadSys() {
   return fs.readJson(SYS_FILE).catch(() => ({}));
 }
 
-const SETTLEMENT_DELAY_MS = Number(process.env.SETTLEMENT_DELAY_MS || 10000);
-const MAX_SETTLEMENT_RETRIES = Number(process.env.MAX_SETTLEMENT_RETRIES || 3);
+const transferLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function emit(io, userId, event, payload) {
   try {
@@ -65,8 +72,8 @@ async function scheduleSettlement(io, tx) {
       emit(io, tx.fromUserId, 'transfer', { ...rec, type: 'transfer:settled' });
     } catch (e) {
       attempts += 1;
-      if (attempts < MAX_SETTLEMENT_RETRIES) {
-        const backoff = SETTLEMENT_DELAY_MS * Math.pow(2, attempts);
+      if (attempts < Number(process.env.MAX_SETTLEMENT_RETRIES || 3)) {
+        const backoff = Number(process.env.SETTLEMENT_DELAY_MS || 10000) * Math.pow(2, attempts);
         setTimeout(doSettle, backoff);
       } else {
         const txs = await loadTx();
@@ -88,10 +95,10 @@ async function scheduleSettlement(io, tx) {
       }
     }
   };
-  setTimeout(doSettle, SETTLEMENT_DELAY_MS);
+  setTimeout(doSettle, Number(process.env.SETTLEMENT_DELAY_MS || 10000));
 }
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, csrf, transferLimiter, async (req, res) => {
   try {
     const { fromAccountId, toAccountId, amount, memo } = req.body;
     if (!fromAccountId || !toAccountId || !amount)
@@ -171,7 +178,7 @@ router.post('/', auth, async (req, res) => {
 
     return res.json({ ok: true, tx });
   } catch (e) {
-    console.error('transfer error', e?.response?.data || e.message || e);
+    logger.error('transfer error', e?.response?.data || e.message || e);
     return res.status(500).json({ error: 'transfer failed', details: e?.message || e });
   }
 });

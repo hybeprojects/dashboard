@@ -1,13 +1,8 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+const logger = require('./logger');
 
-const {
-  DB_HOST,
-  DB_PORT,
-  DB_USER,
-  DB_PASSWORD,
-  DB_NAME,
-} = process.env;
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
 let pool = null;
 let available = false;
@@ -28,9 +23,9 @@ async function init() {
     // quick connection test
     const [rows] = await pool.query('SELECT 1 as ok');
     available = true;
-    console.log('✅ MySQL pool initialized');
+    logger.info('MySQL pool initialized');
   } catch (err) {
-    console.warn('⚠️ MySQL not available:', err.message || err);
+    logger.warn('MySQL not available:', err && err.message ? err.message : err);
     available = false;
     pool = null;
   }

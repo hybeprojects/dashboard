@@ -5,6 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/db');
 const rateLimit = require('express-rate-limit');
+const csrf = require('../middleware/csrf');
+const logger = require('../utils/logger');
 
 // Memory storage to avoid writing files to disk
 const upload = multer({
@@ -31,11 +33,25 @@ function validFileType(mimetype) {
   return mimetype.startsWith('image/') || mimetype === 'application/pdf';
 }
 
+// Basic AV scanner: checks for EICAR test string when AV_ENABLED=true
+function scanBuffer(buf) {
+  try {
+    if (process.env.AV_ENABLED !== 'true') return true;
+    const txt = buf.toString('utf8');
+    if (txt.includes('EICAR')) return false;
+    return true;
+  } catch (e) {
+    logger.warn('AV scan failed, rejecting file');
+    return false;
+  }
+}
+
 // Public endpoint for KYC submission
 // Accepts multipart form-data: idFront, idBack, proofAddress (files) and form fields
 router.post(
   '/submit',
   authLimiter,
+  csrf,
   upload.fields([
     { name: 'idFront', maxCount: 1 },
     { name: 'idBack', maxCount: 1 },
@@ -87,10 +103,13 @@ router.post(
         return res.status(400).json({ error: 'All 3 documents are required' });
       }
 
-      // validate file types
+      // validate file types and AV-scan
       for (const f of [idFront, idBack, proof]) {
         if (!validFileType(f.mimetype)) {
           return res.status(400).json({ error: 'Invalid file type. Use images or pdfs.' });
+        }
+        if (!scanBuffer(f.buffer)) {
+          return res.status(400).json({ error: 'File failed virus scan' });
         }
       }
 
@@ -142,7 +161,7 @@ router.post(
 
       return res.json({ success: true, submissionId });
     } catch (e) {
-      console.error('KYC submit error', e.message || e);
+      logger.error('KYC submit error', e.message || e);
       return res.status(500).json({ error: 'Failed to process KYC submission' });
     }
   },

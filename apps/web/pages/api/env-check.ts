@@ -15,7 +15,19 @@ type EnvCheckResult = {
   timestamp: string;
 };
 
-export default function handler(_req: NextApiRequest, res: NextApiResponse<EnvCheckResult>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<EnvCheckResult>) {
+  // In production this endpoint is restricted. A valid secret header must be provided.
+  if (process.env.NODE_ENV === 'production') {
+    const secret = process.env.ENV_CHECK_SECRET;
+    if (!secret) {
+      return res.status(404).end();
+    }
+    const provided = req.headers['x-env-check-secret'];
+    if (typeof provided !== 'string' || provided !== secret) {
+      return res.status(403).json({} as any);
+    }
+  }
+
   const result: EnvCheckResult = {
     public: {
       NEXT_PUBLIC_API_URL:
