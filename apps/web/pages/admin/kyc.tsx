@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import Navbar from '../../components/Navbar';
 import Button from '../../components/ui/Button';
+import { createClient } from '../../lib/supabase/client';
 
 type Submission = {
   id: number;
@@ -31,7 +32,13 @@ export default function AdminKyc() {
   async function load() {
     try {
       setLoading(true);
-      const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`);
+      // attach supabase access token for admin auth
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || null;
+      const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       setSubs(res.data.submissions || []);
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -43,10 +50,18 @@ export default function AdminKyc() {
 
   async function preview(submissionId: string) {
     try {
-      const res = await api.get(`/admin/kyc/signed/${submissionId}`);
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || null;
+
+      const res = await api.get(`/admin/kyc/signed/${submissionId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const { urls } = res.data;
       // open each URL in new tab for review
-      Object.values(urls || {}).forEach((u: string) => window.open(u, '_blank'));
+      Object.values(urls || {}).forEach((u: any) => {
+        if (u) window.open(String(u), '_blank');
+      });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('preview error', e);
@@ -56,7 +71,14 @@ export default function AdminKyc() {
 
   async function decide(submissionId: string, decision: 'approved' | 'rejected') {
     try {
-      await api.post('/admin/kyc/decision', { submissionId, decision });
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || null;
+      await api.post(
+        '/admin/kyc/decision',
+        { submissionId, decision },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      );
       load();
     } catch (e) {
       // eslint-disable-next-line no-console

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const db = require('../utils/db');
-const authMiddleware = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 
 function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -12,7 +12,7 @@ function getSupabaseServer() {
 }
 
 // List submissions (paginated)
-router.get('/submissions', authMiddleware, async (req, res) => {
+router.get('/submissions', adminAuth, async (req, res) => {
   try {
     // basic admin protection: middleware must set req.user
     const page = parseInt(req.query.page || '1', 10);
@@ -31,7 +31,7 @@ router.get('/submissions', authMiddleware, async (req, res) => {
 });
 
 // Generate signed URLs for a submission's files
-router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
+router.get('/signed/:submissionId', adminAuth, async (req, res) => {
   try {
     const supabase = getSupabaseServer();
     if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
@@ -65,7 +65,7 @@ router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
 });
 
 // Approve or reject submission
-router.post('/decision', authMiddleware, async (req, res) => {
+router.post('/decision', adminAuth, async (req, res) => {
   try {
     const { submissionId, decision, note } = req.body;
     if (!submissionId || !decision)
