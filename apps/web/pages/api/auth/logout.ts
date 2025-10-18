@@ -8,10 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = getServerSupabase();
+  if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
 
   const { error } = await supabase.auth.signOut();
 
