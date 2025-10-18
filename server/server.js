@@ -1,7 +1,9 @@
 require('dotenv').config();
 
+const logger = require('./utils/logger');
+
 if (!process.env.JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET is not defined.');
+  logger.error('FATAL ERROR: JWT_SECRET is not defined.');
   process.exit(1);
 }
 
@@ -13,8 +15,28 @@ const helmet = require('helmet');
 
 const app = express();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
-app.use(helmet());
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || CLIENT_URL).split(',').map((s) => s.trim()).filter(Boolean);
+
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use((req, res, next) => {
+  // Enforce HSTS for HTTPS
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  next();
+});
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (server-to-server, curl)
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN', 'X-CSRF-Token', 'X-Requested-With'],
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -46,7 +68,13 @@ app.use((req, res) => {
   res.status(404).json({ error: 'not found' });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error', err && err.message ? err.message : err);
+  res.status(500).json({ error: 'internal server error' });
+});
+
 // Listen on all interfaces (important for Codespaces/Docker)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dashboard server listening on port ${PORT}`);
+  logger.info(`🚀 Dashboard server listening on port ${PORT}`);
 });

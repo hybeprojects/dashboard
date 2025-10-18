@@ -6,9 +6,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient, createSavingsAccount } = require('../utils/fineractAPI');
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 const { JWT_SECRET } = process.env;
 const db = require('../utils/db');
+const csrf = require('../middleware/csrf');
+const rateLimit = require('express-rate-limit');
+const logger = require('../utils/logger');
 
 const getAllowedSchema = () => {
   const allowedSchemas = ['personal_users_db', 'business_users_db'];
@@ -19,7 +23,14 @@ const getAllowedSchema = () => {
   return schema;
 };
 
-router.post('/signup', async (req, res) => {
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     if (!email || !password) {
@@ -55,12 +66,12 @@ router.post('/signup', async (req, res) => {
     });
     return res.json({ accessToken: token, user: { id: userId, email, firstName, lastName } });
   } catch (e) {
-    console.error('signup error', e.message || e);
+    logger.error('signup error', e.message || e);
     return res.status(500).json({ error: 'signup failed' });
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -75,12 +86,24 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
+
+    // Double-submit CSRF cookie
+    const xsrf = crypto.randomBytes(16).toString('hex');
+
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    // XSRF token is readable by JS to include in headers
+    res.cookie('XSRF-TOKEN', xsrf, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.json({
       user: {
         id: user.id,
@@ -91,18 +114,9 @@ router.post('/login', async (req, res) => {
       accessToken: token,
     });
   } catch (e) {
-    console.error('login error', e);
+    logger.error('login error', e);
     return res.status(500).json({ error: 'login failed' });
   }
-});
-
-const rateLimit = require('express-rate-limit');
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
 });
 
 router.use('/login', authLimiter);
@@ -128,16 +142,18 @@ router.get('/me', authMiddleware, async (req, res) => {
       },
     });
   } catch (e) {
+    logger.error('me error', e);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.post('/logout', async (req, res) => {
+router.post('/logout', csrf, async (req, res) => {
   res.clearCookie('token');
+  res.clearCookie('XSRF-TOKEN');
   return res.json({ success: true });
 });
 
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', csrf, async (req, res) => {
   const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -153,6 +169,14 @@ router.post('/refresh', async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    // rotate XSRF token as well
+    const xsrf = crypto.randomBytes(16).toString('hex');
+    res.cookie('XSRF-TOKEN', xsrf, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.json({ success: true });
   } catch (e) {
