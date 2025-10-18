@@ -12,7 +12,7 @@ function getSupabaseServer() {
 }
 
 // List submissions (paginated)
-router.get('/submissions', authMiddleware, async (req, res) => {
+router.get('/submissions', adminAuth, async (req, res) => {
   try {
     // basic admin protection: middleware must set req.user
     const page = parseInt(req.query.page || '1', 10);
