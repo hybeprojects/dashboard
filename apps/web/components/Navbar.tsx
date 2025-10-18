@@ -27,7 +27,7 @@ export default function Navbar() {
             className="h-20 w-auto object-contain"
           />
         </Link>
-        <div className="hidden items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="text-sm">
@@ -50,7 +50,7 @@ export default function Navbar() {
           <ThemeToggle />
         </div>
         <button
-          className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800"
+          className="inline-flex md:hidden items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
