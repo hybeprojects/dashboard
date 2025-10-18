@@ -1,12 +1,11 @@
 const jwt = require('jsonwebtoken');
-const secret = process.env.JWT_SECRET || 'dev_secret';
+const secret = process.env.JWT_SECRET;
 
 function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: 'Missing Authorization' });
-  const parts = auth.split(' ');
-  if (parts.length !== 2) return res.status(401).json({ error: 'Invalid Authorization' });
-  const token = parts[1];
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   try {
     const decoded = jwt.verify(token, secret);
     req.user = decoded;

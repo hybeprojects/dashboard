@@ -7,8 +7,6 @@ export async function login(
   otp?: string,
 ): Promise<{ accessToken: string; user: UserProfile }> {
   const { data } = await api.post('/auth/login', { email, password, otp });
-  if (typeof window !== 'undefined')
-    localStorage.setItem('token', data.accessToken || data.token || '');
   return data as { accessToken: string; user: UserProfile };
 }
 
@@ -25,14 +23,11 @@ export async function register(payload: {
     email: payload.email,
     password: payload.password,
   });
-  if (typeof window !== 'undefined')
-    localStorage.setItem('token', data.accessToken || data.token || '');
   return { accessToken: data.accessToken || data.token, user: data.user };
 }
 
 export async function logout() {
   await api.post('/auth/logout');
-  if (typeof window !== 'undefined') localStorage.removeItem('token');
 }
 
 export default { login, register, logout };

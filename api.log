@@ -1,5 +1,5 @@
 
-> premium-banking-api@0.0.0 dev
-> nest start --watch
+> dashboard-server@1.0.0 dev
+> node server.js
 
-[2J[3J[H[[90m6:08:10 PM[0m] Starting compilation in watch mode...
+🚀 Dashboard server listening on port 5000
