@@ -2,11 +2,11 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const {
-  DB_HOST = 'localhost',
-  DB_PORT = 3306,
-  DB_USER = 'appuser',
-  DB_PASSWORD = 'apppassword',
-  DB_NAME = 'premierbank',
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
 } = process.env;
 
 let pool = null;
