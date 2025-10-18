@@ -83,7 +83,9 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  const hasJwt = Boolean(context.req.headers.cookie && context.req.headers.cookie.includes('token='));
+  const hasJwt = Boolean(
+    context.req.headers.cookie && context.req.headers.cookie.includes('token='),
+  );
 
   if (!hasJwt) {
     return {
