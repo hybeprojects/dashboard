@@ -1,30 +1,30 @@
-module.exports = function registerSockets(io) {
-  const cookie = require('cookie');
-  const jwtLib = require('jsonwebtoken');
+const cookie = require('cookie');
+const { createClient } = require('@supabase/supabase-js');
+const jwtLib = require('jsonwebtoken');
 
-  io.on('connection', (socket) => {
-    try {
-      // Prefer token sent in auth payload, fall back to cookie header (httpOnly cookie set by server).
-      const tokenFromAuth = socket.handshake.auth?.token;
-      let token = tokenFromAuth;
+function getSupabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
-      if (!token && socket.request && socket.request.headers && socket.request.headers.cookie) {
-        const cookies = cookie.parse(socket.request.headers.cookie || '');
-        token = cookies?.token;
-      }
-
-      if (token) {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) throw new Error('JWT_SECRET not set');
-        const decoded = jwtLib.verify(token, secret);
-        const userId = decoded.sub;
-        // join room for this user
+module.exports = function transferSocket(io) {
+  return function (socket) {
+    socket.on('authenticate', async (token) => {
+      try {
+        const supabase = getSupabaseServer();
+        if (!supabase) throw new Error('Supabase not configured');
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data || !data.user) throw new Error('Invalid token');
+        const userId = data.user.id;
+        socket.user = { supabaseId: userId, id: userId };
         socket.join(userId);
+        socket.emit('authenticated', { ok: true });
+      } catch (e) {
+        socket.emit('unauthorized');
+        socket.disconnect(true);
       }
-    } catch (e) {
-      // ignore connection auth errors; socket will remain connected but without user room
-    }
-
-    socket.on('disconnect', () => {});
-  });
+    });
+  };
 };
