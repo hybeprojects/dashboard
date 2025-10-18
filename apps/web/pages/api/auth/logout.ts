@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import getServerSupabase from '../_serverSupabase';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { serialize } from 'cookie';
 
