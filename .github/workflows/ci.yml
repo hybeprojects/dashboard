@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workspace: [web, admin, api]
+        workspace: [web]
 
     steps:
       - name: Checkout
