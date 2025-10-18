@@ -49,9 +49,14 @@ router.post('/setup-profile', async (req, res) => {
     let fineractClient = null;
     let accountId = null;
     try {
-      fineractClient = await fineractAPI.createClient({ firstName: sbUser.user_metadata?.first_name || sbUser.email?.split('@')[0], lastName: sbUser.user_metadata?.last_name || '' });
-      const savings = await fineractAPI.createSavingsAccount(fineractClient.clientId).catch(() => null);
-      accountId = savings ? (savings.savingsId || savings.resourceId || savings.id) : null;
+      fineractClient = await fineractAPI.createClient({
+        firstName: sbUser.user_metadata?.first_name || sbUser.email?.split('@')[0],
+        lastName: sbUser.user_metadata?.last_name || '',
+      });
+      const savings = await fineractAPI
+        .createSavingsAccount(fineractClient.clientId)
+        .catch(() => null);
+      accountId = savings ? savings.savingsId || savings.resourceId || savings.id : null;
     } catch (e) {
       // ignore fineract failures but continue
       accountId = null;
@@ -81,9 +86,17 @@ router.post('/setup-profile', async (req, res) => {
 });
 
 // Deprecate older JWT routes: respond with guidance
-router.post('/signup', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for signup' }));
-router.post('/login', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for login' }));
-router.post('/refresh', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for session refresh' }));
-router.post('/logout', (_req, res) => res.status(410).json({ error: 'Use Supabase Auth for logout' }));
+router.post('/signup', (_req, res) =>
+  res.status(410).json({ error: 'Use Supabase Auth for signup' }),
+);
+router.post('/login', (_req, res) =>
+  res.status(410).json({ error: 'Use Supabase Auth for login' }),
+);
+router.post('/refresh', (_req, res) =>
+  res.status(410).json({ error: 'Use Supabase Auth for session refresh' }),
+);
+router.post('/logout', (_req, res) =>
+  res.status(410).json({ error: 'Use Supabase Auth for logout' }),
+);
 
 module.exports = router;
