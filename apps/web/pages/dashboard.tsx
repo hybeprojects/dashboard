@@ -117,7 +117,7 @@ export default function Dashboard() {
             <button className="w-full flex items-center justify-between px-4 py-4">
               <div className="text-left">
                 <div className="text-sm text-gray-500">
-                  Hello{user?.user_metadata?.first_name ? ',' : ''} {user?.user_metadata?.first_name || 'there'}
+                  Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />

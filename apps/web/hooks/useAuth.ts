@@ -1,22 +1,18 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
-import { createClient } from '../lib/supabase/client';
+import { me } from '../lib/auth';
 
 export function useSupabaseSession() {
   const setUser = useAuthStore((s) => s.setUser);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    let mounted = true;
+    (async () => {
+      const user = await me();
+      if (mounted) setUser(user);
+    })();
+    return () => {
+      mounted = false;
+    };
   }, [setUser]);
 }
