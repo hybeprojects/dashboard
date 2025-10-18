@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import Navbar from '../../components/Navbar';
 import Button from '../../components/ui/Button';
+import { createClient } from '../../lib/supabase/client';
 
 type Submission = {
   id: number;
