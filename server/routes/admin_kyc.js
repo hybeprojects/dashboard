@@ -31,7 +31,7 @@ router.get('/submissions', adminAuth, async (req, res) => {
 });
 
 // Generate signed URLs for a submission's files
-router.get('/signed/:submissionId', authMiddleware, async (req, res) => {
+router.get('/signed/:submissionId', adminAuth, async (req, res) => {
   try {
     const supabase = getSupabaseServer();
     if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
