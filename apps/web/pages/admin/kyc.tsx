@@ -31,7 +31,13 @@ export default function AdminKyc() {
   async function load() {
     try {
       setLoading(true);
-      const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`);
+      // attach supabase access token for admin auth
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || null;
+      const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       setSubs(res.data.submissions || []);
     } catch (e) {
       // eslint-disable-next-line no-console
