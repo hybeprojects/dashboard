@@ -1,90 +1,33 @@
-import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import FormInput from '../components/ui/FormInput';
-import Button from '../components/ui/Button';
-import { useState } from 'react';
-import Alert from '../components/ui/Alert';
+import Link from 'next/link';
 import Navbar from '../components/Navbar';
 
-const signupSchema = yup.object().shape({
-  email: yup.string().email().required(),
-  password: yup.string().required(),
-  firstName: yup.string().required(),
-  lastName: yup.string().required(),
-  userType: yup.string().oneOf(['personal', 'business']).required(),
-});
-
 export default function Register() {
-  const router = useRouter();
-  const [msg, setMsg] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: yupResolver(signupSchema),
-  });
-
-  const onSubmit = async (data: any) => {
-    setMsg(null);
-    const res = await fetch('http://localhost:3001/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (res.ok) {
-      router.push('/login');
-    } else {
-      const { message } = await res.json();
-      setMsg(message);
-    }
-  };
-
   return (
     <div className="container-page">
       <Navbar />
-      <main className="section py-10 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-4">Open your account</h2>
-        <form className="card-surface p-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          <FormInput label="First Name" {...register('firstName')} error={errors.firstName} />
-          <FormInput label="Last Name" {...register('lastName')} error={errors.lastName} />
-          <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
-          <FormInput
-            label="Password"
-            type="password"
-            {...register('password')}
-            error={errors.password}
-          />
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="personal"
-              value="personal"
-              {...register('userType')}
-              className="mr-2"
-              name="userType"
-            />
-            <label htmlFor="personal">Personal</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="business"
-              value="business"
-              {...register('userType')}
-              className="mr-2"
-              name="userType"
-            />
-            <label htmlFor="business">Business</label>
-          </div>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating…' : 'Create Account'}
-          </Button>
-          {msg && <Alert kind="error">{msg}</Alert>}
-        </form>
+      <main className="section py-10 max-w-md mx-auto text-center">
+        <h2 className="text-2xl font-bold mb-4">Open a New Account</h2>
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+          Choose the type of account you would like to open.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Link href="/register/personal">
+            <a className="card-surface p-6 block text-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 rounded-lg">
+              <h3 className="text-xl font-semibold mb-2">Personal Account</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                For individuals. Get a free checking and savings account with no monthly fees.
+              </p>
+            </a>
+          </Link>
+          <Link href="/register/business">
+            <a className="card-surface p-6 block text-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 rounded-lg">
+              <h3 className="text-xl font-semibold mb-2">Business Account</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                For businesses of all sizes. Get a powerful checking account with business-focused features.
+              </p>
+            </a>
+          </Link>
+        </div>
       </main>
     </div>
   );
