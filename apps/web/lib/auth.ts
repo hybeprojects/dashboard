@@ -16,9 +16,7 @@ export async function register(payload: {
   firstName: string;
   lastName: string;
 }) {
-  // Create account
   await api.post('/auth/register', payload);
-  // Immediately login to obtain access token
   const { data } = await api.post('/auth/login', {
     email: payload.email,
     password: payload.password,
@@ -30,4 +28,13 @@ export async function logout() {
   await api.post('/auth/logout');
 }
 
-export default { login, register, logout };
+export async function me(): Promise<UserProfile | null> {
+  try {
+    const { data } = await api.get('/auth/me');
+    return (data && data.user) || null;
+  } catch {
+    return null;
+  }
+}
+
+export default { login, register, logout, me };

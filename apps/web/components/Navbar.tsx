@@ -3,16 +3,16 @@ import Link from 'next/link';
 import ThemeToggle from '../lib/theme';
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
-import { createClient } from '../lib/supabase/client';
+import { logout as apiLogout } from '../lib/auth';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const supabase = createClient();
-
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    try {
+      await apiLogout();
+    } catch {}
     logout();
     setOpen(false);
   }
@@ -31,7 +31,7 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="text-sm">
-                {user.user_metadata.first_name || user.email}
+                {user.firstName || user.email}
               </Link>
               <button className="text-sm text-primary" onClick={handleSignOut}>
                 Sign out
@@ -79,7 +79,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <Link href="/dashboard" className="py-2" onClick={() => setOpen(false)}>
-                    {user.user_metadata.first_name || user.email}
+                    {user.firstName || user.email}
                   </Link>
                   <button className="text-left text-primary" onClick={handleSignOut}>
                     Sign out

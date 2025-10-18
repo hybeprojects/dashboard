@@ -83,11 +83,11 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const hasJwt = Boolean(
+    context.req.headers.cookie && context.req.headers.cookie.includes('token='),
+  );
 
-  if (!session) {
+  if (!hasJwt) {
     return {
       redirect: {
         destination: '/login',
@@ -102,7 +102,6 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .from('accounts')
     .select('*')
     .eq('id', accountId)
-    .eq('user_id', session.user.id)
     .single();
 
   const { data: transactions, error: transactionsError } = await supabase
