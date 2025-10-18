@@ -14,6 +14,7 @@ export default function Navbar() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     logout();
+    setOpen(false);
   }
 
   return (
@@ -26,7 +27,8 @@ export default function Navbar() {
             className="h-20 w-auto object-contain"
           />
         </Link>
-        <div className="hidden md:flex items-center gap-4">
+        {/* Hide inline nav on all sizes to move everything into hamburger */}
+        <div className="hidden items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="text-sm">
@@ -49,8 +51,8 @@ export default function Navbar() {
           <ThemeToggle />
         </div>
         <button
-          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800"
-          aria-label="Open menu"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800"
+          aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
@@ -72,19 +74,32 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="md:hidden border-t border-gray-200 dark:border-gray-800"
+            className="border-t border-gray-200 dark:border-gray-800"
           >
             <div className="section py-4 flex flex-col gap-3">
-              <Link href="/login" className="py-2" onClick={() => setOpen(false)}>
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="btn-primary text-center"
-                onClick={() => setOpen(false)}
-              >
-                Open Account
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/dashboard" className="py-2" onClick={() => setOpen(false)}>
+                    {user.user_metadata.first_name || user.email}
+                  </Link>
+                  <button className="text-left text-primary" onClick={handleSignOut}>
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="py-2" onClick={() => setOpen(false)}>
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="btn-primary text-center"
+                    onClick={() => setOpen(false)}
+                  >
+                    Open Account
+                  </Link>
+                </>
+              )}
               <div className="pt-2">
                 <ThemeToggle />
               </div>
