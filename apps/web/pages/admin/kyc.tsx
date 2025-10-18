@@ -50,7 +50,13 @@ export default function AdminKyc() {
 
   async function preview(submissionId: string) {
     try {
-      const res = await api.get(`/admin/kyc/signed/${submissionId}`);
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || null;
+
+      const res = await api.get(`/admin/kyc/signed/${submissionId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const { urls } = res.data;
       // open each URL in new tab for review
       Object.values(urls || {}).forEach((u: any) => {
