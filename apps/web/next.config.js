@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    // Fail build if ESLint errors are present
+    ignoreDuringBuilds: false,
   },
   typescript: {
     ignoreBuildErrors: false,
@@ -28,8 +29,9 @@ const nextConfig = {
                 "default-src 'self'",
                 "base-uri 'self'",
                 "frame-ancestors 'none'",
-                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                // removed 'unsafe-inline' to mitigate XSS; use nonces/hashes for inline scripts/styles
+                "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+                "style-src 'self' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com",
                 "img-src 'self' data:",
               ];
@@ -37,6 +39,8 @@ const nextConfig = {
               if (supabase) connect.push(supabase);
               if (apiUrl) connect.push(apiUrl);
               parts.push(connect.join(' '));
+              // prefer upgrade-insecure-requests
+              parts.push("upgrade-insecure-requests");
               return parts.join('; ') + ';';
             })(),
           },
