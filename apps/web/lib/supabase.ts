@@ -20,7 +20,8 @@ export function getSupabase(): SupabaseClient | null {
     return null;
   }
   if (typeof window === 'undefined') return null; // avoid creating client on server
-  client = createClient(url, anon, { auth: { persistSession: false } });
+  // enable session persistence in the browser so user stays signed in across refreshes
+  client = createClient(url, anon, { auth: { persistSession: true } });
   return client;
 }
 
