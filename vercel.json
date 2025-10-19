@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "apps/web/package.json", "use": "@vercel/next" }
-  ],
+  "builds": [{ "src": "apps/web/package.json", "use": "@vercel/next" }],
   "build": {
     "env": {
       "NEXT_PUBLIC_SUPABASE_URL": "",
