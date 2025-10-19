@@ -133,9 +133,25 @@ router.post('/', auth, csrf, transferLimiter, async (req, res) => {
       memo: memo || null,
       retries: 0,
     };
-    const txs = await loadTx();
-    txs.unshift(tx);
-    await saveTx(txs);
+    // persist transaction in Supabase (best-effort)
+    await store.addTransaction({
+      id: tx.id,
+      from_user_id: tx.fromUserId,
+      from_account_id: tx.fromAccountId,
+      to_user_id: tx.toUserId,
+      to_account_id: tx.toAccountId,
+      amount: tx.amount,
+      currency: tx.currency,
+      status: tx.status,
+      created_at: tx.createdAt,
+      posted_at: tx.postedAt,
+      settled_at: tx.settledAt,
+      fineract_clearing_ref: tx.fineractClearingRef,
+      fineract_settlement_ref: tx.fineractSettlementRef,
+      memo: tx.memo,
+    }).catch((e) => {
+      logger.warn('Failed to persist transaction to Supabase', e && (e.message || e));
+    });
 
     // balances
     let senderBal = null;
