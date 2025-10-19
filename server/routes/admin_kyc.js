@@ -4,6 +4,8 @@ const { createClient } = require('@supabase/supabase-js');
 const db = require('../utils/db');
 const adminAuth = require('../middleware/adminAuth');
 const audit = require('../utils/audit');
+const { validate } = require('../middleware/validate');
+const { submissionsQuery, signedParams, decisionBody } = require('../validation/adminKyc');
 
 function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -13,11 +15,10 @@ function getSupabaseServer() {
 }
 
 // List submissions (paginated)
-router.get('/submissions', adminAuth, async (req, res) => {
+router.get('/submissions', adminAuth, validate('query', submissionsQuery), async (req, res) => {
   try {
     // basic admin protection: middleware must set req.user
-    const page = parseInt(req.query.page || '1', 10);
-    const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
+    const { page, limit } = req.query;
     const offset = (page - 1) * limit;
 
     const supabase = getSupabaseServer();
@@ -39,50 +40,52 @@ router.get('/submissions', adminAuth, async (req, res) => {
 });
 
 // Generate signed URLs for a submission's files
-router.get('/signed/:submissionId', adminAuth, async (req, res) => {
-  try {
-    const supabase = getSupabaseServer();
-    if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+router.get(
+  '/signed/:submissionId',
+  adminAuth,
+  validate('params', signedParams),
+  async (req, res) => {
+    try {
+      const supabase = getSupabaseServer();
+      if (!supabase)
+        return res.status(500).json({ error: 'Supabase service client not configured' });
 
-    const submissionId = req.params.submissionId;
-    const { data: submission, error: subErr } = await supabase
-      .from('kyc_submissions')
-      .select('*')
-      .eq('submission_id', submissionId)
-      .limit(1)
-      .maybeSingle();
-    if (subErr) throw subErr;
-    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+      const submissionId = req.params.submissionId;
+      const { data: submission, error: subErr } = await supabase
+        .from('kyc_submissions')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .limit(1)
+        .maybeSingle();
+      if (subErr) throw subErr;
+      if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
-    const bucket = process.env.SUPABASE_KYC_BUCKET || 'kyc';
-    const expiresIn = 60; // 60 seconds
+      const bucket = process.env.SUPABASE_KYC_BUCKET || 'kyc';
+      const expiresIn = 60; // 60 seconds
 
-    const urls = {};
-    for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
-      if (submission[key]) {
-        const { data: d, error: e } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(submission[key], expiresIn);
-        if (e) throw e;
-        urls[key] = d.signedURL;
+      const urls = {};
+      for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
+        if (submission[key]) {
+          const { data: d, error: e } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(submission[key], expiresIn);
+          if (e) throw e;
+          urls[key] = d.signedURL;
+        }
       }
-    }
 
-    return res.json({ urls });
-  } catch (e) {
-    console.error('admin signed url error', e.message || e);
-    return res.status(500).json({ error: 'Failed to create signed urls' });
-  }
-});
+      return res.json({ urls });
+    } catch (e) {
+      console.error('admin signed url error', e.message || e);
+      return res.status(500).json({ error: 'Failed to create signed urls' });
+    }
+  },
+);
 
 // Approve or reject submission
-router.post('/decision', adminAuth, async (req, res) => {
+router.post('/decision', adminAuth, validate('body', decisionBody), async (req, res) => {
   try {
     const { submissionId, decision, note } = req.body;
-    if (!submissionId || !decision)
-      return res.status(400).json({ error: 'Missing submissionId or decision' });
-    if (!['approved', 'rejected'].includes(decision))
-      return res.status(400).json({ error: 'Invalid decision' });
 
     const supabase = getSupabaseServer();
     if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });

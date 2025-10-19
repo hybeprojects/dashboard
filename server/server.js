@@ -109,7 +109,8 @@ mountIfExists('./routes/notifications', '/notifications', sharedLimiter);
 mountIfExists('./routes/transfer', '/transfer', sharedLimiter);
 // KYC upload and admin endpoints
 mountIfExists('./routes/kyc', '/kyc', sharedLimiter);
-mountIfExists('./routes/admin_kyc', '/admin/kyc', sharedLimiter);
+const adminAudit = require('./middleware/audit');
+mountIfExists('./routes/admin_kyc', '/admin/kyc', sharedLimiter, adminAudit());
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -40,6 +40,8 @@ async function run() {
   }
 }
 
+module.exports = { run };
+
 if (require.main === module) {
   run().catch((e) => {
     console.error('Backup failed', e && (e.message || e));
