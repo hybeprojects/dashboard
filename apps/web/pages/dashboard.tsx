@@ -53,7 +53,7 @@ export default function Dashboard() {
                   firstName: u.user_metadata?.first_name,
                   lastName: u.user_metadata?.last_name,
                 }
-              : null
+              : null,
           );
         }
         if (!u && mounted) {
@@ -83,7 +83,10 @@ export default function Dashboard() {
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: async () => {
-      const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
       return data;
     },
     staleTime: 15_000,
@@ -107,7 +110,9 @@ export default function Dashboard() {
           const list = Array.isArray(old) ? [...old] : [];
           const newRow = payload.new;
           if (!newRow) return list;
-          const idx = list.findIndex((a: any) => a.id === newRow.id || a.accountId === newRow.accountId);
+          const idx = list.findIndex(
+            (a: any) => a.id === newRow.id || a.accountId === newRow.accountId,
+          );
           if (idx === -1) list.unshift(newRow);
           else list[idx] = { ...list[idx], ...newRow };
           return list;
@@ -117,18 +122,24 @@ export default function Dashboard() {
 
     const txChannel = supabase
       .channel('public:transactions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
-        qc.setQueryData(['transactions'], (old: any) => {
-          const list = Array.isArray(old) ? [...old] : [];
-          const newRow = payload.new;
-          if (!newRow) return list;
-          // for inserts, add to top; for updates, replace
-          const idx = list.findIndex((t: any) => t.id === newRow.id || t.transactionId === newRow.transactionId);
-          if (idx === -1) list.unshift(newRow);
-          else list[idx] = { ...list[idx], ...newRow };
-          return list;
-        });
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        (payload) => {
+          qc.setQueryData(['transactions'], (old: any) => {
+            const list = Array.isArray(old) ? [...old] : [];
+            const newRow = payload.new;
+            if (!newRow) return list;
+            // for inserts, add to top; for updates, replace
+            const idx = list.findIndex(
+              (t: any) => t.id === newRow.id || t.transactionId === newRow.transactionId,
+            );
+            if (idx === -1) list.unshift(newRow);
+            else list[idx] = { ...list[idx], ...newRow };
+            return list;
+          });
+        },
+      )
       .subscribe();
 
     return () => {
