@@ -5,6 +5,7 @@ const logger = require('./utils/logger');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 
