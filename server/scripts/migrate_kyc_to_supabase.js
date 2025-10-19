@@ -58,7 +58,10 @@ async function migrate() {
         console.error('Batch upsert failed', error.message || error);
         // fallback to inserting one-by-one to identify failing rows
         for (const p of payload) {
-          const { data: d, error: e } = await supabase.from('kyc_submissions').upsert(p, { onConflict: 'id' }).select();
+          const { data: d, error: e } = await supabase
+            .from('kyc_submissions')
+            .upsert(p, { onConflict: 'id' })
+            .select();
           if (e) console.error('Failed to migrate submission', p.submission_id, e.message || e);
           else console.log('Migrated submission', p.submission_id);
         }
