@@ -133,15 +133,26 @@ export default function BusinessRegister() {
               {...register('representativeName')}
               error={errors.representativeName}
             />
-            <FormInput label="SSN" {...register('representativeSsn')} error={errors.representativeSsn} />
+            <FormInput
+              label="SSN"
+              {...register('representativeSsn')}
+              error={errors.representativeSsn}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-            <FormInput label="Email" {...register('email', { required: 'Email is required' })} error={(errors as any).email} />
+            <FormInput
+              label="Email"
+              {...register('email', { required: 'Email is required' })}
+              error={(errors as any).email}
+            />
             <FormInput
               label="Password"
               type="password"
-              {...register('password', { required: 'Password is required', minLength: { value: 12, message: 'Use 12+ chars' } })}
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 12, message: 'Use 12+ chars' },
+              })}
               error={(errors as any).password}
             />
           </div>

@@ -68,12 +68,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             timeout: 10000,
           };
           if (tenant) axiosConfig.headers['Fineract-Platform-TenantId'] = tenant;
-          const resp = await axios.post(`${fineractUrl.replace(/\/$/, '')}/clients`, body, axiosConfig);
+          const resp = await axios.post(
+            `${fineractUrl.replace(/\/$/, '')}/clients`,
+            body,
+            axiosConfig,
+          );
           const clientData = resp?.data || null;
           // try to extract client id from common fields
           const clientId = clientData?.clientId || clientData?.resourceId || clientData?.id || null;
           if (clientId) {
-            await supabase.from('profiles').update({ fineract_client_id: clientId }).eq('id', user.id);
+            await supabase
+              .from('profiles')
+              .update({ fineract_client_id: clientId })
+              .eq('id', user.id);
           }
         }
       } catch (e) {

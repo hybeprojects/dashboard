@@ -95,11 +95,18 @@ export default function PersonalRegister() {
           <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput label="Email" {...register('email', { required: 'Email is required' })} error={(errors as any).email} />
+            <FormInput
+              label="Email"
+              {...register('email', { required: 'Email is required' })}
+              error={(errors as any).email}
+            />
             <FormInput
               label="Password"
               type="password"
-              {...register('password', { required: 'Password is required', minLength: { value: 12, message: 'Use 12+ chars' } })}
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 12, message: 'Use 12+ chars' },
+              })}
               error={(errors as any).password}
             />
           </div>
