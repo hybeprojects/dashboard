@@ -85,7 +85,11 @@ export default function Dashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from('transactions')
-        .select('*')
+        .select(`
+          *,
+          accounts!sender_account_id(name),
+          receiver_account:accounts!receiver_account_id(name)
+        `)
         .order('created_at', { ascending: false });
       return data;
     },
