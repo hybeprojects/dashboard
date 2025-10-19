@@ -55,11 +55,21 @@ async function run() {
       let sbAccount = null;
       try {
         // 1. Try match by id (if accounts.id equals acctRef)
-        let q = await supabase.from('accounts').select('*').eq('id', acctRef).limit(1).maybeSingle();
+        let q = await supabase
+          .from('accounts')
+          .select('*')
+          .eq('id', acctRef)
+          .limit(1)
+          .maybeSingle();
         if (!q.error && q.data) sbAccount = q.data;
         // 2. Try match by user_id
         if (!sbAccount) {
-          q = await supabase.from('accounts').select('*').eq('user_id', u.id).limit(1).maybeSingle();
+          q = await supabase
+            .from('accounts')
+            .select('*')
+            .eq('user_id', u.id)
+            .limit(1)
+            .maybeSingle();
           if (!q.error && q.data) sbAccount = q.data;
         }
         // 3. Try app_users.balance column
@@ -110,7 +120,11 @@ async function run() {
                 currency: u.currency || 'USD',
                 created_at: new Date().toISOString(),
               };
-              const { data: ins, error: insErr } = await supabase.from('accounts').insert(newRow).select().maybeSingle();
+              const { data: ins, error: insErr } = await supabase
+                .from('accounts')
+                .insert(newRow)
+                .select()
+                .maybeSingle();
               if (insErr) throw insErr;
             } catch (e) {
               // if unable to insert, fallback to updating app_users.balance field (best-effort)
@@ -155,8 +169,15 @@ async function run() {
     const path = require('path');
     const outDir = path.join(__dirname, '..', 'backups');
     await fs.mkdir(outDir, { recursive: true });
-    const filePath = path.join(outDir, `reconcile_report_${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-    await fs.writeFile(filePath, JSON.stringify({ generated_at: new Date().toISOString(), report }, null, 2), 'utf8');
+    const filePath = path.join(
+      outDir,
+      `reconcile_report_${new Date().toISOString().replace(/[:.]/g, '-')}.json`,
+    );
+    await fs.writeFile(
+      filePath,
+      JSON.stringify({ generated_at: new Date().toISOString(), report }, null, 2),
+      'utf8',
+    );
     logger.info('Reconciliation report written to', filePath);
   } catch (e) {
     logger.warn('Failed to write reconciliation report', e && (e.message || e));
