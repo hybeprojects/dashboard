@@ -44,6 +44,19 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// CSRF token issuer endpoint (double-submit cookie pattern)
+app.get('/csrf-token', (req, res) => {
+  const token = crypto.randomBytes(24).toString('hex');
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('XSRF-TOKEN', token, {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60, // 1 hour
+  });
+  return res.json({ csrfToken: token });
+});
+
 const PORT = process.env.PORT || 5000;
 
 // Initialize DB
