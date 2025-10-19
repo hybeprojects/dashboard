@@ -22,8 +22,14 @@ async function migrate() {
     const [rows] = await db.query('SELECT * FROM kyc_submissions ORDER BY created_at ASC');
     console.log('Found', rows.length, 'kyc records to migrate');
 
-    for (const r of rows) {
-      const payload = {
+    const batchSize = 100;
+    const batches = [];
+    for (let i = 0; i < rows.length; i += batchSize) {
+      batches.push(rows.slice(i, i + batchSize));
+    }
+
+    for (const batch of batches) {
+      const payload = batch.map((r) => ({
         id: r.id || r.uuid || require('uuid').v4(),
         submission_id: r.submission_id || require('uuid').v4(),
         user_id: r.user_id || null,
@@ -40,13 +46,24 @@ async function migrate() {
         review_note: r.review_note || null,
         created_at: r.created_at || new Date().toISOString(),
         reviewed_at: r.reviewed_at || null,
-      };
+      }));
 
-      const { data, error } = await supabase.from('kyc_submissions').insert(payload).maybeSingle();
+      // Use upsert to avoid duplicate primary key errors; onConflict 'id'
+      const { data: inserted, error } = await supabase
+        .from('kyc_submissions')
+        .upsert(payload, { onConflict: 'id' })
+        .select();
+
       if (error) {
-        console.error('Failed to insert submission', payload.submission_id, error.message || error);
+        console.error('Batch upsert failed', error.message || error);
+        // fallback to inserting one-by-one to identify failing rows
+        for (const p of payload) {
+          const { data: d, error: e } = await supabase.from('kyc_submissions').upsert(p, { onConflict: 'id' }).select();
+          if (e) console.error('Failed to migrate submission', p.submission_id, e.message || e);
+          else console.log('Migrated submission', p.submission_id);
+        }
       } else {
-        console.log('Migrated submission', payload.submission_id);
+        for (const p of payload) console.log('Migrated submission', p.submission_id);
       }
     }
 
