@@ -94,14 +94,22 @@ const sharedLimiter = rateLimit({
 });
 
 // Mount routes
-app.use('/auth', require('./routes/auth'));
-app.use('/accounts', sharedLimiter, require('./routes/accounts'));
-app.use('/transactions', sharedLimiter, require('./routes/transactions'));
-app.use('/notifications', sharedLimiter, require('./routes/notifications'));
-app.use('/transfer', sharedLimiter, require('./routes/transfer'));
+const fs = require('fs');
+function mountIfExists(routePath, mountPath, ...middleware) {
+  const abs = path.join(__dirname, routePath + '.js');
+  if (fs.existsSync(abs)) {
+    app.use(mountPath, ...middleware, require(routePath));
+  }
+}
+
+mountIfExists('./routes/auth', '/auth');
+mountIfExists('./routes/accounts', '/accounts', sharedLimiter);
+mountIfExists('./routes/transactions', '/transactions', sharedLimiter);
+mountIfExists('./routes/notifications', '/notifications', sharedLimiter);
+mountIfExists('./routes/transfer', '/transfer', sharedLimiter);
 // KYC upload and admin endpoints
-app.use('/kyc', sharedLimiter, require('./routes/kyc'));
-app.use('/admin/kyc', sharedLimiter, require('./routes/admin_kyc'));
+mountIfExists('./routes/kyc', '/kyc', sharedLimiter);
+mountIfExists('./routes/admin_kyc', '/admin/kyc', sharedLimiter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
