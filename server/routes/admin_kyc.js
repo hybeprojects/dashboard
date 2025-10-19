@@ -59,7 +59,9 @@ router.get('/signed/:submissionId', adminAuth, async (req, res) => {
     const urls = {};
     for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
       if (submission[key]) {
-        const { data: d, error: e } = await supabase.storage.from(bucket).createSignedUrl(submission[key], expiresIn);
+        const { data: d, error: e } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(submission[key], expiresIn);
         if (e) throw e;
         urls[key] = d.signedURL;
       }
@@ -83,7 +85,11 @@ router.post('/decision', adminAuth, async (req, res) => {
 
     const { data: updated, error: upErr } = await supabase
       .from('kyc_submissions')
-      .update({ status: decision, review_note: note || null, reviewed_at: new Date().toISOString() })
+      .update({
+        status: decision,
+        review_note: note || null,
+        reviewed_at: new Date().toISOString(),
+      })
       .eq('submission_id', submissionId)
       .select()
       .maybeSingle();
