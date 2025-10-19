@@ -83,15 +83,25 @@ const db = require('./utils/db');
   await db.init();
 })();
 
+const rateLimit = require('express-rate-limit');
+
+// Shared limiter for sensitive routes (IP-based)
+const sharedLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Mount routes
 app.use('/auth', require('./routes/auth'));
-app.use('/accounts', require('./routes/accounts'));
-app.use('/transactions', require('./routes/transactions'));
-app.use('/notifications', require('./routes/notifications'));
-app.use('/transfer', require('./routes/transfer'));
+app.use('/accounts', sharedLimiter, require('./routes/accounts'));
+app.use('/transactions', sharedLimiter, require('./routes/transactions'));
+app.use('/notifications', sharedLimiter, require('./routes/notifications'));
+app.use('/transfer', sharedLimiter, require('./routes/transfer'));
 // KYC upload and admin endpoints
-app.use('/kyc', require('./routes/kyc'));
-app.use('/admin/kyc', require('./routes/admin_kyc'));
+app.use('/kyc', sharedLimiter, require('./routes/kyc'));
+app.use('/admin/kyc', sharedLimiter, require('./routes/admin_kyc'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
