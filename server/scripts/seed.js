@@ -1,21 +1,15 @@
 const fs = require('fs-extra');
 const path = require('path');
+const fs = require('fs-extra');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 const { v4: uuidv4 } = require('uuid');
 const { createClient, createSavingsAccount, depositToSavings } = require('../utils/fineractAPI');
+const store = require('../utils/store');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SYS_FILE = path.join(DATA_DIR, 'system.json');
 
-async function loadUsers() {
-  return fs.readJson(USERS_FILE).catch(() => []);
-}
-async function saveUsers(u) {
-  await fs.ensureDir(DATA_DIR);
-  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
-}
 async function loadSys() {
   return fs.readJson(SYS_FILE).catch(() => ({}));
 }
