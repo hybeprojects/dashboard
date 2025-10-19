@@ -9,23 +9,9 @@ const rateLimit = require('express-rate-limit');
 const { transferFunds, getAccountBalance, getSavingsAccount } = require('../utils/fineractAPI');
 const logger = require('../utils/logger');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const TX_FILE = path.join(DATA_DIR, 'transactions.json');
-const SYS_FILE = path.join(DATA_DIR, 'system.json');
+const SYS_FILE = path.join(__dirname, '..', 'data', 'system.json');
+const store = require('../utils/store');
 
-async function loadUsers() {
-  return fs.readJson(USERS_FILE).catch(() => []);
-}
-async function saveUsers(u) {
-  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
-}
-async function loadTx() {
-  return fs.readJson(TX_FILE).catch(() => []);
-}
-async function saveTx(t) {
-  return fs.writeJson(TX_FILE, t, { spaces: 2 });
-}
 async function loadSys() {
   return fs.readJson(SYS_FILE).catch(() => ({}));
 }
