@@ -44,10 +44,13 @@ router.get('/signed/:submissionId', adminAuth, async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
 
     const submissionId = req.params.submissionId;
-    const [rows] = await db.query('SELECT * FROM kyc_submissions WHERE submission_id = ? LIMIT 1', [
-      submissionId,
-    ]);
-    const submission = rows && rows[0];
+    const { data: submission, error: subErr } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('submission_id', submissionId)
+      .limit(1)
+      .maybeSingle();
+    if (subErr) throw subErr;
     if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
     const bucket = process.env.SUPABASE_KYC_BUCKET || 'kyc';
@@ -56,11 +59,9 @@ router.get('/signed/:submissionId', adminAuth, async (req, res) => {
     const urls = {};
     for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
       if (submission[key]) {
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(submission[key], expiresIn);
-        if (error) throw error;
-        urls[key] = data.signedURL;
+        const { data: d, error: e } = await supabase.storage.from(bucket).createSignedUrl(submission[key], expiresIn);
+        if (e) throw e;
+        urls[key] = d.signedURL;
       }
     }
 
