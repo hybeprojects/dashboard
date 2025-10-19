@@ -9,12 +9,14 @@ const csrf = require('../middleware/csrf');
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 
-const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
+const store = require('../utils/store');
 async function loadUsers() {
-  return fs.readJson(USERS_FILE).catch(() => []);
+  // kept for compatibility but prefer store.getUserBySupabaseId
+  return [];
 }
 async function saveUsers(u) {
-  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
+  // noop: persistence should be in Supabase
+  return null;
 }
 
 const createLimiter = rateLimit({
