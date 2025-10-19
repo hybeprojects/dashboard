@@ -81,11 +81,14 @@ router.post('/decision', adminAuth, async (req, res) => {
     if (!['approved', 'rejected'].includes(decision))
       return res.status(400).json({ error: 'Invalid decision' });
 
-    await db.query(
-      'UPDATE kyc_submissions SET status = ?, review_note = ?, reviewed_at = NOW() WHERE submission_id = ?',
-      [decision, note || null, submissionId],
-    );
-    return res.json({ success: true });
+    const { data: updated, error: upErr } = await supabase
+      .from('kyc_submissions')
+      .update({ status: decision, review_note: note || null, reviewed_at: new Date().toISOString() })
+      .eq('submission_id', submissionId)
+      .select()
+      .maybeSingle();
+    if (upErr) throw upErr;
+    return res.json({ success: true, updated });
   } catch (e) {
     console.error('admin decision error', e.message || e);
     return res.status(500).json({ error: 'Failed to update decision' });
