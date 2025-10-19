@@ -8,6 +8,7 @@ const store = require('../utils/store');
 const rateLimit = require('express-rate-limit');
 const csrf = require('../middleware/csrf');
 const logger = require('../utils/logger');
+const audit = require('../utils/audit');
 
 // Memory storage to avoid writing files to disk
 const upload = multer({
@@ -94,7 +95,12 @@ router.post(
         return res.status(400).json({ error: 'Missing required email' });
       }
 
-      // minimal validation
+      // additional validation
+      const { validateKycPayload } = require('../utils/validate');
+      const { valid, errors } = validateKycPayload({ fullName, dob, ssn, address, email });
+      if (!valid) return res.status(400).json({ error: 'Validation failed', details: errors });
+
+      // minimal validation for files
       const files = req.files || {};
       const idFront = files.idFront && files.idFront[0];
       const idBack = files.idBack && files.idBack[0];
@@ -162,6 +168,25 @@ router.post(
           status: 'pending',
           created_at: new Date().toISOString(),
         });
+
+        // log audit record
+        try {
+          const audit = require('../utils/audit');
+          const actorId = req.user ? req.user.sub : null;
+          const actorEmail = req.user ? req.user.email : null;
+          await audit.logAudit({
+            actor_id: actorId,
+            actor_email: actorEmail,
+            action: 'kyc_submit',
+            target_type: 'kyc_submission',
+            target_id: submissionId,
+            changes: { email, full_name: fullName },
+            ip: req.ip,
+            user_agent: req.get('user-agent') || null,
+          });
+        } catch (ae) {
+          logger.warn('Failed to write audit record', ae && (ae.message || ae));
+        }
       } catch (e) {
         logger.error('Failed to persist KYC submission to Supabase', e && (e.message || e));
         return res.status(500).json({ error: 'Failed to store submission' });

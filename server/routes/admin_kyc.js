@@ -3,6 +3,7 @@ const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const db = require('../utils/db');
 const adminAuth = require('../middleware/adminAuth');
+const audit = require('../utils/audit');
 
 function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -83,6 +84,9 @@ router.post('/decision', adminAuth, async (req, res) => {
     if (!['approved', 'rejected'].includes(decision))
       return res.status(400).json({ error: 'Invalid decision' });
 
+    const supabase = getSupabaseServer();
+    if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+
     const { data: updated, error: upErr } = await supabase
       .from('kyc_submissions')
       .update({
@@ -94,6 +98,26 @@ router.post('/decision', adminAuth, async (req, res) => {
       .select()
       .maybeSingle();
     if (upErr) throw upErr;
+
+    // Audit log for decision
+    try {
+      const audit = require('../utils/audit');
+      const actorId = req.user ? req.user.sub : null;
+      const actorEmail = req.user ? req.user.email : null;
+      await audit.logAudit({
+        actor_id: actorId,
+        actor_email: actorEmail,
+        action: 'kyc_decision',
+        target_type: 'kyc_submission',
+        target_id: submissionId,
+        changes: { decision, note: note || null },
+        ip: req.ip,
+        user_agent: req.get('user-agent') || null,
+      });
+    } catch (ae) {
+      console.warn('Failed to write audit record', ae && (ae.message || ae));
+    }
+
     return res.json({ success: true, updated });
   } catch (e) {
     console.error('admin decision error', e.message || e);
