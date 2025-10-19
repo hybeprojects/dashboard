@@ -8,7 +8,10 @@ const { FINERACT_BASE_URL, FINERACT_USERNAME, FINERACT_PASSWORD, FINERACT_TENANT
 const fineract = axios.create({
   baseURL: FINERACT_BASE_URL,
   timeout: 10000,
-  auth: FINERACT_USERNAME && FINERACT_PASSWORD ? { username: FINERACT_USERNAME, password: FINERACT_PASSWORD } : undefined,
+  auth:
+    FINERACT_USERNAME && FINERACT_PASSWORD
+      ? { username: FINERACT_USERNAME, password: FINERACT_PASSWORD }
+      : undefined,
   headers: FINERACT_TENANT ? { 'Fineract-Platform-TenantId': FINERACT_TENANT } : {},
 });
 
@@ -68,11 +71,13 @@ async function getAccountBalance(accountId) {
     const data = await getSavingsAccount(accountId);
     // common fields for balance in Fineract responses
     const summary = data?.summary || data?.accountSummary || data?.resource || null;
-    const available = summary?.availableBalance ?? summary?.availableAmount ?? summary?.balance ?? null;
+    const available =
+      summary?.availableBalance ?? summary?.availableAmount ?? summary?.balance ?? null;
     if (available == null) {
       // try other common paths
       if (data?.summary?.availableBalance != null) return data.summary.availableBalance;
-      if (data?.account?.summary?.availableBalance != null) return data.account.summary.availableBalance;
+      if (data?.account?.summary?.availableBalance != null)
+        return data.account.summary.availableBalance;
       return null;
     }
     return available;
