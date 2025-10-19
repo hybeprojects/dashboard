@@ -1,16 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './db-types';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-let client: SupabaseClient<Database> | null = null;
+let client: SupabaseClient | null = null;
 
 /**
  * Returns a lazily-initialized Supabase client for browser usage.
  * On the server this will return null to avoid creating a client during SSR.
  */
-export function getSupabase(): SupabaseClient<Database> | null {
+export function getSupabase(): SupabaseClient | null {
   if (client) return client;
   if (!url || !anon) {
     if (typeof window !== 'undefined') {
@@ -22,7 +21,7 @@ export function getSupabase(): SupabaseClient<Database> | null {
   }
   if (typeof window === 'undefined') return null; // avoid creating client on server
   // enable session persistence in the browser so user stays signed in across refreshes
-  client = createClient<Database>(url, anon, { auth: { persistSession: true } });
+  client = createClient(url, anon, { auth: { persistSession: true } });
   return client;
 }
 
