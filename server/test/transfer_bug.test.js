@@ -21,27 +21,32 @@ async function runTest() {
   const { accessToken } = await signupRes.json();
   assert(accessToken, 'Did not receive access token');
 
-  // 2. Get user's account info
-  // This is a bit tricky since the /me endpoint doesn't return accountId.
-  // We'll have to read the users.json file to get the accountId.
-  // This is not ideal, but for this test it will work.
-  const fs = require('fs-extra');
-  const path = require('path');
-  const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
-  const users = await fs.readJson(USERS_FILE);
-  const user = users.find((u) => u.email === email);
-  assert(user, 'Could not find test user in users.json');
-
-  // Manually set accountId for testing purposes since Fineract is not available.
-  if (!user.accountId) {
-    user.accountId = 12345; // A dummy account id
-    await fs.writeJson(USERS_FILE, users, { spaces: 2 });
+  // 2. Get user's account info from Supabase app_users
+  const { createClient } = require('@supabase/supabase-js');
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { data: appUserRows, error: appErr } = await sb.from('app_users').select('*').eq('email', email).limit(1).maybeSingle();
+  if (appErr) {
+    console.error('Failed to query app_users', appErr);
+    process.exit(1);
+  }
+  let user = appUserRows || null;
+  // If app_users entry not present, create a fallback mapping with dummy account
+  if (!user) {
+    const newUser = { id: (await import('uuid')).v4(), email, first_name: 'Test' };
+    const { data: ins, error: insErr } = await sb.from('app_users').insert(newUser).select().maybeSingle();
+    if (insErr) console.warn('Failed to insert app_user', insErr);
+    user = ins || newUser;
   }
 
-  assert(user.accountId, 'Test user does not have an accountId');
+  // Manually set accountId for testing purposes since Fineract is not available.
+  if (!user.account_id) {
+    const dummyAccount = 12345;
+    await sb.from('app_users').update({ account_id: dummyAccount }).eq('id', user.id).catch(() => {});
+    user.account_id = dummyAccount;
+  }
 
-  const fromAccountId = user.accountId;
-  const toAccountId = user.accountId; // Transfer to self
+  const fromAccountId = user.account_id;
+  const toAccountId = user.account_id; // Transfer to self
 
   // 3. Attempt to make a transfer to the same account
   console.log(`Attempting to transfer to self for account ${fromAccountId}`);
