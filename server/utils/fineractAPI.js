@@ -29,8 +29,8 @@ async function safeRequest(promise) {
 }
 
 async function connect() {
-  if (!FINERACT_BASE_URL) {
-    logger.warn('FINERACT_BASE_URL not configured');
+  if (!FINERACT_URL) {
+    logger.warn('FINERACT_URL not configured');
     return false;
   }
   try {
