@@ -18,13 +18,21 @@
       "FINERACT_URL": "",
       "FINERACT_USERNAME": "",
       "FINERACT_PASSWORD": "",
-      "FINERACT_TENANT_ID": ""
+      "FINERACT_TENANT_ID": "",
+      "CLEARING_ACCOUNT_ID": "",
+      "SERVER_BASE_URL": "",
+      "SERVER_PORT": "",
+      "MAX_SETTLEMENT_RETRIES": "",
+      "SETTLEMENT_DELAY_MS": ""
     }
   },
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "",
     "NEXT_PUBLIC_API_URL": "",
-    "NEXT_PUBLIC_SENTRY_DSN": ""
+    "NEXT_PUBLIC_SENTRY_DSN": "",
+    "CLEARING_ACCOUNT_ID": "",
+    "SERVER_BASE_URL": "",
+    "SERVER_PORT": ""
   }
 }
