@@ -30,9 +30,14 @@ export default function Login() {
   const onSubmit = async (formData: any) => {
     setMsg(null);
     try {
-      const { user } = await apiLogin(formData.email, formData.password);
-      setUser(user);
-      router.push('/dashboard');
+      const resp = await apiLogin(formData.email, formData.password);
+      if (!resp || !resp.user) {
+        // no user returned — likely pending email confirmation
+        setMsg('Please check your email to confirm your account before signing in.');
+        return;
+      }
+      setUser(resp.user);
+      await router.push('/dashboard');
     } catch (err: any) {
       const message = err?.response?.data?.error || err?.message || 'Sign in failed';
       setMsg(message);
