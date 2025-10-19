@@ -34,6 +34,11 @@ api.interceptors.request.use(async (config) => {
       if (matches && functionsBase) {
         config.baseURL = functionsBase;
 
+        // rewrite some route paths to function names
+        if (config.url!.startsWith('/kyc/')) config.url = config.url!.replace('/kyc/submit', '/kyc-upload').replace('/kyc/', '/kyc-upload');
+        if (config.url!.startsWith('/admin/')) config.url = '/admin-actions';
+        if (config.url === '/transfer') config.url = '/transfer';
+
         // attach Supabase access token if available
         try {
           // lazy import to avoid SSR issues
