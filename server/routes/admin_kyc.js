@@ -40,41 +40,47 @@ router.get('/submissions', adminAuth, validate('query', submissionsQuery), async
 });
 
 // Generate signed URLs for a submission's files
-router.get('/signed/:submissionId', adminAuth, validate('params', signedParams), async (req, res) => {
-  try {
-    const supabase = getSupabaseServer();
-    if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+router.get(
+  '/signed/:submissionId',
+  adminAuth,
+  validate('params', signedParams),
+  async (req, res) => {
+    try {
+      const supabase = getSupabaseServer();
+      if (!supabase)
+        return res.status(500).json({ error: 'Supabase service client not configured' });
 
-    const submissionId = req.params.submissionId;
-    const { data: submission, error: subErr } = await supabase
-      .from('kyc_submissions')
-      .select('*')
-      .eq('submission_id', submissionId)
-      .limit(1)
-      .maybeSingle();
-    if (subErr) throw subErr;
-    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+      const submissionId = req.params.submissionId;
+      const { data: submission, error: subErr } = await supabase
+        .from('kyc_submissions')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .limit(1)
+        .maybeSingle();
+      if (subErr) throw subErr;
+      if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
-    const bucket = process.env.SUPABASE_KYC_BUCKET || 'kyc';
-    const expiresIn = 60; // 60 seconds
+      const bucket = process.env.SUPABASE_KYC_BUCKET || 'kyc';
+      const expiresIn = 60; // 60 seconds
 
-    const urls = {};
-    for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
-      if (submission[key]) {
-        const { data: d, error: e } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(submission[key], expiresIn);
-        if (e) throw e;
-        urls[key] = d.signedURL;
+      const urls = {};
+      for (const key of ['id_front_path', 'id_back_path', 'proof_path']) {
+        if (submission[key]) {
+          const { data: d, error: e } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(submission[key], expiresIn);
+          if (e) throw e;
+          urls[key] = d.signedURL;
+        }
       }
-    }
 
-    return res.json({ urls });
-  } catch (e) {
-    console.error('admin signed url error', e.message || e);
-    return res.status(500).json({ error: 'Failed to create signed urls' });
-  }
-});
+      return res.json({ urls });
+    } catch (e) {
+      console.error('admin signed url error', e.message || e);
+      return res.status(500).json({ error: 'Failed to create signed urls' });
+    }
+  },
+);
 
 // Approve or reject submission
 router.post('/decision', adminAuth, validate('body', decisionBody), async (req, res) => {
