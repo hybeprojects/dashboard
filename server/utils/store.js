@@ -130,6 +130,48 @@ async function markNotificationsRead(userId, ids) {
   return data;
 }
 
+// KYC submissions
+async function insertKycSubmission(sub) {
+  const sb = getSupabase();
+  const { data, error } = await sb.from('kyc_submissions').insert(sub).select().maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function listKycSubmissions({ limit = 50, offset = 0 } = {}) {
+  const sb = getSupabase();
+  const from = offset;
+  const to = offset + limit - 1;
+  const { data, error } = await sb
+    .from('kyc_submissions')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(from, to);
+  if (error) throw error;
+  return data || [];
+}
+async function getKycSubmissionBySubmissionId(submissionId) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('kyc_submissions')
+    .select('*')
+    .eq('submission_id', submissionId)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function updateKycSubmissionBySubmissionId(submissionId, patch) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('kyc_submissions')
+    .update(patch)
+    .eq('submission_id', submissionId)
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 module.exports = {
   getUserBySupabaseId,
   getUserByAccountId,
@@ -139,4 +181,8 @@ module.exports = {
   updateTransactionById,
   listNotificationsForUser,
   markNotificationsRead,
+  insertKycSubmission,
+  listKycSubmissions,
+  getKycSubmissionBySubmissionId,
+  updateKycSubmissionBySubmissionId,
 };
