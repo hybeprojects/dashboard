@@ -109,7 +109,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   const { data: transactions, error: transactionsError } = await supabase
     .from('transactions')
     .select('*')
-    .eq('account_id', accountId)
+    .or(`sender_account_id.eq.${accountId},receiver_account_id.eq.${accountId}`)
     .order('created_at', { ascending: false });
 
   if (accountError || !account) {
