@@ -1,8 +1,6 @@
-import { createClient as createBrowserClient } from './supabase/client';
 import { UserProfile } from '../types/api';
 import getSupabase from './supabase';
 
-const supabase = getSupabase();
 
 function extractUser(dataUser: any): UserProfile | null {
   if (!dataUser) return null;
@@ -15,6 +13,7 @@ function extractUser(dataUser: any): UserProfile | null {
 }
 
 export async function login(email: string, password: string) {
+  const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase client not available');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message || 'Sign in failed');
@@ -33,6 +32,8 @@ export async function register(payload: {
   userType?: string;
 }) {
   const { email, password, firstName, lastName } = payload;
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client not available');
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -54,11 +55,15 @@ export async function register(payload: {
 }
 
 export async function logout() {
+  const supabase = getSupabase();
+  if (!supabase) return;
   await supabase.auth.signOut();
 }
 
 export async function me(): Promise<UserProfile | null> {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
     const { data, error } = await supabase.auth.getUser();
     const user = data?.user || null;
     if (!user) return null;
