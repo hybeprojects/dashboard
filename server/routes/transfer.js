@@ -38,37 +38,31 @@ async function scheduleSettlement(io, tx) {
       const sys = await loadSys();
       const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
       await transferFunds(Number(clearingId), Number(tx.toAccountId), Number(tx.amount));
-      const txs = await loadTx();
-      const rec = txs.find((x) => x.id === tx.id);
-      if (rec) {
-        rec.status = 'completed';
-        rec.settledAt = new Date().toISOString();
-      }
-      await saveTx(txs);
+      // mark transaction completed in store
+      await store.updateTransactionById(tx.id, {
+        status: 'completed',
+        settled_at: new Date().toISOString(),
+      }).catch(() => null);
+
       // balances for receiver
       let receiverBalance = null;
       try {
         receiverBalance = await getAccountBalance(tx.toAccountId);
       } catch (_) {}
+
       emit(io, tx.toUserId, 'transfer', {
-        ...rec,
+        ...tx,
         newBalance: receiverBalance,
         type: 'transfer:completed',
       });
-      emit(io, tx.fromUserId, 'transfer', { ...rec, type: 'transfer:settled' });
+      emit(io, tx.fromUserId, 'transfer', { ...tx, type: 'transfer:settled' });
     } catch (e) {
       attempts += 1;
       if (attempts < Number(process.env.MAX_SETTLEMENT_RETRIES || 3)) {
         const backoff = Number(process.env.SETTLEMENT_DELAY_MS || 10000) * Math.pow(2, attempts);
         setTimeout(doSettle, backoff);
       } else {
-        const txs = await loadTx();
-        const rec = txs.find((x) => x.id === tx.id);
-        if (rec) {
-          rec.status = 'failed';
-          rec.error = e?.message || 'settlement failed';
-        }
-        await saveTx(txs);
+        await store.updateTransactionById(tx.id, { status: 'failed', error: e?.message || 'settlement failed' }).catch(() => null);
         emit(io, tx.toUserId, 'notification', {
           id: uuidv4(),
           userId: tx.toUserId,
