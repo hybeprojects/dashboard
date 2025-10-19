@@ -3,8 +3,8 @@ const fs = require('fs-extra');
 const path = require('path');
 require('dotenv').config();
 
-const BASE = process.env.SERVER_BASE_URL || `http://localhost:${process.env.SERVER_PORT||5000}`;
-const names = [ 'Alice', 'Bob', 'Charlie', 'Diana', 'Evan' ];
+const BASE = process.env.SERVER_BASE_URL || `http://localhost:${process.env.SERVER_PORT || 5000}`;
+const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Evan'];
 
 async function seed() {
   try {
@@ -13,7 +13,9 @@ async function seed() {
       const password = process.env.SEED_ADMIN_PASSWORD || 'password123';
       // call signup
       console.log('Creating', email);
-      await axios.post(`${BASE}/auth/signup`, { firstName: name, lastName: 'Demo', email, password }).catch(()=>{});
+      await axios
+        .post(`${BASE}/auth/signup`, { firstName: name, lastName: 'Demo', email, password })
+        .catch(() => {});
     }
     console.log('Seed complete');
   } catch (e) {

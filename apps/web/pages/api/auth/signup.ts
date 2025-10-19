@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch (e) {
         // log but don't fail signup
         // eslint-disable-next-line no-console
-        console.warn('Fineract client creation failed', e && e.message ? e.message : e);
+        console.warn('Fineract client creation failed', e && (e as any).message ? (e as any).message : e);
       }
     }
 
