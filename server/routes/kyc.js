@@ -4,6 +4,7 @@ const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/db');
+const store = require('../utils/store');
 const rateLimit = require('express-rate-limit');
 const csrf = require('../middleware/csrf');
 const logger = require('../utils/logger');
@@ -143,21 +144,28 @@ router.post(
       const ssnStr = String(ssn || '');
       const ssnLast4 = ssnStr.slice(-4);
 
-      const insertSql = `INSERT INTO kyc_submissions (id, submission_id, email, full_name, dob, ssn_last4, address, open_savings, id_front_path, id_back_path, proof_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
-      await db.query(insertSql, [
-        uuidv4(),
-        submissionId,
-        email,
-        fullName,
-        dob,
-        ssnLast4,
-        address,
-        openSavings ? 1 : 0,
-        idFrontPath,
-        idBackPath,
-        proofPath,
-        'pending',
-      ]);
+      // persist metadata to Supabase kyc_submissions table
+      try {
+        await store.insertKycSubmission({
+          id: uuidv4(),
+          submission_id: submissionId,
+          user_id: req.user ? req.user.sub : null,
+          email,
+          full_name: fullName,
+          dob: dob,
+          ssn_last4: ssnLast4,
+          address: address,
+          open_savings: openSavings ? 1 : 0,
+          id_front_path: idFrontPath,
+          id_back_path: idBackPath,
+          proof_path: proofPath,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        logger.error('Failed to persist KYC submission to Supabase', e && (e.message || e));
+        return res.status(500).json({ error: 'Failed to store submission' });
+      }
 
       return res.json({ success: true, submissionId });
     } catch (e) {
