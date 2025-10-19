@@ -19,11 +19,17 @@ export default function AccountDetail() {
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['transactions', id],
     queryFn: async () => {
-      const { data } = await supabase.from('transactions').select('*');
-      return data;
+      if (!id) return [] as any[];
+      const { data } = await supabase
+        .from('transactions')
+        .select('*')
+        .or(`sender_account_id.eq.${id},receiver_account_id.eq.${id}`)
+        .order('created_at', { ascending: false });
+      return (data as any[]) || [];
     },
+    enabled: !!id,
   });
 
   const acct = accounts?.find(
@@ -32,12 +38,7 @@ export default function AccountDetail() {
       String(a.accountId) === String(id) ||
       String(a.number) === String(id),
   );
-  const relatedTx = transactions?.filter(
-    (t: any) =>
-      String(t.fromAccountId) === String(id) ||
-      String(t.toAccountId) === String(id) ||
-      String(t.account_id) === String(id),
-  );
+  const relatedTx = (transactions as any[]) || [];
 
   return (
     <div className="container-page p-4">
@@ -63,7 +64,7 @@ export default function AccountDetail() {
             relatedTx.slice(0, 8).map((t: any) => (
               <div key={t.id || JSON.stringify(t)} className="flex justify-between py-2 border-t">
                 <div className="text-sm">
-                  {t.description || `${t.fromAccountId} → ${t.toAccountId}`}
+                  {t.description || `${t.sender_account_id} → ${t.receiver_account_id}`}
                 </div>
                 <div className="font-medium">${t.amount}</div>
               </div>
