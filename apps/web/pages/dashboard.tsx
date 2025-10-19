@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useEffect, useMemo, useState } from 'react';
 import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
@@ -30,8 +32,45 @@ const icons = {
 
 export default function Dashboard() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
   const user = useAuthStore((s) => s.user);
   const supabase = createClient();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const u = data?.user || null;
+        if (mounted) {
+          setUser(
+            u
+              ? {
+                  id: u.id,
+                  email: u.email,
+                  firstName: u.user_metadata?.first_name,
+                  lastName: u.user_metadata?.last_name,
+                }
+              : null,
+          );
+        }
+        if (!u && mounted) {
+          // Not authenticated -> redirect to login
+          router.replace('/login');
+        }
+      } catch (e) {
+        // ignore and redirect
+        if (mounted) router.replace('/login');
+      } finally {
+        if (mounted) setCheckingAuth(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [router, setUser, supabase]);
 
   const { data: accounts = [], isLoading: accLoading } = useQuery({
     queryKey: ['accounts'],
@@ -44,7 +83,10 @@ export default function Dashboard() {
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: async () => {
-      const { data } = await supabase.from('transactions').select('*');
+      const { data } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
       return data;
     },
     staleTime: 15_000,
@@ -58,6 +100,60 @@ export default function Dashboard() {
     staleTime: 15_000,
   });
 
+  // realtime subscriptions to keep balances and transactions up-to-date
+  useEffect(() => {
+    if (!supabase) return;
+    const acctChannel = supabase
+      .channel('public:accounts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, (payload) => {
+        qc.setQueryData(['accounts'], (old: any) => {
+          const list = Array.isArray(old) ? [...old] : [];
+          const newRow = payload.new;
+          if (!newRow) return list;
+          const idx = list.findIndex(
+            (a: any) => a.id === newRow.id || a.accountId === newRow.accountId,
+          );
+          if (idx === -1) list.unshift(newRow);
+          else list[idx] = { ...list[idx], ...newRow };
+          return list;
+        });
+      })
+      .subscribe();
+
+    const txChannel = supabase
+      .channel('public:transactions')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        (payload) => {
+          qc.setQueryData(['transactions'], (old: any) => {
+            const list = Array.isArray(old) ? [...old] : [];
+            const newRow = payload.new;
+            if (!newRow) return list;
+            // for inserts, add to top; for updates, replace
+            const idx = list.findIndex(
+              (t: any) => t.id === newRow.id || t.transactionId === newRow.transactionId,
+            );
+            if (idx === -1) list.unshift(newRow);
+            else list[idx] = { ...list[idx], ...newRow };
+            return list;
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      try {
+        acctChannel.unsubscribe();
+      } catch (e) {
+        // ignore
+      }
+      try {
+        txChannel.unsubscribe();
+      } catch (e) {}
+    };
+  }, [qc, supabase]);
+
   const accountsArr = Array.isArray(accounts) ? accounts : [];
   const transactionsArr = Array.isArray(transactions) ? transactions : [];
   const notificationsArr = Array.isArray(notifications) ? notifications : [];
@@ -70,6 +166,21 @@ export default function Dashboard() {
   }, [accountsArr]);
 
   const primary = 'bg-primary text-white';
+
+  if (checkingAuth) {
+    return (
+      <div className="container-page">
+        <main className="section py-10 max-w-3xl mx-auto">
+          <div className="card-surface p-6">
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded mb-4 animate-pulse" />
+            <div className="h-8 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+            <div className="h-8 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+            <div className="h-8 w-2/3 bg-gray-200 dark:bg-gray-800 rounded mt-4 animate-pulse" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="container-page">
