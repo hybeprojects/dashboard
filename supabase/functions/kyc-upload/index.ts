@@ -2,7 +2,8 @@ import { serve } from 'https://deno.land/std@0.200.0/http/server.ts';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || Deno.env.get('NEXT_PUBLIC_SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+const SUPABASE_ANON_KEY =
+  Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 const BUCKET = Deno.env.get('SUPABASE_KYC_BUCKET') || 'kyc-documents';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -22,7 +23,8 @@ serve(async (req: Request) => {
 
     const form = await req.formData();
     const userRes = await supabase.auth.getUser();
-    if (!userRes.data?.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    if (!userRes.data?.user)
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     const userId = userRes.data.user.id;
 
     // Extract fields and files
@@ -35,7 +37,8 @@ serve(async (req: Request) => {
       if (val instanceof File) files.push({ field: key, file: val });
     }
 
-    if (!files.length) return new Response(JSON.stringify({ error: 'No files uploaded' }), { status: 400 });
+    if (!files.length)
+      return new Response(JSON.stringify({ error: 'No files uploaded' }), { status: 400 });
 
     // Validate files
     const uploads: Array<any> = [];
@@ -50,7 +53,9 @@ serve(async (req: Request) => {
       // Magic bytes validation - simple check for PDF/JPEG/PNG signatures
       const buffer = await f.file.arrayBuffer();
       const bytes = new Uint8Array(buffer.slice(0, 8));
-      const sig = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+      const sig = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
       const isPdf = sig.startsWith('25504446'); // %PDF
       const isPng = sig.startsWith('89504e47'); // PNG
       const isJpeg = sig.startsWith('ffd8ff'); // JPEG
@@ -63,12 +68,17 @@ serve(async (req: Request) => {
       const path = `users/${userId}/${documentType}_${timestamp}_${f.file.name}`;
 
       // Upload using user's credentials (RLS / storage policies should apply)
-      const { data: upData, error: upErr } = await supabase.storage.from(BUCKET).upload(path, new Uint8Array(buffer), {
-        contentType: f.file.type,
-        upsert: false,
-      });
+      const { data: upData, error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, new Uint8Array(buffer), {
+          contentType: f.file.type,
+          upsert: false,
+        });
       if (upErr) {
-        return new Response(JSON.stringify({ error: 'Failed to upload file', details: upErr.message }), { status: 500 });
+        return new Response(
+          JSON.stringify({ error: 'Failed to upload file', details: upErr.message }),
+          { status: 500 },
+        );
       }
 
       const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data?.publicUrl || null;
@@ -87,8 +97,13 @@ serve(async (req: Request) => {
       created_at: new Date().toISOString(),
     } as any;
 
-    const { data: insertRes, error: insertErr } = await supabase.from('kyc_submissions').insert(submission).select().maybeSingle();
-    if (insertErr) return new Response(JSON.stringify({ error: 'Failed to store submission' }), { status: 500 });
+    const { data: insertRes, error: insertErr } = await supabase
+      .from('kyc_submissions')
+      .insert(submission)
+      .select()
+      .maybeSingle();
+    if (insertErr)
+      return new Response(JSON.stringify({ error: 'Failed to store submission' }), { status: 500 });
 
     return new Response(JSON.stringify({ success: true, submission: insertRes }), { status: 200 });
   } catch (e: any) {

@@ -8,9 +8,10 @@ const inferredOrigin = typeof window !== 'undefined' ? window.location.origin : 
 const RESOLVED_BASE =
   process.env.NEXT_PUBLIC_API_URL || (inferredOrigin ? inferredOrigin : 'http://localhost:5000');
 
-const functionsBase = (RESOLVED_BASE && RESOLVED_BASE.includes('.supabase.co'))
-  ? RESOLVED_BASE.replace('.supabase.co', '.functions.supabase.co')
-  : process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL || '';
+const functionsBase =
+  RESOLVED_BASE && RESOLVED_BASE.includes('.supabase.co')
+    ? RESOLVED_BASE.replace('.supabase.co', '.functions.supabase.co')
+    : process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL || '';
 
 const api = axios.create({
   baseURL: RESOLVED_BASE,
@@ -35,7 +36,10 @@ api.interceptors.request.use(async (config) => {
         config.baseURL = functionsBase;
 
         // rewrite some route paths to function names
-        if (config.url!.startsWith('/kyc/')) config.url = config.url!.replace('/kyc/submit', '/kyc-upload').replace('/kyc/', '/kyc-upload');
+        if (config.url!.startsWith('/kyc/'))
+          config.url = config
+            .url!.replace('/kyc/submit', '/kyc-upload')
+            .replace('/kyc/', '/kyc-upload');
         if (config.url!.startsWith('/admin/')) config.url = '/admin-actions';
         if (config.url === '/transfer') config.url = '/transfer';
 

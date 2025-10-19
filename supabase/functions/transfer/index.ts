@@ -2,7 +2,8 @@ import { serve } from 'https://deno.land/std@0.200.0/http/server.ts';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || Deno.env.get('NEXT_PUBLIC_SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+const SUPABASE_ANON_KEY =
+  Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Supabase environment not configured');
@@ -35,7 +36,8 @@ serve(async (req: Request) => {
 
     // get user
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userRes?.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    if (userErr || !userRes?.user)
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     const userId = userRes.user.id;
 
     // Check daily total
@@ -46,10 +48,15 @@ serve(async (req: Request) => {
       .select('amount')
       .eq('actor_id', userId)
       .gte('created_at', startOfDay.toISOString());
-    if (tErr) return new Response(JSON.stringify({ error: 'Failed to check transfer history' }), { status: 500 });
+    if (tErr)
+      return new Response(JSON.stringify({ error: 'Failed to check transfer history' }), {
+        status: 500,
+      });
     const daySum = (todays || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
     if (daySum + amt > DAILY_TRANSFER_LIMIT) {
-      return new Response(JSON.stringify({ error: 'Daily transfer limit exceeded' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Daily transfer limit exceeded' }), {
+        status: 400,
+      });
     }
 
     // Check from account belongs to user and has enough balance (RLS should enforce ownership)
@@ -58,9 +65,12 @@ serve(async (req: Request) => {
       .select('id,balance')
       .eq('id', fromAccountId)
       .maybeSingle();
-    if (faErr) return new Response(JSON.stringify({ error: 'Failed to fetch account' }), { status: 500 });
-    if (!fromAccs) return new Response(JSON.stringify({ error: 'From account not found' }), { status: 404 });
-    if (Number(fromAccs.balance) < amt) return new Response(JSON.stringify({ error: 'Insufficient funds' }), { status: 400 });
+    if (faErr)
+      return new Response(JSON.stringify({ error: 'Failed to fetch account' }), { status: 500 });
+    if (!fromAccs)
+      return new Response(JSON.stringify({ error: 'From account not found' }), { status: 404 });
+    if (Number(fromAccs.balance) < amt)
+      return new Response(JSON.stringify({ error: 'Insufficient funds' }), { status: 400 });
 
     // Create transfer record (the DB should have RLS/triggers to perform balance updates atomically)
     const insertPayload = {
@@ -74,8 +84,16 @@ serve(async (req: Request) => {
       created_at: new Date().toISOString(),
     } as any;
 
-    const { data: ins, error: insErr } = await supabase.from('transfers').insert(insertPayload).select().maybeSingle();
-    if (insErr) return new Response(JSON.stringify({ error: insErr.message || 'Failed to create transfer' }), { status: 500 });
+    const { data: ins, error: insErr } = await supabase
+      .from('transfers')
+      .insert(insertPayload)
+      .select()
+      .maybeSingle();
+    if (insErr)
+      return new Response(
+        JSON.stringify({ error: insErr.message || 'Failed to create transfer' }),
+        { status: 500 },
+      );
 
     return new Response(JSON.stringify({ success: true, transfer: ins }), { status: 200 });
   } catch (e: any) {
