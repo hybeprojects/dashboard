@@ -41,28 +41,36 @@ async function ensureClearingAccount() {
 }
 
 async function ensureUser(firstName, email, openingDeposit = 0) {
-  const users = await loadUsers();
-  let user = users.find((u) => u.email === email);
-  if (user && user.accountId) {
-    console.log('User exists:', email);
-    return user;
-  }
-  if (!user) {
-    user = {
-      id: uuidv4(),
-      firstName,
-      lastName: 'Demo',
-      email,
-      password: await bcrypt.hash('password123', 10),
-    };
-    users.push(user);
-  }
+  // create local app user record and persist to Supabase app_users
+  let user = {
+    id: uuidv4(),
+    firstName,
+    lastName: 'Demo',
+    email,
+    password_hash: await bcrypt.hash('password123', 10),
+  };
+
   const client = await createClient({ firstName, lastName: 'Demo', email });
-  user.fineractClientId = client.clientId;
+  user.fineract_client_id = client.clientId;
   const savings = await createSavingsAccount(client.clientId);
   const acctId = savings.savingsId || savings.resourceId || savings.id;
-  user.accountId = acctId;
-  await saveUsers(users);
+  user.account_id = acctId;
+
+  // Persist to Supabase app_users table (best-effort)
+  try {
+    await store.upsertAppUser({
+      id: user.id,
+      email: user.email,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      fineract_client_id: user.fineract_client_id,
+      account_id: user.account_id,
+      password_hash: user.password_hash,
+    });
+  } catch (e) {
+    console.warn('Failed to persist seeded user to Supabase', e && (e.message || e));
+  }
+
   if (openingDeposit > 0) {
     await depositToSavings(acctId, openingDeposit);
     console.log(`Deposited $${openingDeposit} to ${email}`);
