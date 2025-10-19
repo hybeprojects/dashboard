@@ -82,11 +82,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               .update({ fineract_client_id: clientId })
               .eq('id', user.id);
           }
+
+          // Ensure app_users mapping exists for server routes that previously used users.json
+          try {
+            const appUser = {
+              id: user.id,
+              email: user.email,
+              fineract_client_id: clientId || null,
+              account_id: null,
+              first_name: firstName || null,
+              last_name: lastName || null,
+            };
+            await supabase.from('app_users').upsert(appUser, { onConflict: 'id' });
+          } catch (e) {
+            // best-effort: don't fail signup if app_users table doesn't exist
+            // eslint-disable-next-line no-console
+            console.warn(
+              'Failed to upsert app_users',
+              e && (e as any).message ? (e as any).message : e,
+            );
+          }
         }
       } catch (e) {
         // log but don't fail signup
         // eslint-disable-next-line no-console
-        console.warn('Fineract client creation failed', e && (e as any).message ? (e as any).message : e);
+        console.warn(
+          'Fineract client creation failed',
+          e && (e as any).message ? (e as any).message : e,
+        );
       }
     }
 

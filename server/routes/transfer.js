@@ -9,23 +9,9 @@ const rateLimit = require('express-rate-limit');
 const { transferFunds, getAccountBalance, getSavingsAccount } = require('../utils/fineractAPI');
 const logger = require('../utils/logger');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const TX_FILE = path.join(DATA_DIR, 'transactions.json');
-const SYS_FILE = path.join(DATA_DIR, 'system.json');
+const SYS_FILE = path.join(__dirname, '..', 'data', 'system.json');
+const store = require('../utils/store');
 
-async function loadUsers() {
-  return fs.readJson(USERS_FILE).catch(() => []);
-}
-async function saveUsers(u) {
-  return fs.writeJson(USERS_FILE, u, { spaces: 2 });
-}
-async function loadTx() {
-  return fs.readJson(TX_FILE).catch(() => []);
-}
-async function saveTx(t) {
-  return fs.writeJson(TX_FILE, t, { spaces: 2 });
-}
 async function loadSys() {
   return fs.readJson(SYS_FILE).catch(() => ({}));
 }
@@ -52,37 +38,38 @@ async function scheduleSettlement(io, tx) {
       const sys = await loadSys();
       const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
       await transferFunds(Number(clearingId), Number(tx.toAccountId), Number(tx.amount));
-      const txs = await loadTx();
-      const rec = txs.find((x) => x.id === tx.id);
-      if (rec) {
-        rec.status = 'completed';
-        rec.settledAt = new Date().toISOString();
-      }
-      await saveTx(txs);
+      // mark transaction completed in store
+      await store
+        .updateTransactionById(tx.id, {
+          status: 'completed',
+          settled_at: new Date().toISOString(),
+        })
+        .catch(() => null);
+
       // balances for receiver
       let receiverBalance = null;
       try {
         receiverBalance = await getAccountBalance(tx.toAccountId);
       } catch (_) {}
+
       emit(io, tx.toUserId, 'transfer', {
-        ...rec,
+        ...tx,
         newBalance: receiverBalance,
         type: 'transfer:completed',
       });
-      emit(io, tx.fromUserId, 'transfer', { ...rec, type: 'transfer:settled' });
+      emit(io, tx.fromUserId, 'transfer', { ...tx, type: 'transfer:settled' });
     } catch (e) {
       attempts += 1;
       if (attempts < Number(process.env.MAX_SETTLEMENT_RETRIES || 3)) {
         const backoff = Number(process.env.SETTLEMENT_DELAY_MS || 10000) * Math.pow(2, attempts);
         setTimeout(doSettle, backoff);
       } else {
-        const txs = await loadTx();
-        const rec = txs.find((x) => x.id === tx.id);
-        if (rec) {
-          rec.status = 'failed';
-          rec.error = e?.message || 'settlement failed';
-        }
-        await saveTx(txs);
+        await store
+          .updateTransactionById(tx.id, {
+            status: 'failed',
+            error: e?.message || 'settlement failed',
+          })
+          .catch(() => null);
         emit(io, tx.toUserId, 'notification', {
           id: uuidv4(),
           userId: tx.toUserId,
@@ -106,12 +93,18 @@ router.post('/', auth, csrf, transferLimiter, async (req, res) => {
     const amt = Number(amount);
     if (!isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'invalid amount' });
 
-    const users = await loadUsers();
-    const sender = users.find(
-      (u) => u.id === req.user.sub || String(u.accountId) === String(fromAccountId),
-    );
-    const receiver = users.find((u) => String(u.accountId) === String(toAccountId));
+    // Ownership verification: load sender by authenticated user and ensure the fromAccountId belongs to them
+    const sender = await store.getUserBySupabaseId(req.user.sub).catch(() => null);
     if (!sender) return res.status(404).json({ error: 'sender not found' });
+    if (
+      String(sender.account_id) !== String(fromAccountId) &&
+      String(sender.fineract_account_id) !== String(fromAccountId) &&
+      String(sender.fineract_client_id) !== String(fromAccountId)
+    ) {
+      return res.status(403).json({ error: 'authenticated user does not own source account' });
+    }
+
+    const receiver = await store.getUserByAccountId(toAccountId).catch(() => null);
     if (!receiver) return res.status(404).json({ error: 'receiver not found' });
 
     if (String(fromAccountId) === String(toAccountId)) {
@@ -147,9 +140,27 @@ router.post('/', auth, csrf, transferLimiter, async (req, res) => {
       memo: memo || null,
       retries: 0,
     };
-    const txs = await loadTx();
-    txs.unshift(tx);
-    await saveTx(txs);
+    // persist transaction in Supabase (best-effort)
+    await store
+      .addTransaction({
+        id: tx.id,
+        from_user_id: tx.fromUserId,
+        from_account_id: tx.fromAccountId,
+        to_user_id: tx.toUserId,
+        to_account_id: tx.toAccountId,
+        amount: tx.amount,
+        currency: tx.currency,
+        status: tx.status,
+        created_at: tx.createdAt,
+        posted_at: tx.postedAt,
+        settled_at: tx.settledAt,
+        fineract_clearing_ref: tx.fineractClearingRef,
+        fineract_settlement_ref: tx.fineractSettlementRef,
+        memo: tx.memo,
+      })
+      .catch((e) => {
+        logger.warn('Failed to persist transaction to Supabase', e && (e.message || e));
+      });
 
     // balances
     let senderBal = null;

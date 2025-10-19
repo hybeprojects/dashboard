@@ -5,7 +5,11 @@ import path from 'path';
 
 const SERVER_BASE = process.env.TEST_SERVER_BASE || 'http://localhost:5000';
 const WEB_BASE = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-const USERS_FILE = path.join(process.cwd(), 'server', 'data', 'users.json');
+import { createClient } from '@supabase/supabase-js';
+const supabaseTestClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+);
 
 async function ensureSeed() {
   // Run the seed script to create Alice and Bob
@@ -17,11 +21,10 @@ async function ensureSeed() {
   }
 }
 
-function readUsers() {
+async function readUsers() {
   try {
-    const raw = fs.readFileSync(USERS_FILE, 'utf-8');
-    const users = JSON.parse(raw);
-    return users;
+    const { data } = await supabaseTestClient.from('app_users').select('*');
+    return data || [];
   } catch (e) {
     return [];
   }
@@ -33,11 +36,11 @@ test.describe('End-to-end transfer flow', () => {
   });
 
   test('user A logs in, sends money to user B, transaction appears for both', async ({ page }) => {
-    const users = readUsers();
+    const users = await readUsers();
     const alice = users.find((u: any) => u.email === 'alice@example.com');
     const bob = users.find((u: any) => u.email === 'bob@example.com');
     if (!alice || !bob) {
-      test.fail(true, 'Seeded users not found in server/data/users.json');
+      test.fail(true, 'Seeded users not found in Supabase app_users');
       return;
     }
 

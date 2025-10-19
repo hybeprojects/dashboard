@@ -5,6 +5,7 @@ const logger = require('./utils/logger');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 
@@ -15,7 +16,24 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || CLIENT_URL)
   .map((s) => s.trim())
   .filter(Boolean);
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet());
+// Apply a reasonable CSP for API surface
+const cspConnect = ["'self'"];
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) cspConnect.push(process.env.NEXT_PUBLIC_SUPABASE_URL);
+if (process.env.NEXT_PUBLIC_API_URL) cspConnect.push(process.env.NEXT_PUBLIC_API_URL);
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: cspConnect,
+    },
+  }),
+);
 app.use((req, res, next) => {
   // Enforce HSTS for HTTPS
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
@@ -44,6 +62,19 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// CSRF token issuer endpoint (double-submit cookie pattern)
+app.get('/csrf-token', (req, res) => {
+  const token = crypto.randomBytes(24).toString('hex');
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('XSRF-TOKEN', token, {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60, // 1 hour
+  });
+  return res.json({ csrfToken: token });
+});
+
 const PORT = process.env.PORT || 5000;
 
 // Initialize DB
@@ -52,15 +83,33 @@ const db = require('./utils/db');
   await db.init();
 })();
 
+const rateLimit = require('express-rate-limit');
+
+// Shared limiter for sensitive routes (IP-based)
+const sharedLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Mount routes
-app.use('/auth', require('./routes/auth'));
-app.use('/accounts', require('./routes/accounts'));
-app.use('/transactions', require('./routes/transactions'));
-app.use('/notifications', require('./routes/notifications'));
-app.use('/transfer', require('./routes/transfer'));
+const fs = require('fs');
+function mountIfExists(routePath, mountPath, ...middleware) {
+  const abs = path.join(__dirname, routePath + '.js');
+  if (fs.existsSync(abs)) {
+    app.use(mountPath, ...middleware, require(routePath));
+  }
+}
+
+mountIfExists('./routes/auth', '/auth');
+mountIfExists('./routes/accounts', '/accounts', sharedLimiter);
+mountIfExists('./routes/transactions', '/transactions', sharedLimiter);
+mountIfExists('./routes/notifications', '/notifications', sharedLimiter);
+mountIfExists('./routes/transfer', '/transfer', sharedLimiter);
 // KYC upload and admin endpoints
-app.use('/kyc', require('./routes/kyc'));
-app.use('/admin/kyc', require('./routes/admin_kyc'));
+mountIfExists('./routes/kyc', '/kyc', sharedLimiter);
+mountIfExists('./routes/admin_kyc', '/admin/kyc', sharedLimiter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
