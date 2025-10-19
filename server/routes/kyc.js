@@ -4,6 +4,7 @@ const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/db');
+const store = require('../utils/store');
 const rateLimit = require('express-rate-limit');
 const csrf = require('../middleware/csrf');
 const logger = require('../utils/logger');
