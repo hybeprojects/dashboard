@@ -25,6 +25,7 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
 
 function MyApp({ Component, pageProps }: AppProps) {
   useSupabaseSession();
+  useCsrfBootstrap();
 
   return (
     <Suspense fallback={<TopProgressBar />}>
