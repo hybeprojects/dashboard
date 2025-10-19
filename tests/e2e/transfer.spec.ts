@@ -5,7 +5,6 @@ import path from 'path';
 
 const SERVER_BASE = process.env.TEST_SERVER_BASE || 'http://localhost:5000';
 const WEB_BASE = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-const USERS_FILE = path.join(process.cwd(), 'server', 'data', 'users.json');
 import { createClient } from '@supabase/supabase-js';
 const supabaseTestClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY || '');
 
