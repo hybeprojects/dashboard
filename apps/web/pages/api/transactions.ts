@@ -33,8 +33,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!body || !body.amount) return res.status(400).json({ error: 'Missing amount' });
 
     // Normalize possible field names to new schema
-    const sender = body.sender_account_id ?? body.fromAccountId ?? body.from_account_id ?? body.account_id;
-    const receiver = body.receiver_account_id ?? body.toAccountId ?? body.to_account_number ?? body.toAccountNumber ?? body.recipient_account;
+    const sender =
+      body.sender_account_id ?? body.fromAccountId ?? body.from_account_id ?? body.account_id;
+    const receiver =
+      body.receiver_account_id ??
+      body.toAccountId ??
+      body.to_account_number ??
+      body.toAccountNumber ??
+      body.recipient_account;
     const amount = Number(body.amount ?? body.amt);
     const receiverEmail = body.receiver_email ?? body.recipient_email ?? null;
     const receiverName = body.receiver_name ?? body.recipient_name ?? null;
@@ -72,9 +78,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         // optional running_balance if provided or calculable
-        if (typeof body.running_balance !== 'undefined') insertPayload.running_balance = Number(body.running_balance);
+        if (typeof body.running_balance !== 'undefined')
+          insertPayload.running_balance = Number(body.running_balance);
 
-        const { data: inserted, error: insertError } = await supabase.from('transactions').insert([insertPayload]);
+        const { data: inserted, error: insertError } = await supabase
+          .from('transactions')
+          .insert([insertPayload]);
         if (insertError) return res.status(500).json({ error: insertError.message });
 
         return res.status(200).json(inserted?.[0] ?? { success: true });
