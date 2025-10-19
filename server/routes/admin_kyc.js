@@ -97,6 +97,26 @@ router.post('/decision', adminAuth, async (req, res) => {
       .select()
       .maybeSingle();
     if (upErr) throw upErr;
+
+    // Audit log for decision
+    try {
+      const audit = require('../utils/audit');
+      const actorId = req.user ? req.user.sub : null;
+      const actorEmail = req.user ? req.user.email : null;
+      await audit.logAudit({
+        actor_id: actorId,
+        actor_email: actorEmail,
+        action: 'kyc_decision',
+        target_type: 'kyc_submission',
+        target_id: submissionId,
+        changes: { decision, note: note || null },
+        ip: req.ip,
+        user_agent: req.get('user-agent') || null,
+      });
+    } catch (ae) {
+      console.warn('Failed to write audit record', ae && (ae.message || ae));
+    }
+
     return res.json({ success: true, updated });
   } catch (e) {
     console.error('admin decision error', e.message || e);
