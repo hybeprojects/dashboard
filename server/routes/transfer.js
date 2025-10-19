@@ -86,12 +86,18 @@ router.post('/', auth, csrf, transferLimiter, async (req, res) => {
     const amt = Number(amount);
     if (!isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'invalid amount' });
 
-    const users = await loadUsers();
-    const sender = users.find(
-      (u) => u.id === req.user.sub || String(u.accountId) === String(fromAccountId),
-    );
-    const receiver = users.find((u) => String(u.accountId) === String(toAccountId));
+    // Ownership verification: load sender by authenticated user and ensure the fromAccountId belongs to them
+    const sender = await store.getUserBySupabaseId(req.user.sub).catch(() => null);
     if (!sender) return res.status(404).json({ error: 'sender not found' });
+    if (
+      String(sender.account_id) !== String(fromAccountId) &&
+      String(sender.fineract_account_id) !== String(fromAccountId) &&
+      String(sender.fineract_client_id) !== String(fromAccountId)
+    ) {
+      return res.status(403).json({ error: 'authenticated user does not own source account' });
+    }
+
+    const receiver = await store.getUserByAccountId(toAccountId).catch(() => null);
     if (!receiver) return res.status(404).json({ error: 'receiver not found' });
 
     if (String(fromAccountId) === String(toAccountId)) {
