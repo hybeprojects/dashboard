@@ -7,6 +7,7 @@ import TopProgressBar from '../components/ui/TopProgressBar';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Suspense } from 'react';
 import { useSupabaseSession } from '../hooks/useAuth';
+import { useCsrfBootstrap } from '../hooks/useCsrf';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN });
