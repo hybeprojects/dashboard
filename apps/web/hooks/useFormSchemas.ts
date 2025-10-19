@@ -36,6 +36,15 @@ export const businessRegisterSchema = yup.object({
     .required('Initial deposit required'),
   representativeName: yup.string().required('Representative name required'),
   representativeSsn: yup.string().required('SSN required'),
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup
+    .string()
+    .min(12, 'Use 12+ chars')
+    .matches(/[A-Z]/, 'Include uppercase letter')
+    .matches(/[a-z]/, 'Include lowercase letter')
+    .matches(/\d/, 'Include a number')
+    .matches(/[^A-Za-z0-9]/, 'Include a symbol')
+    .required('Password is required'),
 });
 
 export const personalRegisterSchema = yup.object({
