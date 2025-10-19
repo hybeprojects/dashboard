@@ -1,4 +1,5 @@
 import axios from 'axios';
+import axios from 'axios';
 import Cookies from 'js-cookie';
 
 // Resolve a sensible base URL for the API in the browser/dev/prod.
