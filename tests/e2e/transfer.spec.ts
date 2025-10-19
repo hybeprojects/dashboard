@@ -47,7 +47,10 @@ test.describe('End-to-end transfer flow', () => {
     await page.goto(`${WEB_BASE}/login`);
     await page.fill('input[type="email"]', alice.email);
     await page.fill('input[type="password"]', alicePassword);
-    await Promise.all([page.waitForNavigation({ url: `${WEB_BASE}/dashboard` }), page.click('button[type="submit"], button:has-text("Sign In")')]);
+    await Promise.all([
+      page.waitForNavigation({ url: `${WEB_BASE}/dashboard` }),
+      page.click('button[type="submit"], button:has-text("Sign In")'),
+    ]);
 
     // Wait for dashboard accounts to load
     await page.waitForSelector('text=Accounts', { timeout: 10_000 });
@@ -67,31 +70,51 @@ test.describe('End-to-end transfer flow', () => {
     // Use Bob's accountId as target (fallback to numeric or string)
     const toAccount = bob.accountId ?? bob.acctId ?? bob.account_id ?? bob.id ?? String(bob.email);
 
-    await page.fill('input[placeholder="To (account id)"], input[name="to"], input[type="text"]', String(toAccount));
+    await page.fill(
+      'input[placeholder="To (account id)"], input[name="to"], input[type="text"]',
+      String(toAccount),
+    );
     await page.fill('input[placeholder="Amount"], input[name="amount"]', '10');
 
     // Submit
     await Promise.all([
-      page.waitForResponse((resp) => resp.url().includes('/api/transactions') || resp.url().includes('/transfer') || resp.status() < 500),
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/api/transactions') ||
+          resp.url().includes('/transfer') ||
+          resp.status() < 500,
+      ),
       page.click('button:has-text("Send Transfer")'),
     ]);
 
     // Check for success message in UI
-    const success = await page.locator('text=Transfer submitted').first().isVisible().catch(() => false);
+    const success = await page
+      .locator('text=Transfer submitted')
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(success).toBeTruthy();
 
     // Check Alice's account history page
     const aliceAccountId = alice.accountId ?? alice.accountId;
     await page.goto(`${WEB_BASE}/accounts/${aliceAccountId}`);
     await page.waitForSelector('text=Recent activity', { timeout: 5000 });
-    const aliceHasTx = await page.locator(`text=Transfer to`).first().isVisible().catch(() => false);
+    const aliceHasTx = await page
+      .locator(`text=Transfer to`)
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(aliceHasTx).toBeTruthy();
 
     // Check Bob's account history page
     const bobAccountId = bob.accountId ?? bob.accountId;
     await page.goto(`${WEB_BASE}/accounts/${bobAccountId}`);
     await page.waitForSelector('text=Recent activity', { timeout: 5000 });
-    const bobHasTx = await page.locator(`text=Transfer to`).first().isVisible().catch(() => false);
+    const bobHasTx = await page
+      .locator(`text=Transfer to`)
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(bobHasTx).toBeTruthy();
   });
 });
