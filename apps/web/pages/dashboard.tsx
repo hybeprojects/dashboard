@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useEffect, useMemo, useState } from 'react';
 import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
