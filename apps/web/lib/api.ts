@@ -1,5 +1,4 @@
 import axios from 'axios';
-import axios from 'axios';
 import Cookies from 'js-cookie';
 
 // Resolve a sensible base URL for the API in the browser/dev/prod.
@@ -37,9 +36,7 @@ api.interceptors.request.use(async (config) => {
 
         // rewrite some route paths to function names
         if (config.url!.startsWith('/kyc/'))
-          config.url = config
-            .url!.replace('/kyc/submit', '/kyc-upload')
-            .replace('/kyc/', '/kyc-upload');
+          config.url = config.url!.replace('/kyc/submit', '/kyc-upload').replace('/kyc/', '/kyc-upload');
         if (config.url!.startsWith('/admin/')) config.url = '/admin-actions';
         if (config.url === '/transfer') config.url = '/transfer';
 
