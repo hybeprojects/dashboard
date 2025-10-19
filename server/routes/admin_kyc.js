@@ -19,11 +19,18 @@ router.get('/submissions', adminAuth, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
     const offset = (page - 1) * limit;
 
-    const [rows] = await db.query(
-      'SELECT * FROM kyc_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?',
-      [limit, offset],
-    );
-    return res.json({ submissions: rows });
+    const supabase = getSupabaseServer();
+    if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+
+    const from = offset;
+    const to = offset + limit - 1;
+    const { data, error } = await supabase
+      .from('kyc_submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (error) throw error;
+    return res.json({ submissions: data });
   } catch (e) {
     console.error('admin kyc list error', e.message || e);
     return res.status(500).json({ error: 'Failed to list submissions' });
