@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               id: user.id,
               email: user.email,
               fineract_client_id: clientId || null,
-              account_id: newId || null,
+              account_id: null,
               first_name: firstName || null,
               last_name: lastName || null,
             };
