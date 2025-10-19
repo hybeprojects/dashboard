@@ -19,11 +19,10 @@ async function ensureSeed() {
   }
 }
 
-function readUsers() {
+async function readUsers() {
   try {
-    const raw = fs.readFileSync(USERS_FILE, 'utf-8');
-    const users = JSON.parse(raw);
-    return users;
+    const { data } = await supabaseTestClient.from('app_users').select('*');
+    return data || [];
   } catch (e) {
     return [];
   }
