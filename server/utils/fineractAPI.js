@@ -1,12 +1,14 @@
 const axios = require('axios');
-const axios = require('axios');
 const logger = require('./logger');
 
-const { FINERACT_BASE_URL, FINERACT_USERNAME, FINERACT_PASSWORD, FINERACT_TENANT } = process.env;
+const FINERACT_URL = process.env.FINERACT_URL || process.env.FINERACT_BASE_URL || process.env.FINERACT_BASE;
+const FINERACT_USERNAME = process.env.FINERACT_USERNAME;
+const FINERACT_PASSWORD = process.env.FINERACT_PASSWORD;
+const FINERACT_TENANT = process.env.FINERACT_TENANT_ID || process.env.FINERACT_TENANT;
 
 // Configure axios with basic auth and tenant header when available
 const fineract = axios.create({
-  baseURL: FINERACT_BASE_URL,
+  baseURL: FINERACT_URL,
   timeout: 10000,
   auth:
     FINERACT_USERNAME && FINERACT_PASSWORD
