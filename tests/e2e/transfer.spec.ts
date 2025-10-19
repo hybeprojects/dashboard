@@ -38,7 +38,7 @@ test.describe('End-to-end transfer flow', () => {
     const alice = users.find((u: any) => u.email === 'alice@example.com');
     const bob = users.find((u: any) => u.email === 'bob@example.com');
     if (!alice || !bob) {
-      test.fail(true, 'Seeded users not found in server/data/users.json');
+      test.fail(true, 'Seeded users not found in Supabase app_users');
       return;
     }
 
