@@ -34,7 +34,7 @@ test.describe('End-to-end transfer flow', () => {
   });
 
   test('user A logs in, sends money to user B, transaction appears for both', async ({ page }) => {
-    const users = readUsers();
+    const users = await readUsers();
     const alice = users.find((u: any) => u.email === 'alice@example.com');
     const bob = users.find((u: any) => u.email === 'bob@example.com');
     if (!alice || !bob) {
