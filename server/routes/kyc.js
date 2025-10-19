@@ -8,6 +8,7 @@ const store = require('../utils/store');
 const rateLimit = require('express-rate-limit');
 const csrf = require('../middleware/csrf');
 const logger = require('../utils/logger');
+const audit = require('../utils/audit');
 
 // Memory storage to avoid writing files to disk
 const upload = multer({
