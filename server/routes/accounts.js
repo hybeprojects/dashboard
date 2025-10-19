@@ -28,19 +28,20 @@ const createLimiter = rateLimit({
 
 // list accounts for authenticated user
 router.get('/', auth, async (req, res) => {
-  const users = await loadUsers();
-  const user = users.find((u) => u.id === req.user.sub);
+  // Load the user's app record from Supabase (app_users or profiles)
+  const user = await store.getUserBySupabaseId(req.user.sub).catch(() => null);
   if (!user) return res.status(404).json({ error: 'user not found' });
   // fetch fineract account info if available
   let acct = null;
-  if (user.accountId) {
-    acct = await getSavingsAccount(user.accountId).catch(() => null);
+  const acctId = user.account_id || user.accountId || user.fineract_account_id || user.accountId;
+  if (acctId) {
+    acct = await getSavingsAccount(acctId).catch(() => null);
   }
   // return app-level account object
   return res.json({
     accounts: [
       {
-        id: user.accountId || null,
+        id: acctId || null,
         balance: acct?.summary?.availableBalance || 0,
         owner: { id: user.id, email: user.email },
       },
