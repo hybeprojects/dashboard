@@ -1,7 +1,6 @@
 import { UserProfile } from '../types/api';
 import getSupabase from './supabase';
 
-
 function extractUser(dataUser: any): UserProfile | null {
   if (!dataUser) return null;
   return {
