@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "apps/web/package.json", "use": "@vercel/next" }
+  ],
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_SUPABASE_URL": "",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "",
+      "SUPABASE_SERVICE_ROLE_KEY": "",
+      "DB_PASSWORD": "",
+      "DB_URL": "",
+      "ALLOWED_ORIGINS": "",
+      "NEXT_PUBLIC_API_URL": "",
+      "ENV_CHECK_SECRET": "",
+      "ADMIN_EMAILS": "",
+      "NEXT_PUBLIC_SENTRY_DSN": "",
+      "FINERACT_URL": "",
+      "FINERACT_USERNAME": "",
+      "FINERACT_PASSWORD": "",
+      "FINERACT_TENANT_ID": ""
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "",
+    "NEXT_PUBLIC_API_URL": "",
+    "NEXT_PUBLIC_SENTRY_DSN": ""
+  }
+}
