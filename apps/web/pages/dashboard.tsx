@@ -156,6 +156,21 @@ export default function Dashboard() {
 
   const primary = 'bg-primary text-white';
 
+  if (checkingAuth) {
+    return (
+      <div className="container-page">
+        <main className="section py-10 max-w-3xl mx-auto">
+          <div className="card-surface p-6">
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded mb-4 animate-pulse" />
+            <div className="h-8 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+            <div className="h-8 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+            <div className="h-8 w-2/3 bg-gray-200 dark:bg-gray-800 rounded mt-4 animate-pulse" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="container-page">
       {/* Mobile banking template */}
