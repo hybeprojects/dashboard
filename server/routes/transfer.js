@@ -39,10 +39,12 @@ async function scheduleSettlement(io, tx) {
       const clearingId = process.env.CLEARING_ACCOUNT_ID || sys.clearingAccountId;
       await transferFunds(Number(clearingId), Number(tx.toAccountId), Number(tx.amount));
       // mark transaction completed in store
-      await store.updateTransactionById(tx.id, {
-        status: 'completed',
-        settled_at: new Date().toISOString(),
-      }).catch(() => null);
+      await store
+        .updateTransactionById(tx.id, {
+          status: 'completed',
+          settled_at: new Date().toISOString(),
+        })
+        .catch(() => null);
 
       // balances for receiver
       let receiverBalance = null;
@@ -62,7 +64,12 @@ async function scheduleSettlement(io, tx) {
         const backoff = Number(process.env.SETTLEMENT_DELAY_MS || 10000) * Math.pow(2, attempts);
         setTimeout(doSettle, backoff);
       } else {
-        await store.updateTransactionById(tx.id, { status: 'failed', error: e?.message || 'settlement failed' }).catch(() => null);
+        await store
+          .updateTransactionById(tx.id, {
+            status: 'failed',
+            error: e?.message || 'settlement failed',
+          })
+          .catch(() => null);
         emit(io, tx.toUserId, 'notification', {
           id: uuidv4(),
           userId: tx.toUserId,
@@ -134,24 +141,26 @@ router.post('/', auth, csrf, transferLimiter, async (req, res) => {
       retries: 0,
     };
     // persist transaction in Supabase (best-effort)
-    await store.addTransaction({
-      id: tx.id,
-      from_user_id: tx.fromUserId,
-      from_account_id: tx.fromAccountId,
-      to_user_id: tx.toUserId,
-      to_account_id: tx.toAccountId,
-      amount: tx.amount,
-      currency: tx.currency,
-      status: tx.status,
-      created_at: tx.createdAt,
-      posted_at: tx.postedAt,
-      settled_at: tx.settledAt,
-      fineract_clearing_ref: tx.fineractClearingRef,
-      fineract_settlement_ref: tx.fineractSettlementRef,
-      memo: tx.memo,
-    }).catch((e) => {
-      logger.warn('Failed to persist transaction to Supabase', e && (e.message || e));
-    });
+    await store
+      .addTransaction({
+        id: tx.id,
+        from_user_id: tx.fromUserId,
+        from_account_id: tx.fromAccountId,
+        to_user_id: tx.toUserId,
+        to_account_id: tx.toAccountId,
+        amount: tx.amount,
+        currency: tx.currency,
+        status: tx.status,
+        created_at: tx.createdAt,
+        posted_at: tx.postedAt,
+        settled_at: tx.settledAt,
+        fineract_clearing_ref: tx.fineractClearingRef,
+        fineract_settlement_ref: tx.fineractSettlementRef,
+        memo: tx.memo,
+      })
+      .catch((e) => {
+        logger.warn('Failed to persist transaction to Supabase', e && (e.message || e));
+      });
 
     // balances
     let senderBal = null;

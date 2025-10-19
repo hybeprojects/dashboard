@@ -97,13 +97,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           } catch (e) {
             // best-effort: don't fail signup if app_users table doesn't exist
             // eslint-disable-next-line no-console
-            console.warn('Failed to upsert app_users', e && (e as any).message ? (e as any).message : e);
+            console.warn(
+              'Failed to upsert app_users',
+              e && (e as any).message ? (e as any).message : e,
+            );
           }
         }
       } catch (e) {
         // log but don't fail signup
         // eslint-disable-next-line no-console
-        console.warn('Fineract client creation failed', e && (e as any).message ? (e as any).message : e);
+        console.warn(
+          'Fineract client creation failed',
+          e && (e as any).message ? (e as any).message : e,
+        );
       }
     }
 

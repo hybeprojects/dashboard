@@ -1,7 +1,8 @@
 const axios = require('axios');
 const logger = require('./logger');
 
-const FINERACT_URL = process.env.FINERACT_URL || process.env.FINERACT_BASE_URL || process.env.FINERACT_BASE;
+const FINERACT_URL =
+  process.env.FINERACT_URL || process.env.FINERACT_BASE_URL || process.env.FINERACT_BASE;
 const FINERACT_USERNAME = process.env.FINERACT_USERNAME;
 const FINERACT_PASSWORD = process.env.FINERACT_PASSWORD;
 const FINERACT_TENANT = process.env.FINERACT_TENANT_ID || process.env.FINERACT_TENANT;

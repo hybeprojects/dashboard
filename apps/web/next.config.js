@@ -40,7 +40,7 @@ const nextConfig = {
               if (apiUrl) connect.push(apiUrl);
               parts.push(connect.join(' '));
               // prefer upgrade-insecure-requests
-              parts.push("upgrade-insecure-requests");
+              parts.push('upgrade-insecure-requests');
               return parts.join('; ') + ';';
             })(),
           },

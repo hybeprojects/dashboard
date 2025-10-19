@@ -9,7 +9,9 @@ function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
-    throw new Error('Supabase service not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error(
+      'Supabase service not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY',
+    );
   }
   supabase = createClient(url, key);
   return supabase;
@@ -18,11 +20,24 @@ function getSupabase() {
 // Users (app_users table)
 async function getUserBySupabaseId(id) {
   const sb = getSupabase();
-  const { data, error } = await sb.from('app_users').select('*').eq('id', id).limit(1).maybeSingle();
+  const { data, error } = await sb
+    .from('app_users')
+    .select('*')
+    .eq('id', id)
+    .limit(1)
+    .maybeSingle();
   if (error) {
-    logger.warn('app_users table query failed, falling back to profiles if available', error.message || error);
+    logger.warn(
+      'app_users table query failed, falling back to profiles if available',
+      error.message || error,
+    );
     // fallback to profiles
-    const { data: p, error: e2 } = await sb.from('profiles').select('*').eq('id', id).limit(1).maybeSingle();
+    const { data: p, error: e2 } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .maybeSingle();
     if (e2) throw e2;
     return p;
   }
@@ -32,7 +47,12 @@ async function getUserBySupabaseId(id) {
 async function getUserByAccountId(accountId) {
   const sb = getSupabase();
   // try app_users first
-  let { data, error } = await sb.from('app_users').select('*').eq('account_id', String(accountId)).limit(1).maybeSingle();
+  let { data, error } = await sb
+    .from('app_users')
+    .select('*')
+    .eq('account_id', String(accountId))
+    .limit(1)
+    .maybeSingle();
   if (error) {
     logger.warn('app_users query failed, trying profiles', error.message || error);
     const { data: p, error: e2 } = await sb
@@ -49,7 +69,11 @@ async function getUserByAccountId(accountId) {
 
 async function upsertAppUser(record) {
   const sb = getSupabase();
-  const { data, error } = await sb.from('app_users').upsert(record, { onConflict: 'id' }).select().maybeSingle();
+  const { data, error } = await sb
+    .from('app_users')
+    .upsert(record, { onConflict: 'id' })
+    .select()
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -73,7 +97,12 @@ async function listTransactionsForUser(userId) {
 }
 async function updateTransactionById(id, patch) {
   const sb = getSupabase();
-  const { data, error } = await sb.from('transactions').update(patch).eq('id', id).select().maybeSingle();
+  const { data, error } = await sb
+    .from('transactions')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -81,13 +110,22 @@ async function updateTransactionById(id, patch) {
 // Notifications
 async function listNotificationsForUser(userId) {
   const sb = getSupabase();
-  const { data, error } = await sb.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  const { data, error } = await sb
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
 }
 async function markNotificationsRead(userId, ids) {
   const sb = getSupabase();
-  const { data, error } = await sb.from('notifications').update({ read: true }).eq('user_id', userId).in('id', ids).select();
+  const { data, error } = await sb
+    .from('notifications')
+    .update({ read: true })
+    .eq('user_id', userId)
+    .in('id', ids)
+    .select();
   if (error) throw error;
   return data;
 }

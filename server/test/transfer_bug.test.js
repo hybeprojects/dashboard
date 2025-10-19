@@ -23,8 +23,16 @@ async function runTest() {
 
   // 2. Get user's account info from Supabase app_users
   const { createClient } = require('@supabase/supabase-js');
-  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const { data: appUserRows, error: appErr } = await sb.from('app_users').select('*').eq('email', email).limit(1).maybeSingle();
+  const sb = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+  );
+  const { data: appUserRows, error: appErr } = await sb
+    .from('app_users')
+    .select('*')
+    .eq('email', email)
+    .limit(1)
+    .maybeSingle();
   if (appErr) {
     console.error('Failed to query app_users', appErr);
     process.exit(1);
@@ -33,7 +41,11 @@ async function runTest() {
   // If app_users entry not present, create a fallback mapping with dummy account
   if (!user) {
     const newUser = { id: (await import('uuid')).v4(), email, first_name: 'Test' };
-    const { data: ins, error: insErr } = await sb.from('app_users').insert(newUser).select().maybeSingle();
+    const { data: ins, error: insErr } = await sb
+      .from('app_users')
+      .insert(newUser)
+      .select()
+      .maybeSingle();
     if (insErr) console.warn('Failed to insert app_user', insErr);
     user = ins || newUser;
   }
@@ -41,7 +53,11 @@ async function runTest() {
   // Manually set accountId for testing purposes since Fineract is not available.
   if (!user.account_id) {
     const dummyAccount = 12345;
-    await sb.from('app_users').update({ account_id: dummyAccount }).eq('id', user.id).catch(() => {});
+    await sb
+      .from('app_users')
+      .update({ account_id: dummyAccount })
+      .eq('id', user.id)
+      .catch(() => {});
     user.account_id = dummyAccount;
   }
 
