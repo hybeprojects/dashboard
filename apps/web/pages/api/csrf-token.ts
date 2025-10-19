@@ -28,7 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (contentType) res.setHeader('content-type', contentType);
 
     // Forward Set-Cookie headers if present
-    // response.headers.raw() is available on some fetch implementations; try to use it.
     const anyHeaders: any = (response as any).headers;
     let setCookie: string[] | undefined;
     if (anyHeaders && typeof anyHeaders.raw === 'function') {
@@ -39,12 +38,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (single) setCookie = [single];
     }
     if (setCookie && setCookie.length) {
-      // Multiple Set-Cookie values should be set as an array
       res.setHeader('set-cookie', setCookie as string[]);
     }
 
     // Stream response body back
     const body = await response.text();
+    // If content-type is json, try to parse and send as JSON to keep types consistent
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        const json = JSON.parse(body);
+        return res.json(json);
+      } catch (e) {
+        // fallthrough to send raw body
+      }
+    }
+
     res.send(body);
   } catch (err: any) {
     console.error('Error proxying CSRF token:', err?.message || err);
