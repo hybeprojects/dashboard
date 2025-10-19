@@ -24,7 +24,8 @@ export default function TransferPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!from && accounts && accounts.length > 0) setFrom(accounts[0].id ?? accounts[0].accountId ?? '');
+    if (!from && accounts && accounts.length > 0)
+      setFrom(accounts[0].id ?? accounts[0].accountId ?? '');
   }, [accounts, from]);
 
   async function submit(e: React.FormEvent) {
@@ -33,12 +34,36 @@ export default function TransferPage() {
     setError(null);
     setSuccess(null);
     try {
+      const fromAccountRec = accounts?.find(
+        (a: any) => String(a.id ?? a.accountId ?? a.number) === String(from),
+      );
+      const toAccountRec = accounts?.find(
+        (a: any) => String(a.id ?? a.accountId ?? a.number) === String(to),
+      );
+      const fromBalance = Number(
+        fromAccountRec?.balance ?? fromAccountRec?.raw?.accountBalance?.amount ?? 0,
+      );
+      const amt = parseFloat(amount);
+      if (!isFinite(amt) || amt <= 0) {
+        throw new Error('Invalid amount');
+      }
+      const newBalance = fromBalance - amt;
+      const receiverName = toAccountRec?.name || toAccountRec?.accountName || String(to);
+      const receiverEmail =
+        (toAccountRec as any)?.email || (toAccountRec as any)?.owner_email || null;
+
       const { data, error } = await supabase.from('transactions').insert([
         {
-          from_account_id: from,
-          to_account_id: to,
-          amount: Number(amount),
-          description: `Transfer from ${from} to ${to}`,
+          sender_account_id: from,
+          receiver_account_id: to,
+          receiver_name: receiverName,
+          receiver_email: receiverEmail,
+          amount: amt,
+          type: 'transfer',
+          status: 'completed',
+          description: `Transfer to ${receiverName}`,
+          running_balance: newBalance,
+          reference: `TRF-${Date.now()}`,
         },
       ]);
 
