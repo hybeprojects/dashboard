@@ -6,8 +6,12 @@ const auth = require('../middleware/auth');
 
 // simple transaction store (in-memory file for demo)
 const TX_FILE = path.join(__dirname, '..', 'data', 'transactions.json');
-async function loadTx() { return fs.readJson(TX_FILE).catch(() => []); }
-async function saveTx(txs) { return fs.writeJson(TX_FILE, txs, { spaces: 2 }); }
+async function loadTx() {
+  return fs.readJson(TX_FILE).catch(() => []);
+}
+async function saveTx(txs) {
+  return fs.writeJson(TX_FILE, txs, { spaces: 2 });
+}
 
 router.get('/', auth, async (req, res) => {
   const txs = await loadTx();

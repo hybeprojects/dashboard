@@ -5,8 +5,12 @@ const path = require('path');
 const auth = require('../middleware/auth');
 
 const NOT_FILE = path.join(__dirname, '..', 'data', 'notifications.json');
-async function load(){ return fs.readJson(NOT_FILE).catch(()=>[]); }
-async function save(n){ return fs.writeJson(NOT_FILE,n,{spaces:2}); }
+async function load() {
+  return fs.readJson(NOT_FILE).catch(() => []);
+}
+async function save(n) {
+  return fs.writeJson(NOT_FILE, n, { spaces: 2 });
+}
 
 router.get('/', auth, async (req, res) => {
   const all = await load();

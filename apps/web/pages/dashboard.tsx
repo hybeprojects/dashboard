@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
 import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
@@ -49,7 +48,7 @@ export default function Dashboard() {
             u
               ? {
                   id: u.id,
-                  email: u.email,
+                  email: u.email || '',
                   firstName: u.user_metadata?.first_name,
                   lastName: u.user_metadata?.last_name,
                 }
@@ -117,7 +116,7 @@ export default function Dashboard() {
           const newRow = payload.new;
           if (!newRow) return list;
           const idx = list.findIndex(
-            (a: any) => a.id === newRow.id || a.accountId === newRow.accountId,
+            (a: any) => a.id === (newRow as any).id || a.accountId === (newRow as any).accountId,
           );
           if (idx === -1) list.unshift(newRow);
           else list[idx] = { ...list[idx], ...newRow };
@@ -138,7 +137,7 @@ export default function Dashboard() {
             if (!newRow) return list;
             // for inserts, add to top; for updates, replace
             const idx = list.findIndex(
-              (t: any) => t.id === newRow.id || t.transactionId === newRow.transactionId,
+              (t: any) => t.id === (newRow as any).id || t.transactionId === (newRow as any).transactionId,
             );
             if (idx === -1) list.unshift(newRow);
             else list[idx] = { ...list[idx], ...newRow };
@@ -156,11 +155,13 @@ export default function Dashboard() {
       }
       try {
         txChannel.unsubscribe();
-      } catch (e) {}
+      } catch (e) {
+        // ignore
+      }
     };
   }, [qc, supabase]);
 
-  const accountsArr = Array.isArray(accounts) ? accounts : [];
+  const accountsArr = useMemo(() => Array.isArray(accounts) ? accounts : [], [accounts]);
   const transactionsArr = Array.isArray(transactions) ? transactions : [];
   const notificationsArr = Array.isArray(notifications) ? notifications : [];
 
