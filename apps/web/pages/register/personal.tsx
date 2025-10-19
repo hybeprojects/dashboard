@@ -13,6 +13,8 @@ type Form = {
   dob: string;
   ssn: string;
   address: string;
+  email: string;
+  password: string;
   openSavings?: boolean;
   idFront?: FileList;
   idBack?: FileList;
@@ -28,9 +30,30 @@ export default function PersonalRegister() {
     watch: _watch,
     formState: { errors, isSubmitting },
   } = useForm<Form>({ resolver: yupResolver(personalRegisterSchema) });
+
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
+      // perform signup first
+      const names = (v.fullName || '').trim().split(/\s+/);
+      const firstName = names.shift() || '';
+      const lastName = names.join(' ');
+
+      const signupResp = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: v.email,
+          password: v.password,
+          firstName,
+          lastName,
+          userType: 'personal',
+        }),
+      });
+      const signupBody = await signupResp.json();
+      if (!signupResp.ok) throw new Error(signupBody?.error || 'Signup failed');
+
+      // proceed with KYC submission
       const form = new FormData();
       Object.entries(v).forEach(([k, val]) => {
         if (val === undefined || val === null) return;
@@ -43,14 +66,16 @@ export default function PersonalRegister() {
       });
       form.append('accountType', 'personal');
       form.append('openSavings', v.openSavings ? '1' : '0');
+
       await api.post('/kyc/submit', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
       if (v.openSavings) {
-        // create linked savings via API (best-effort placeholder)
         await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
       }
-      setStatus('Submitted — verification in progress');
+
+      setStatus('Submitted — verification in progress. Check your email for confirmation.');
       router.push('/register/complete?type=personal');
     } catch (err: any) {
       setStatus(err?.message || 'Submission failed');
@@ -68,6 +93,24 @@ export default function PersonalRegister() {
         </p>
         <form className="card-surface p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput label="Full name" {...register('fullName')} error={errors.fullName} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Email"
+              {...register('email', { required: 'Email is required' })}
+              error={(errors as any).email}
+            />
+            <FormInput
+              label="Password"
+              type="password"
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 12, message: 'Use 12+ chars' },
+              })}
+              error={(errors as any).password}
+            />
+          </div>
+
           <FormInput label="Date of birth" type="date" {...register('dob')} error={errors.dob} />
           <FormInput label="SSN" {...register('ssn')} error={errors.ssn} />
           <FormInput label="Address" {...register('address')} error={errors.address} />

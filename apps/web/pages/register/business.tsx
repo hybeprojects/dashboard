@@ -18,6 +18,8 @@ type Form = {
   initialDeposit: number;
   representativeName: string;
   representativeSsn: string;
+  email: string;
+  password: string;
   idFront?: FileList;
   idBack?: FileList;
   proofAddress?: FileList;
@@ -35,6 +37,25 @@ export default function BusinessRegister() {
   async function onSubmit(v: Form) {
     setStatus(null);
     try {
+      // perform signup first using representative name
+      const names = (v.representativeName || '').trim().split(/\s+/);
+      const firstName = names.shift() || '';
+      const lastName = names.join(' ');
+
+      const signupResp = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: v.email,
+          password: v.password,
+          firstName,
+          lastName,
+          userType: 'business',
+        }),
+      });
+      const signupBody = await signupResp.json();
+      if (!signupResp.ok) throw new Error(signupBody?.error || 'Signup failed');
+
       const form = new FormData();
       Object.entries(v).forEach(([k, val]) => {
         if (val === undefined || val === null) return;
@@ -50,7 +71,7 @@ export default function BusinessRegister() {
       await api.post('/kyc/submit', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setStatus('Submitted — verification in progress');
+      setStatus('Submitted — verification in progress. Check your email for confirmation.');
       router.push('/register/complete?type=business');
     } catch (err: any) {
       setStatus(err?.message || 'Submission failed');
@@ -67,33 +88,37 @@ export default function BusinessRegister() {
           speed up onboarding.
         </p>
         <form className="card-surface p-4 sm:p-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-          <FormInput
-            label="Business name"
-            {...register('businessName')}
-            error={errors.businessName}
-          />
-          <FormInput
-            label="Business address"
-            {...register('businessAddress')}
-            error={errors.businessAddress}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Business name"
+              {...register('businessName')}
+              error={errors.businessName}
+            />
+            <FormInput
+              label="Business address"
+              {...register('businessAddress')}
+              error={errors.businessAddress}
+            />
+          </div>
           <FormInput label="Tax ID (EIN)" {...register('taxId')} error={errors.taxId} />
-          <FormInput
-            label="Annual business income"
-            type="number"
-            {...register('annualIncome')}
-            error={errors.annualIncome}
-          />
-          <FormInput
-            label="Funding account number"
-            {...register('depositAccountNumber')}
-            error={errors.depositAccountNumber}
-          />
-          <FormInput
-            label="Routing number"
-            {...register('routingNumber')}
-            error={errors.routingNumber}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FormInput
+              label="Annual business income"
+              type="number"
+              {...register('annualIncome')}
+              error={errors.annualIncome}
+            />
+            <FormInput
+              label="Funding account number"
+              {...register('depositAccountNumber')}
+              error={errors.depositAccountNumber}
+            />
+            <FormInput
+              label="Routing number"
+              {...register('routingNumber')}
+              error={errors.routingNumber}
+            />
+          </div>
           <FormInput
             label="Initial deposit (USD)"
             type="number"
@@ -102,16 +127,36 @@ export default function BusinessRegister() {
           />
           <hr className="my-4" />
           <div className="text-lg font-semibold">Authorized representative</div>
-          <FormInput
-            label="Full name"
-            {...register('representativeName')}
-            error={errors.representativeName}
-          />
-          <FormInput
-            label="SSN"
-            {...register('representativeSsn')}
-            error={errors.representativeSsn}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Full name"
+              {...register('representativeName')}
+              error={errors.representativeName}
+            />
+            <FormInput
+              label="SSN"
+              {...register('representativeSsn')}
+              error={errors.representativeSsn}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <FormInput
+              label="Email"
+              {...register('email', { required: 'Email is required' })}
+              error={(errors as any).email}
+            />
+            <FormInput
+              label="Password"
+              type="password"
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 12, message: 'Use 12+ chars' },
+              })}
+              error={(errors as any).password}
+            />
+          </div>
+
           <div>
             <label className="block text-sm mb-1">ID document (front)</label>
             <input
