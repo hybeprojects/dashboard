@@ -17,7 +17,9 @@ async function run() {
   const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!fineractUrl || !username || !password || !tenantId) {
-    console.error('Fineract credentials are not configured. Set FINERACT_URL, FINERACT_USERNAME, FINERACT_PASSWORD, FINERACT_TENANT_ID');
+    console.error(
+      'Fineract credentials are not configured. Set FINERACT_URL, FINERACT_USERNAME, FINERACT_PASSWORD, FINERACT_TENANT_ID',
+    );
     process.exit(1);
   }
   if (!sbUrl || !sbKey) {
@@ -79,7 +81,11 @@ async function run() {
         if (existing) {
           // update if needed
           const patch = {};
-          if (record.fineract_display_name && record.fineract_display_name !== existing.fineract_display_name) patch.fineract_display_name = record.fineract_display_name;
+          if (
+            record.fineract_display_name &&
+            record.fineract_display_name !== existing.fineract_display_name
+          )
+            patch.fineract_display_name = record.fineract_display_name;
           if (record.email && record.email !== existing.email) patch.email = record.email;
           if (record.phone && record.phone !== existing.phone) patch.phone = record.phone;
           if (Object.keys(patch).length > 0) {
@@ -102,7 +108,11 @@ async function run() {
             phone: record.phone,
             created_at: new Date().toISOString(),
           };
-          const { data: ins, error: insErr } = await supabase.from('app_users').insert(payload).select().maybeSingle();
+          const { data: ins, error: insErr } = await supabase
+            .from('app_users')
+            .insert(payload)
+            .select()
+            .maybeSingle();
           if (insErr) throw insErr;
           report.created++;
         }

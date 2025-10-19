@@ -12,7 +12,17 @@ function getSupabase() {
   return supabase;
 }
 
-async function logAudit({ actor_id = null, actor_email = null, action, target_type = null, target_id = null, changes = null, ip = null, user_agent = null, metadata = null } = {}) {
+async function logAudit({
+  actor_id = null,
+  actor_email = null,
+  action,
+  target_type = null,
+  target_id = null,
+  changes = null,
+  ip = null,
+  user_agent = null,
+  metadata = null,
+} = {}) {
   try {
     if (!action) throw new Error('action is required for audit log');
     const sb = getSupabase();
