@@ -16,7 +16,24 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || CLIENT_URL)
   .map((s) => s.trim())
   .filter(Boolean);
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet());
+// Apply a reasonable CSP for API surface
+const cspConnect = ["'self'"];
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) cspConnect.push(process.env.NEXT_PUBLIC_SUPABASE_URL);
+if (process.env.NEXT_PUBLIC_API_URL) cspConnect.push(process.env.NEXT_PUBLIC_API_URL);
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: cspConnect,
+    },
+  }),
+);
 app.use((req, res, next) => {
   // Enforce HSTS for HTTPS
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
