@@ -14,8 +14,8 @@ async function runTest() {
   });
 
   if (signupRes.status !== 200) {
-      console.error('Signup failed', await signupRes.text());
-      process.exit(1);
+    console.error('Signup failed', await signupRes.text());
+    process.exit(1);
   }
 
   const { accessToken } = await signupRes.json();
@@ -29,7 +29,7 @@ async function runTest() {
   const path = require('path');
   const USERS_FILE = path.join(__dirname, '..', 'data', 'users.json');
   const users = await fs.readJson(USERS_FILE);
-  const user = users.find(u => u.email === email);
+  const user = users.find((u) => u.email === email);
   assert(user, 'Could not find test user in users.json');
 
   // Manually set accountId for testing purposes since Fineract is not available.
@@ -49,13 +49,13 @@ async function runTest() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
       fromAccountId,
       toAccountId,
       amount: 10,
-      memo: 'test self-transfer'
+      memo: 'test self-transfer',
     }),
   });
 
@@ -64,14 +64,18 @@ async function runTest() {
   assert.strictEqual(transferRes.status, 400, 'Expected status code 400 for self-transfer');
   const body = await transferRes.json();
   console.log('Received body:', body);
-  assert.strictEqual(body.error, 'sender and receiver accounts cannot be the same', 'Expected specific error message');
+  assert.strictEqual(
+    body.error,
+    'sender and receiver accounts cannot be the same',
+    'Expected specific error message',
+  );
 
   console.log('Test passed: Server correctly rejected self-transfer.');
 }
 
 // Need to start the server for this test to run.
 // I will run the server in the background and then run this test.
-runTest().catch(err => {
+runTest().catch((err) => {
   console.error('Test failed', err);
   process.exit(1);
 });

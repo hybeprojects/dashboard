@@ -12,7 +12,9 @@ export default function Navbar() {
   async function handleSignOut() {
     try {
       await apiLogout();
-    } catch {}
+    } catch {
+      // ignore
+    }
     logout();
     setOpen(false);
   }

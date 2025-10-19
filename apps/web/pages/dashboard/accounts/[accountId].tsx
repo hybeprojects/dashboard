@@ -85,6 +85,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   // Check for Supabase auth token in cookies (server-side)
   const cookiesHeader = context.req.headers.cookie || '';
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const cookie = require('cookie');
   const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
   const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];

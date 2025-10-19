@@ -68,7 +68,7 @@ export async function me(): Promise<UserProfile | null> {
     if (!user) return null;
     return {
       id: user.id,
-      email: user.email,
+      email: user.email || '',
       firstName: user.user_metadata?.first_name,
       lastName: user.user_metadata?.last_name,
     };
@@ -77,4 +77,5 @@ export async function me(): Promise<UserProfile | null> {
   }
 }
 
-export default { login, register, logout, me };
+const auth = { login, register, logout, me };
+export default auth;

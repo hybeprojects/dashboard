@@ -5,24 +5,14 @@ module.exports = {
     node: true,
     es2021: true,
   },
-  extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['eslint:recommended', '@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2021,
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint'],
-  ignorePatterns: [
-    '**/dist/**',
-    '**/.next/**',
-    '**/node_modules/**',
-    '**/build/**',
-    '**/*.min.js',
-  ],
+  ignorePatterns: ['**/dist/**', '**/.next/**', '**/node_modules/**', '**/build/**', '**/*.min.js'],
   rules: {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
