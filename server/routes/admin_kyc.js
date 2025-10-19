@@ -83,6 +83,9 @@ router.post('/decision', adminAuth, async (req, res) => {
     if (!['approved', 'rejected'].includes(decision))
       return res.status(400).json({ error: 'Invalid decision' });
 
+    const supabase = getSupabaseServer();
+    if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+
     const { data: updated, error: upErr } = await supabase
       .from('kyc_submissions')
       .update({
