@@ -52,7 +52,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         // Require a sender account id for a valid transaction row
         const accountId = sender || body.account_id;
-        if (!accountId) return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
+        if (!accountId)
+          return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
 
         // Fetch current balance to compute running_balance (required by schema)
         const { data: fromAcc, error: accErr } = await supabase

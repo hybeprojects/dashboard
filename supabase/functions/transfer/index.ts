@@ -22,8 +22,10 @@ serve(async (req: Request) => {
     });
 
     const body = await req.json();
-    const fromAccountId = body.fromAccountId ?? body.from_account_id ?? body.fromId ?? body.sender_account_id;
-    const toAccountId = body.toAccountId ?? body.to_account_id ?? body.toId ?? body.receiver_account_id;
+    const fromAccountId =
+      body.fromAccountId ?? body.from_account_id ?? body.fromId ?? body.sender_account_id;
+    const toAccountId =
+      body.toAccountId ?? body.to_account_id ?? body.toId ?? body.receiver_account_id;
     const amount = body.amount;
 
     // Validation
