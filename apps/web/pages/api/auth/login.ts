@@ -1,5 +1,6 @@
 import getServerSupabase from '../_serverSupabase';
 import { NextApiRequest, NextApiResponse } from 'next';
+import getServerSupabase from '../_serverSupabase';
 import { serialize } from 'cookie';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
