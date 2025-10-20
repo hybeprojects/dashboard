@@ -1,0 +1,36 @@
+rules:
+  - id: js.no-eval
+    patterns:
+      - pattern: eval(...)
+    message: "Avoid using eval(). It can lead to RCE and injection vulnerabilities."
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: js.new-function
+    patterns:
+      - pattern: new Function(...)
+    message: "Avoid new Function(); it can lead to code injection vulnerabilities."
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: js.hardcoded-secret
+    patterns:
+      - pattern-regex: "(?i)(?:api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{8,}['\"]"
+    message: "Possible hardcoded secret detected. Move secrets to environment variables or secret manager."
+    languages: [javascript, typescript, python]
+    severity: WARNING
+
+  - id: js.supabase-service-role-client
+    patterns:
+      - pattern: process.env.SUPABASE_SERVICE_ROLE_KEY
+    message: "Ensure SUPABASE_SERVICE_ROLE_KEY is not used in client-side code. It should only be available server-side."
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: js.child-process
+    patterns:
+      - pattern: require('child_process')
+      - pattern: import child_process from 'child_process'
+    message: "Use of child_process can be dangerous in serverless environments; ensure inputs are validated."
+    languages: [javascript, typescript]
+    severity: WARNING
