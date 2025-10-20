@@ -19,7 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Create a user-scoped Supabase client using the anon key but with Authorization header
   const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  if (!anonUrl || !anonKey) return res.status(500).json({ error: 'Supabase anon key not configured' });
+  if (!anonUrl || !anonKey)
+    return res.status(500).json({ error: 'Supabase anon key not configured' });
 
   // Import createClient lazily to avoid pulling into client bundles
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -72,9 +73,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('id', accountId)
         .maybeSingle();
       if (accErr) return res.status(500).json({ error: accErr.message });
-      if (!fromAcc) return res.status(404).json({ error: 'Sender account not found or not authorized' });
+      if (!fromAcc)
+        return res.status(404).json({ error: 'Sender account not found or not authorized' });
 
-      if (Number(fromAcc.balance) < amount) return res.status(400).json({ error: 'Insufficient funds' });
+      if (Number(fromAcc.balance) < amount)
+        return res.status(400).json({ error: 'Insufficient funds' });
 
       const newBalance = Number(fromAcc.balance || 0) - amount;
 
