@@ -27,7 +27,10 @@ export async function safeTestSupabaseConnection() {
   const supabase = getServerSupabase();
   if (!supabase) {
     logger.error('getServerSupabase returned null');
-    return { ok: false, error: 'Supabase service client not configured (missing service role key?)' } as const;
+    return {
+      ok: false,
+      error: 'Supabase service client not configured (missing service role key?)',
+    } as const;
   }
 
   try {
@@ -92,7 +95,12 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
         results[t] = { ok: false, error: res.error.message };
         continue;
       }
-      const count = typeof (res.count as number) === 'number' ? res.count : Array.isArray(res.data) ? res.data.length : null;
+      const count =
+        typeof (res.count as number) === 'number'
+          ? res.count
+          : Array.isArray(res.data)
+            ? res.data.length
+            : null;
       results[t] = { ok: true, count };
     } catch (err: any) {
       logger.warn('Count query exception for table', t, err?.message || err);
@@ -106,9 +114,10 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
 export async function runDiagnostics() {
   logger.info('Running full Supabase diagnostics');
   const schema = await getSchemaInfo();
-  const tablesToCheck = (schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0)
-    ? ['profiles', 'accounts', 'transactions'].filter((t) => schema.tables.includes(t))
-    : ['profiles', 'accounts', 'transactions'];
+  const tablesToCheck =
+    schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0
+      ? ['profiles', 'accounts', 'transactions'].filter((t) => schema.tables.includes(t))
+      : ['profiles', 'accounts', 'transactions'];
 
   const counts = await sampleCounts(tablesToCheck);
 

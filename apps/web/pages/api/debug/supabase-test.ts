@@ -1,5 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { validateServerEnv, safeTestSupabaseConnection, runDiagnostics } from '../../../lib/supabase/server-utils';
+import {
+  validateServerEnv,
+  safeTestSupabaseConnection,
+  runDiagnostics,
+} from '../../../lib/supabase/server-utils';
 import { logger } from '../../../lib/logger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,7 +41,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const diagnostics = await runDiagnostics();
     return res
       .status(200)
-      .json({ ok: true, message: 'Supabase service client configured', test_query: result.data, diagnostics });
+      .json({
+        ok: true,
+        message: 'Supabase service client configured',
+        test_query: result.data,
+        diagnostics,
+      });
   } catch (err: any) {
     return res.status(500).json({ ok: false, error: err?.message || err });
   }
