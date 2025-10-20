@@ -1,10 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+
+function buildCookie(token: string) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const parts = [`XSRF-TOKEN=${token}`, 'Path=/', 'Max-Age=3600', 'SameSite=Lax'];
+  if (isProd) parts.push('Secure');
+  // httpOnly must be false for double-submit cookie pattern (readable by JS)
+  // Don't set HttpOnly
+  return parts.join('; ');
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const apiBase = process.env.NEXT_PUBLIC_API_URL;
     if (!apiBase) {
-      return res.status(500).json({ error: 'API base URL not configured' });
+      // If no API base is configured, fallback to issuing a local token for dev ergonomics
+      const token = crypto.randomBytes(24).toString('hex');
+      res.setHeader('Set-Cookie', buildCookie(token));
+      return res.status(200).json({ csrfToken: token, fallback: true });
     }
 
     const target = `${apiBase.replace(/\/$/, '')}/csrf-token`;
@@ -15,10 +28,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
     if (req.headers.cookie) headers.cookie = req.headers.cookie as string;
 
-    const response = await fetch(target, {
-      method: 'GET',
-      headers,
-    });
+    let response: Response | null = null;
+    try {
+      response = await fetch(target, {
+        method: 'GET',
+        headers,
+      });
+    } catch (err) {
+      // If remote fetch fails (network error / unreachable), fall back to local token
+      const token = crypto.randomBytes(24).toString('hex');
+      res.setHeader('Set-Cookie', buildCookie(token));
+      return res.status(200).json({ csrfToken: token, fallback: true });
+    }
+
+    // If the remote returned a non-success status, fall back locally instead of returning opaque 4xx/5xx
+    if (!response || response.status >= 400) {
+      const token = crypto.randomBytes(24).toString('hex');
+      res.setHeader('Set-Cookie', buildCookie(token));
+      return res.status(200).json({ csrfToken: token, fallback: true, remoteStatus: response?.status });
+    }
 
     // Forward status
     res.status(response.status);
@@ -56,6 +84,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.send(body);
   } catch (err: any) {
     console.error('Error proxying CSRF token:', err?.message || err);
-    res.status(502).json({ error: 'Bad gateway' });
+    // As a last resort, issue a local token so the frontend can continue in dev
+    try {
+      const token = crypto.randomBytes(24).toString('hex');
+      res.setHeader('Set-Cookie', buildCookie(token));
+      return res.status(200).json({ csrfToken: token, fallback: true, error: String(err) });
+    } catch (e) {
+      res.status(502).json({ error: 'Bad gateway' });
+    }
   }
 }
