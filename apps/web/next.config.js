@@ -1,7 +1,33 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production';
+
+function buildCSP() {
+  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const parts = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    isDev ? 'frame-ancestors *' : "frame-ancestors 'none'",
+    isDev
+      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
+      : "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    isDev
+      ? "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
+      : "style-src 'self' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    isDev ? "img-src 'self' data: https:" : "img-src 'self' data:",
+  ];
+  const connect = ["connect-src 'self'"];
+  if (isDev) connect.push('ws:', 'wss:', 'blob:');
+  if (supabase) connect.push(supabase);
+  if (apiUrl) connect.push(apiUrl);
+  parts.push(connect.join(' '));
+  if (!isDev) parts.push('upgrade-insecure-requests');
+  return parts.join('; ') + ';';
+}
+
 const nextConfig = {
   eslint: {
-    // Fail build if ESLint errors are present
     ignoreDuringBuilds: false,
   },
   typescript: {
@@ -12,38 +38,14 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
+          // In dev, allow embedding in iframes (Builder preview); in prod, keep strict settings
+          ...(isDev
+            ? []
+            : [{ key: 'X-Frame-Options', value: 'DENY' }]),
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // Security policies
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: (() => {
-              const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-              const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-              const parts = [
-                "default-src 'self'",
-                "base-uri 'self'",
-                "frame-ancestors 'none'",
-                // removed 'unsafe-inline' to mitigate XSS; use nonces/hashes for inline scripts/styles
-                "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
-                "style-src 'self' https://fonts.googleapis.com",
-                "font-src 'self' https://fonts.gstatic.com",
-                "img-src 'self' data:",
-              ];
-              const connect = ["connect-src 'self'"];
-              if (supabase) connect.push(supabase);
-              if (apiUrl) connect.push(apiUrl);
-              parts.push(connect.join(' '));
-              // prefer upgrade-insecure-requests
-              parts.push('upgrade-insecure-requests');
-              return parts.join('; ') + ';';
-            })(),
-          },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'Content-Security-Policy', value: buildCSP() },
         ],
       },
     ];
