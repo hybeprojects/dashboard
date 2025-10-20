@@ -14,7 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cookieHeader = (req.headers.cookie as string) || '';
     const cookie = require('cookie');
     const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
-    const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+    const token =
+      cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
     if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
     // Validate token and get user
@@ -24,12 +25,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userId = userData.user.id;
 
     // Check admin flag in profiles
-    const { data: profile, error: profileErr } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle();
+    const { data: profile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .maybeSingle();
     if (profileErr) return res.status(500).json({ error: 'Failed to load profile' });
     if (!profile || !profile.is_admin) return res.status(403).json({ error: 'Forbidden' });
 
     // Fetch users
-    const { data: users, error: usersErr } = await supabase.from('profiles').select('id, email, first_name, last_name, is_admin, created_at');
+    const { data: users, error: usersErr } = await supabase
+      .from('profiles')
+      .select('id, email, first_name, last_name, is_admin, created_at');
     if (usersErr) return res.status(500).json({ error: 'Failed to fetch users' });
 
     return res.status(200).json({ users });
