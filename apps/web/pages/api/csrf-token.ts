@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let response: Response | null = null;
     let lastError: any = null;
+
     for (const t of targets) {
       try {
         // attempt fetch
@@ -27,7 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           break;
         }
         // capture non-ok responses to inspect later (e.g., 404)
-        lastError = { status: r.status, statusText: r.statusText };
+        try {
+          const txt = await r.text();
+          lastError = { status: r.status, statusText: r.statusText, body: txt };
+        } catch (e) {
+          lastError = { status: r.status, statusText: r.statusText };
+        }
       } catch (e) {
         lastError = e;
       }
@@ -47,53 +53,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (contentType) res.setHeader('content-type', contentType);
 
     // Forward Set-Cookie headers if present
+    const setCookies: string[] = [];
     const anyHeaders: any = (response as any).headers;
-    let setCookie: string[] | undefined;
     if (anyHeaders && typeof anyHeaders.raw === 'function') {
-      const raw = anyHeaders.raw();
-      setCookie = raw && raw['set-cookie'];
-    } else {
-      const single = response.headers.get('set-cookie');
-      if (single) setCookie = [single];
-    }
-    if (setCookie && setCookie.length) {
-      res.setHeader('set-cookie', setCookie as string[]);
-    }
-
-    // Stream response body back
-    const body = await response.text();
-    // If content-type is json, try to parse and send as JSON to keep types consistent
-    if (contentType && contentType.includes('application/json')) {
       try {
-        const json = JSON.parse(body);
-        return res.json(json);
+        const raw = anyHeaders.raw();
+        if (raw && Array.isArray(raw['set-cookie'])) setCookies.push(...raw['set-cookie']);
       } catch (e) {
-        // fallthrough to send raw body
+        // ignore
       }
-    }
-
-    res.send(body);
-
-    // Forward status
-    res.status(response.status);
-
-    // Forward relevant headers
-    const contentType = response.headers.get('content-type');
-    if (contentType) res.setHeader('content-type', contentType);
-
-    // Forward Set-Cookie headers if present
-    const anyHeaders: any = (response as any).headers;
-    let setCookie: string[] | undefined;
-    if (anyHeaders && typeof anyHeaders.raw === 'function') {
-      const raw = anyHeaders.raw();
-      setCookie = raw && raw['set-cookie'];
     } else {
       const single = response.headers.get('set-cookie');
-      if (single) setCookie = [single];
+      if (single) setCookies.push(single);
     }
-    if (setCookie && setCookie.length) {
-      res.setHeader('set-cookie', setCookie as string[]);
-    }
+    if (setCookies.length) res.setHeader('set-cookie', setCookies as string[]);
 
     // Stream response body back
     const body = await response.text();
