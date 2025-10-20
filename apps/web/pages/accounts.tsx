@@ -3,14 +3,17 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
+import type { Database } from '../lib/supabase/types.gen';
+
+type AccountRow = Database['public']['Tables']['accounts']['Row'];
 
 export default function AccountsPage() {
   const supabase = createClient();
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccountRow[]> => {
       const { data } = await supabase.from('accounts').select('*');
-      return data;
+      return data ?? [];
     },
     staleTime: 30_000,
   });
@@ -27,21 +30,14 @@ export default function AccountsPage() {
         {isLoading ? (
           <div className="text-sm text-gray-500">Loading…</div>
         ) : accounts && accounts.length > 0 ? (
-          accounts.map((a: any) => (
+          accounts.map((a) => (
             <Card key={a.id} className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-500">
-                    {a.name || a.accountName || 'Account'}
-                  </div>
-                  <div className="font-medium">
-                    ${Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}
-                  </div>
+                  <div className="text-sm text-gray-500">{a.name || 'Account'}</div>
+                  <div className="font-medium">${Number(a.balance ?? 0).toLocaleString()}</div>
                 </div>
-                <Link
-                  href={`/accounts/${a.id ?? a.accountId ?? a.number ?? '0'}`}
-                  className="text-blue-600 text-sm font-semibold"
-                >
+                <Link href={`/accounts/${a.id}`} className="text-blue-600 text-sm font-semibold">
                   View
                 </Link>
               </div>

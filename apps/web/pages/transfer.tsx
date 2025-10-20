@@ -3,16 +3,20 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
+import type { Database } from '../lib/supabase/types.gen';
+
+type AccountRow = Database['public']['Tables']['accounts']['Row'];
+type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
 
 export default function TransferPage() {
   const qc = useQueryClient();
   const supabase = createClient();
 
-  const { data: accounts = [] } = useQuery({
+  const { data: accounts = [] } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccountRow[]> => {
       const { data } = await supabase.from('accounts').select('*');
-      return data;
+      return data ?? [];
     },
   });
 
@@ -24,8 +28,7 @@ export default function TransferPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!from && accounts && accounts.length > 0)
-      setFrom(accounts[0].id ?? accounts[0].accountId ?? '');
+    if (!from && accounts && accounts.length > 0) setFrom(accounts[0].id ?? '');
   }, [accounts, from]);
 
   async function submit(e: React.FormEvent) {
@@ -34,38 +37,32 @@ export default function TransferPage() {
     setError(null);
     setSuccess(null);
     try {
-      const fromAccountRec = accounts?.find(
-        (a: any) => String(a.id ?? a.accountId ?? a.number) === String(from),
-      );
-      const toAccountRec = accounts?.find(
-        (a: any) => String(a.id ?? a.accountId ?? a.number) === String(to),
-      );
-      const fromBalance = Number(
-        fromAccountRec?.balance ?? fromAccountRec?.raw?.accountBalance?.amount ?? 0,
-      );
+      const fromAccountRec = accounts.find((a) => String(a.id) === String(from));
+      const toAccountRec = accounts.find((a) => String(a.id) === String(to));
+      const fromBalance = Number(fromAccountRec?.balance ?? 0);
       const amt = parseFloat(amount);
       if (!isFinite(amt) || amt <= 0) {
         throw new Error('Invalid amount');
       }
       const newBalance = fromBalance - amt;
-      const receiverName = toAccountRec?.name || toAccountRec?.accountName || String(to);
-      const receiverEmail =
-        (toAccountRec as any)?.email || (toAccountRec as any)?.owner_email || null;
+      const receiverName = toAccountRec?.name ?? String(to);
+      const receiverEmail = null as string | null;
 
-      const { data, error } = await supabase.from('transactions').insert([
-        {
-          sender_account_id: from,
-          receiver_account_id: to,
-          receiver_name: receiverName,
-          receiver_email: receiverEmail,
-          amount: amt,
-          type: 'transfer',
-          status: 'completed',
-          description: `Transfer to ${receiverName}`,
-          running_balance: newBalance,
-          reference: `TRF-${Date.now()}`,
-        },
-      ]);
+      const payload: TransactionInsert = {
+        account_id: from,
+        sender_account_id: from,
+        receiver_account_id: to || null,
+        receiver_name: receiverName || null,
+        receiver_email: receiverEmail,
+        amount: amt,
+        type: 'transfer',
+        status: 'completed',
+        description: `Transfer to ${receiverName}`,
+        running_balance: newBalance,
+        reference: `TRF-${Date.now()}`,
+      };
+
+      const { error } = await (supabase as any).from('transactions').insert([payload as any]);
 
       if (error) {
         throw error;
@@ -100,13 +97,9 @@ export default function TransferPage() {
               onChange={(e) => setFrom(e.target.value)}
               className="w-full border rounded p-2"
             >
-              {accounts?.map((a: any) => (
-                <option
-                  key={a.id ?? a.accountId ?? a.number}
-                  value={a.id ?? a.accountId ?? a.number}
-                >
-                  {a.name || a.accountName} • $
-                  {Number(a.balance ?? a.raw?.accountBalance?.amount ?? 0).toLocaleString()}
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} • ${Number(a.balance ?? 0).toLocaleString()}
                 </option>
               ))}
             </select>
