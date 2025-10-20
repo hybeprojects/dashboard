@@ -1,5 +1,5 @@
 import getServerSupabase from '../../pages/api/_serverSupabase';
-import { logger } from '../../logger';
+import { logger } from '../logger';
 
 export function validateServerEnv() {
   const missing: string[] = [];
