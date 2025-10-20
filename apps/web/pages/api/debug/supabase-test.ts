@@ -3,6 +3,7 @@ import { validateServerEnv, safeTestSupabaseConnection } from '../../../lib/supa
 import { logger } from '../../../lib/logger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  logger.info('supabase-test endpoint called', { method: req.method, url: req.url, ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress });
   try {
     const env = validateServerEnv();
     if (!env.ok) {
