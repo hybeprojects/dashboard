@@ -1,20 +1,20 @@
 rules:
   - id: no-hardcoded-secrets
-    pattern: "SUPABASE_SERVICE_ROLE_KEY"
-    message: "Avoid committing service role keys. Use CI secrets or environment variables."
+    pattern: 'SUPABASE_SERVICE_ROLE_KEY'
+    message: 'Avoid committing service role keys. Use CI secrets or environment variables.'
     languages: [js, ts, py]
     severity: ERROR
 
   - id: no-next-public-secret
-    pattern: "NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    message: "Public keys should not be committed into source. Confirm keys are only set via environment."
+    pattern: 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+    message: 'Public keys should not be committed into source. Confirm keys are only set via environment.'
     languages: [js, ts]
     severity: WARNING
 
   - id: jwt-secret-detection
     pattern-either:
-      - pattern: "JWT_SECRET"
-      - pattern: "ENV_CHECK_SECRET"
-    message: "Ensure secrets are not hardcoded in repo and are stored in secret managers."
+      - pattern: 'JWT_SECRET'
+      - pattern: 'ENV_CHECK_SECRET'
+    message: 'Ensure secrets are not hardcoded in repo and are stored in secret managers.'
     languages: [js, ts]
     severity: WARNING
