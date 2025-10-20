@@ -11,18 +11,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
 
   try {
-    const cookieHeader = (req.headers.cookie as string) || '';
-    const cookie = require('cookie');
-    const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
-    const token =
-      cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
-    if (!token) return res.status(401).json({ error: 'Not authenticated' });
-
-    // Validate token and get user
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token as string);
-    if (userErr || !userData?.user) return res.status(401).json({ error: 'Invalid token' });
-
-    const userId = userData.user.id;
+    // Validate token and get user via serverAuth helper
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getUserFromRequest } = require('../../lib/serverAuth');
+    const user = await getUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
+    const userId = user.id;
 
     // Check admin flag in profiles
     const { data: profile, error: profileErr } = await supabase
