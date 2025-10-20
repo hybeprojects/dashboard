@@ -104,7 +104,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   const accountId = context.params?.accountId as string;
 
   // Create a user-scoped client that attaches the user's access token in the Authorization header
-  const userClient = createClient(url, anon, {
+  const userClient = createSupabaseClient(url, anon, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
