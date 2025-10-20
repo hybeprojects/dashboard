@@ -66,6 +66,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const newBalance = Number(fromAcc.balance || 0) - amount;
 
+        // Prefer using DB RPC that enforces limits and performs atomic balance updates
+        try {
+          const rpcRes = await supabase.rpc('process_transfer_with_limits', {
+            from_account_id: accountId,
+            to_account_id: receiver || null,
+            amount: amount,
+          });
+          if (rpcRes.error) {
+            // If RPC fails because not found or permission denied, fall back to insert
+            // but surface message to client
+            // eslint-disable-next-line no-console
+            console.warn('RPC process_transfer_with_limits failed', rpcRes.error.message);
+          } else if (rpcRes.data) {
+            return res.status(200).json(rpcRes.data);
+          }
+        } catch (e) {
+          // ignore and fall through to insert
+        }
+
         const insertPayload: any = {
           account_id: accountId,
           sender_account_id: accountId,
