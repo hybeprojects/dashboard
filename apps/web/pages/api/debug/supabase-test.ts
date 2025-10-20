@@ -1,42 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import getServerSupabase from '../_serverSupabase';
+import { validateServerEnv, safeTestSupabaseConnection } from '../../../lib/supabase/server-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const supabase = getServerSupabase();
-    if (!supabase) {
+    const env = validateServerEnv();
+    if (!env.ok) {
       return res
         .status(500)
-        .json({
-          ok: false,
-          error: 'Supabase service client not configured (SUPABASE_SERVICE_ROLE_KEY missing?)',
-        });
+        .json({ ok: false, error: 'Missing server environment variables', missing: env.missing });
     }
 
-    try {
-      const q = await supabase.from('profiles').select('id').limit(1);
-      if (q.error) {
-        return res
-          .status(200)
-          .json({
-            ok: true,
-            message: 'Supabase service client configured',
-            test_query: null,
-            profiles_select_error: q.error.message,
-          });
-      }
-      return res
-        .status(200)
-        .json({ ok: true, message: 'Supabase service client configured', test_query: q.data });
-    } catch (err: any) {
-      return res
-        .status(200)
-        .json({
-          ok: true,
-          message: 'Supabase service client configured but test query failed',
-          error: err?.message || err,
-        });
+    const result = await safeTestSupabaseConnection();
+    if (!result.ok) {
+      return res.status(200).json({ ok: true, message: 'Supabase service client configured', test_query: null, error: result.error });
     }
+
+    return res.status(200).json({ ok: true, message: 'Supabase service client configured', test_query: result.data });
   } catch (err: any) {
     return res.status(500).json({ ok: false, error: err?.message || err });
   }
