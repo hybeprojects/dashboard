@@ -207,6 +207,101 @@ export interface ProfilesPublic {
 }
 
 // Optionally export a DB mapping for convenience with supabase-js generic types
+export interface AuditLogs {
+  id: UUID;
+  actor_id?: UUID | null;
+  actor_email?: string | null;
+  action: string;
+  target_type?: string | null;
+  target_id?: string | null;
+  changes?: any | null;
+  ip?: string | null;
+  user_agent?: string | null;
+  metadata?: any | null;
+  created_at?: Timestamp | null;
+}
+
+export interface CardAuthorizations {
+  id: UUID;
+  card_id: UUID;
+  account_id: UUID;
+  amount: number;
+  merchant_name: string;
+  merchant_category?: string | null;
+  authorization_code: string;
+  is_approved: boolean;
+  decline_reason?: string | null;
+  location?: any | null;
+  created_at?: Timestamp | null;
+}
+
+export interface FaceVerificationSessions {
+  id: UUID;
+  user_id: UUID;
+  session_token: string;
+  verification_data?: any | null;
+  success?: boolean | null;
+  confidence_score?: number | null;
+  attempts?: number | null;
+  completed_at?: Timestamp | null;
+  created_at?: Timestamp | null;
+}
+
+export interface PendingTransactions {
+  id: UUID;
+  account_id: UUID;
+  card_id?: UUID | null;
+  amount: number;
+  type: string;
+  description: string;
+  merchant_name?: string | null;
+  authorization_code: string;
+  expires_at: Timestamp;
+  created_at?: Timestamp | null;
+}
+
+export interface ProfileUpdateRequests {
+  id: UUID;
+  user_id: UUID;
+  current_first_name?: string | null;
+  current_last_name?: string | null;
+  current_date_of_birth?: string | null;
+  current_address_line1?: string | null;
+  current_city?: string | null;
+  current_state?: string | null;
+  current_zip_code?: string | null;
+  requested_first_name?: string | null;
+  requested_last_name?: string | null;
+  requested_date_of_birth?: string | null;
+  requested_address_line1?: string | null;
+  requested_city?: string | null;
+  requested_state?: string | null;
+  requested_zip_code?: string | null;
+  supporting_docs_urls?: string[] | null;
+  reason?: string | null;
+  status?: string | null;
+  reviewed_by?: UUID | null;
+  reviewed_at?: Timestamp | null;
+  rejection_reason?: string | null;
+  created_at?: Timestamp | null;
+  updated_at?: Timestamp | null;
+}
+
+export interface SecurityEvents {
+  id: UUID;
+  user_id?: UUID | null;
+  event_type: string;
+  severity?: string | null;
+  description: string;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  location?: any | null;
+  is_suspicious?: boolean | null;
+  resolved?: boolean | null;
+  resolved_at?: Timestamp | null;
+  created_at?: Timestamp | null;
+}
+
 export interface Database {
   profiles: Profiles;
   accounts: Accounts;
@@ -218,4 +313,10 @@ export interface Database {
   limit_tiers_config: LimitTiersConfig;
   limit_upgrade_requests: LimitUpgradeRequests;
   large_transaction_docs: LargeTransactionDocs;
+  audit_logs: AuditLogs;
+  card_authorizations: CardAuthorizations;
+  face_verification_sessions: FaceVerificationSessions;
+  pending_transactions: PendingTransactions;
+  profile_update_requests: ProfileUpdateRequests;
+  security_events: SecurityEvents;
 }

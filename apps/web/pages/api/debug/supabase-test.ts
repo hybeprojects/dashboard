@@ -1,42 +1,52 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import getServerSupabase from '../_serverSupabase';
+import {
+  validateServerEnv,
+  safeTestSupabaseConnection,
+  runDiagnostics,
+} from '../../../lib/supabase/server-utils';
+import { logger } from '../../../lib/logger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  logger.info('supabase-test endpoint called', {
+    method: req.method,
+    url: req.url,
+    ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+  });
   try {
-    const supabase = getServerSupabase();
-    if (!supabase) {
+    const env = validateServerEnv();
+    if (!env.ok) {
+      logger.error('Missing Supabase environment variables', { missing: env.missing });
       return res
         .status(500)
-        .json({
-          ok: false,
-          error: 'Supabase service client not configured (SUPABASE_SERVICE_ROLE_KEY missing?)',
-        });
+        .json({ ok: false, error: 'Missing server environment variables', missing: env.missing });
     }
 
-    try {
-      const q = await supabase.from('profiles').select('id').limit(1);
-      if (q.error) {
-        return res
-          .status(200)
-          .json({
-            ok: true,
-            message: 'Supabase service client configured',
-            test_query: null,
-            profiles_select_error: q.error.message,
-          });
-      }
-      return res
-        .status(200)
-        .json({ ok: true, message: 'Supabase service client configured', test_query: q.data });
-    } catch (err: any) {
-      return res
-        .status(200)
-        .json({
-          ok: true,
-          message: 'Supabase service client configured but test query failed',
-          error: err?.message || err,
-        });
+    const result = await safeTestSupabaseConnection();
+    if (!result.ok) {
+      logger.warn('Supabase test query failed', { error: result.error });
+      const diagnostics = await runDiagnostics();
+      return res.status(200).json({
+        ok: true,
+        message: 'Supabase service client configured',
+        test_query: null,
+        error: result.error,
+        diagnostics,
+      });
     }
+
+    logger.info('Supabase test successful', {
+      rows: Array.isArray(result.data) ? result.data.length : 0,
+    });
+
+    const diagnostics = await runDiagnostics();
+    return res
+      .status(200)
+      .json({
+        ok: true,
+        message: 'Supabase service client configured',
+        test_query: result.data,
+        diagnostics,
+      });
   } catch (err: any) {
     return res.status(500).json({ ok: false, error: err?.message || err });
   }
