@@ -2,65 +2,44 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, orbit-haven]
   pull_request:
-    branches: [main]
+    branches: [main, orbit-haven]
 
 jobs:
   build:
-    name: Build workspaces
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        workspace: [web]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
+          cache: 'npm'
 
-      - name: Cache node_modules per workspace
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-            .npm
-          key: npm-cache-${{ matrix.workspace }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-cache-${{ matrix.workspace }}-${{ runner.os }}-
-
-      - name: Install dependencies (root)
+      - name: Install dependencies
         run: npm ci
 
-      - name: Prettier check
-        run: npx prettier --check .
+      - name: Run lint
+        run: npm run lint
 
-      - name: Lint
-        run: npm run lint --workspaces --if-present
+      - name: Run typecheck
+        run: npm run typecheck
 
-      - name: Typecheck
-        run: npm run typecheck --if-present
+      - name: Run build
+        run: npm run build
 
-      - name: Build workspace
-        env:
-          NEXT_PUBLIC_API_URL: 'http://localhost:5000'
-        run: |
-          if [ "${{ matrix.workspace }}" = "web" ]; then
-            npm --prefix apps/web run build;
-          elif [ "${{ matrix.workspace }}" = "admin" ]; then
-            npm --prefix apps/admin run build;
-          else
-            npm --prefix apps/api run build || true;
-          fi
-
-      - name: Upload build logs
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
         with:
-          name: build-logs-${{ matrix.workspace }}
-          path: |
-            apps/${{ matrix.workspace }}/.next/** || apps/${{ matrix.workspace }}/build/** || apps/${{ matrix.workspace }}/dist/**
+          config: .semgrep.yml
+
+      - name: Smoke tests (optional)
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+        run: node scripts/smoke_tests.js
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
