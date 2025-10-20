@@ -1,9 +1,11 @@
 // This file is generated from your Supabase schema
 // Do not edit manually — regenerate using scripts/generate-supabase-types.js
 
-export namespace Database {
-  export namespace public {
-    export interface Tables {
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export interface Database {
+  public: {
+    Tables: {
       accounts: {
         Row: {
           id: string;
@@ -33,8 +35,8 @@ export namespace Database {
           created_at: string | null;
           owner_id: string;
         };
-        Insert: Partial<Row>;
-        Update: Partial<Row>;
+        Insert: Partial<Database['public']['Tables']['accounts']['Row']>;
+        Update: Partial<Database['public']['Tables']['accounts']['Row']>;
       };
       kyc_submissions: {
         Row: {
@@ -55,8 +57,8 @@ export namespace Database {
           created_at: string | null;
           reviewed_at: string | null;
         };
-        Insert: Partial<Row>;
-        Update: Partial<Row>;
+        Insert: Partial<Database['public']['Tables']['kyc_submissions']['Row']>;
+        Update: Partial<Database['public']['Tables']['kyc_submissions']['Row']>;
       };
       profiles: {
         Row: {
@@ -84,8 +86,8 @@ export namespace Database {
           updated_at: string | null;
           is_admin: boolean;
         };
-        Insert: Partial<Row>;
-        Update: Partial<Row>;
+        Insert: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Update: Partial<Database['public']['Tables']['profiles']['Row']>;
       };
       transactions: {
         Row: {
@@ -109,9 +111,9 @@ export namespace Database {
           metadata: string | null;
           created_at: string | null;
         };
-        Insert: Partial<Row>;
-        Update: Partial<Row>;
+        Insert: Partial<Database['public']['Tables']['transactions']['Row']>;
+        Update: Partial<Database['public']['Tables']['transactions']['Row']>;
       };
-    }
-  }
+    };
+  };
 }
