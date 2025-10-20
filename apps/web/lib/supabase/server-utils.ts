@@ -17,7 +17,10 @@ export function validateServerEnv() {
 export async function safeTestSupabaseConnection() {
   const supabase = getServerSupabase();
   if (!supabase) {
-    return { ok: false, error: 'Supabase service client not configured (missing service role key?)' } as const;
+    return {
+      ok: false,
+      error: 'Supabase service client not configured (missing service role key?)',
+    } as const;
   }
 
   try {

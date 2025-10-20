@@ -12,10 +12,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const result = await safeTestSupabaseConnection();
     if (!result.ok) {
-      return res.status(200).json({ ok: true, message: 'Supabase service client configured', test_query: null, error: result.error });
+      return res
+        .status(200)
+        .json({
+          ok: true,
+          message: 'Supabase service client configured',
+          test_query: null,
+          error: result.error,
+        });
     }
 
-    return res.status(200).json({ ok: true, message: 'Supabase service client configured', test_query: result.data });
+    return res
+      .status(200)
+      .json({ ok: true, message: 'Supabase service client configured', test_query: result.data });
   } catch (err: any) {
     return res.status(500).json({ ok: false, error: err?.message || err });
   }
