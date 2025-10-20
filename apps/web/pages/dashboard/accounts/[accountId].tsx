@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { GetServerSidePropsContext } from 'next';
-import { serialize } from 'cookie';
+import { createClient } from '@supabase/supabase-js';
 
 // Define types inline instead of importing
 type Account = {
