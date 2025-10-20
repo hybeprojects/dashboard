@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run lightweight secret scan and semgrep if available
+node scripts/check_no_secrets.js || exit 1
+
+# Semgrep if installed (non-fatal)
+if command -v semgrep >/dev/null 2>&1; then
+  semgrep --config .semgrep.yml || exit 1
+fi
