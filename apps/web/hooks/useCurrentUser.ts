@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../state/useAuthStore';
 import { useEffect } from 'react';
+import { useAuthStore } from '../state/useAuthStore';
+import { useQuery } from '@tanstack/react-query';
 import { me } from '../lib/auth';
 
 export default function useCurrentUser() {
