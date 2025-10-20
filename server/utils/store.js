@@ -87,10 +87,19 @@ async function addTransaction(tx) {
 }
 async function listTransactionsForUser(userId) {
   const sb = getSupabase();
+  // Find all account ids owned by this user (support both owner_id and user_id)
+  const { data: accts, error: accErr } = await sb
+    .from('accounts')
+    .select('id')
+    .or(`owner_id.eq.${userId},user_id.eq.${userId}`);
+  if (accErr) throw accErr;
+  const ids = (accts || []).map((a) => a.id);
+  if (!ids.length) return [];
+  const list = ids.join(',');
   const { data, error } = await sb
     .from('transactions')
     .select('*')
-    .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+    .or(`account_id.in.(${list}),sender_account_id.in.(${list}),receiver_account_id.in.(${list})`)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
