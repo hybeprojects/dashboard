@@ -9,6 +9,10 @@ type AccountRow = Database['public']['Tables']['accounts']['Row'];
 type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
 
 export default function TransferPage() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../hooks/useRequireAuth').default;
+  useRequireAuth();
   const qc = useQueryClient();
   const supabase = createClient();
 
