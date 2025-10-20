@@ -9,6 +9,10 @@ type AccountRow = Database['public']['Tables']['accounts']['Row'];
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function AccountDetail() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../../hooks/useRequireAuth').default;
+  useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
   const supabase = createClient();
