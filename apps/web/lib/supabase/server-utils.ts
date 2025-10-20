@@ -224,12 +224,25 @@ export async function fetchInformationSchema(tables: string[]) {
       .order('ordinal_position', { ascending: true })
       .limit(1000);
 
-    if (q.error) {
-      logger.warn('information_schema.columns query failed', q.error.message);
-      return { ok: false, error: q.error.message } as const;
+    if (!q.error && Array.isArray(q.data)) {
+      return { ok: true, columns: q.data } as const;
     }
 
-    return { ok: true, columns: q.data } as const;
+    logger.warn('information_schema.columns query failed or returned no rows', q.error && q.error.message);
+
+    // Fallback: attempt to call a DB RPC that the project can add to expose column metadata
+    try {
+      // RPC function name expected: get_table_columns(table_names text[])
+      const rpcRes = await supabase.rpc('get_table_columns', { table_names: tables });
+      if (!rpcRes.error && Array.isArray(rpcRes.data)) {
+        return { ok: true, columns: rpcRes.data } as const;
+      }
+      logger.warn('RPC get_table_columns failed', rpcRes.error && rpcRes.error.message);
+      return { ok: false, error: q.error ? q.error.message : 'no information_schema rows and rpc failed' } as const;
+    } catch (re: any) {
+      logger.warn('RPC get_table_columns exception', re && (re.message || re));
+      return { ok: false, error: q.error ? q.error.message : re?.message || String(re) } as const;
+    }
   } catch (err: any) {
     logger.error('information_schema.columns exception', err?.message || err);
     return { ok: false, error: err?.message || String(err) } as const;
