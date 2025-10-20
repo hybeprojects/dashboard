@@ -3,11 +3,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const apiBase = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiBase) {
-      return res.status(500).json({ error: 'API base URL not configured' });
-    }
-
-    const target = `${apiBase.replace(/\/$/, '')}/csrf-token`;
+    const fallbackLocal = 'http://localhost:5000';
+    const targets: string[] = [];
+    if (apiBase) targets.push(`${apiBase.replace(/\/$/, '')}/csrf-token`);
+    targets.push(`${fallbackLocal.replace(/\/$/, '')}/csrf-token`);
 
     // Forward incoming cookies to the API so the remote can see the client's session.
     const headers: Record<string, string> = {
@@ -15,10 +14,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
     if (req.headers.cookie) headers.cookie = req.headers.cookie as string;
 
-    const response = await fetch(target, {
-      method: 'GET',
-      headers,
-    });
+    let response: Response | null = null;
+    let lastError: any = null;
+    for (const t of targets) {
+      try {
+        // attempt fetch
+        // eslint-disable-next-line no-await-in-loop
+        const r = await fetch(t, { method: 'GET', headers });
+        // treat 2xx as success; otherwise try next
+        if (r.ok) {
+          response = r;
+          break;
+        }
+        // capture non-ok responses to inspect later (e.g., 404)
+        lastError = { status: r.status, statusText: r.statusText };
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (!response) {
+      // Nothing succeeded
+      console.error('CSRF proxy: all targets failed', lastError);
+      return res.status(502).json({ error: 'Bad gateway' });
+    }
 
     // Forward status
     res.status(response.status);
