@@ -56,14 +56,21 @@ export async function getSchemaInfo() {
 
   try {
     // Prefer catalog query, but fall back to probing known tables if access is not allowed.
-    const catalog = await supabase.from('pg_catalog.pg_tables').select('schemaname, tablename').eq('schemaname', 'public').limit(200);
+    const catalog = await supabase
+      .from('pg_catalog.pg_tables')
+      .select('schemaname, tablename')
+      .eq('schemaname', 'public')
+      .limit(200);
     if (!catalog.error && Array.isArray(catalog.data)) {
       const tables = catalog.data.map((r: any) => r.tablename);
       logger.info('Schema query (pg_catalog) succeeded', { tablesCount: tables.length });
       return { ok: true, tables } as const;
     }
 
-    logger.warn('pg_catalog access unavailable, falling back to probing known tables', catalog.error && catalog.error.message);
+    logger.warn(
+      'pg_catalog access unavailable, falling back to probing known tables',
+      catalog.error && catalog.error.message,
+    );
 
     // Fallback: probe a set of commonly used tables to see if they exist by attempting a lightweight select
     const candidates = ['profiles', 'accounts', 'transactions', 'app_users', 'kyc_submissions'];
@@ -93,7 +100,11 @@ async function getTableInfo(table: string) {
 
   // Check existence and try to infer columns and recent rows
   try {
-    const sample = await supabase.from(table).select('*').limit(1).order('id', { ascending: false });
+    const sample = await supabase
+      .from(table)
+      .select('*')
+      .limit(1)
+      .order('id', { ascending: false });
     if (sample.error) {
       // Table might be empty or not exist; try head query for count
       const head = await supabase.from(table).select('id', { count: 'exact' }).limit(1);
@@ -108,10 +119,18 @@ async function getTableInfo(table: string) {
     // Fetch recent rows (prefer created_at, fallback to id desc)
     let recent: any[] = [];
     try {
-      const recentRes = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(5);
+      const recentRes = await supabase
+        .from(table)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
       if (!recentRes.error && Array.isArray(recentRes.data)) recent = recentRes.data;
       else {
-        const recentRes2 = await supabase.from(table).select('*').order('id', { ascending: false }).limit(5);
+        const recentRes2 = await supabase
+          .from(table)
+          .select('*')
+          .order('id', { ascending: false })
+          .limit(5);
         if (!recentRes2.error && Array.isArray(recentRes2.data)) recent = recentRes2.data;
       }
     } catch (e) {
@@ -141,7 +160,12 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
         results[t] = { ok: false, error: res.error.message };
         continue;
       }
-      const count = typeof (res.count as number) === 'number' ? res.count : Array.isArray(res.data) ? res.data.length : null;
+      const count =
+        typeof (res.count as number) === 'number'
+          ? res.count
+          : Array.isArray(res.data)
+            ? res.data.length
+            : null;
       // also fetch columns and recent rows
       const info = await getTableInfo(t);
       results[t] = { ok: true, count, info };
@@ -157,9 +181,10 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
 export async function runDiagnostics() {
   logger.info('Running full Supabase diagnostics');
   const schema = await getSchemaInfo();
-  const tablesToCheck = (schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0)
-    ? ['profiles', 'accounts', 'transactions'].filter((t) => schema.tables.includes(t))
-    : ['profiles', 'accounts', 'transactions'];
+  const tablesToCheck =
+    schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0
+      ? ['profiles', 'accounts', 'transactions'].filter((t) => schema.tables.includes(t))
+      : ['profiles', 'accounts', 'transactions'];
 
   const counts = await sampleCounts(tablesToCheck);
 
