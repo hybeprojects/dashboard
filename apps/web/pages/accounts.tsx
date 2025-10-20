@@ -7,6 +7,10 @@ import type { Database } from '../lib/supabase/types.gen';
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
 
 export default function AccountsPage() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../hooks/useRequireAuth').default;
+  useRequireAuth();
   const supabase = createClient();
   const { data: accounts = [], isLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
