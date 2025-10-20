@@ -7,6 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const env = validateServerEnv();
     if (!env.ok) {
+      logger.error('Missing Supabase environment variables', { missing: env.missing });
       return res
         .status(500)
         .json({ ok: false, error: 'Missing server environment variables', missing: env.missing });
@@ -14,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const result = await safeTestSupabaseConnection();
     if (!result.ok) {
+      logger.warn('Supabase test query failed', { error: result.error });
       return res
         .status(200)
         .json({
@@ -24,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
 
+    logger.info('Supabase test successful', { rows: Array.isArray(result.data) ? result.data.length : 0 });
     return res
       .status(200)
       .json({ ok: true, message: 'Supabase service client configured', test_query: result.data });
