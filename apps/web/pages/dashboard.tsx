@@ -5,6 +5,10 @@ import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
 import { createClient } from '../lib/supabase/client';
+import type { Database } from '../lib/supabase/types.gen';
+
+type AccountRow = Database['public']['Tables']['accounts']['Row'];
+type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {
   return (
@@ -71,36 +75,27 @@ export default function Dashboard() {
     };
   }, [router, setUser, supabase]);
 
-  const { data: accounts = [], isLoading: accLoading } = useQuery({
+  const { data: accounts = [], isLoading: accLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccountRow[]> => {
       const { data } = await supabase.from('accounts').select('*');
-      return data;
+      return data ?? [];
     },
     staleTime: 30_000,
   });
-  const { data: transactions = [], isLoading: txLoading } = useQuery({
+  const { data: transactions = [], isLoading: txLoading } = useQuery<TransactionRow[]>({
     queryKey: ['transactions'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('transactions')
-        .select(
-          `
-          *,
-          accounts!sender_account_id(name),
-          receiver_account:accounts!receiver_account_id(name)
-        `,
-        )
-        .order('created_at', { ascending: false });
-      return data;
+    queryFn: async (): Promise<TransactionRow[]> => {
+      const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+      return data ?? [];
     },
     staleTime: 15_000,
   });
-  const { data: notifications = [], isLoading: notifLoading } = useQuery({
+  const { data: notifications = [], isLoading: notifLoading } = useQuery<unknown[]>({
     queryKey: ['notifications'],
-    queryFn: async () => {
-      const { data } = await supabase.from('notifications').select('*');
-      return data;
+    queryFn: async (): Promise<unknown[]> => {
+      const { data } = await (supabase as any).from('notifications').select('*');
+      return (data as unknown[]) ?? [];
     },
     staleTime: 15_000,
   });
