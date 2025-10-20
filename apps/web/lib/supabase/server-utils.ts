@@ -27,7 +27,10 @@ export async function safeTestSupabaseConnection() {
   const supabase = getServerSupabase();
   if (!supabase) {
     logger.error('getServerSupabase returned null');
-    return { ok: false, error: 'Supabase service client not configured (missing service role key?)' } as const;
+    return {
+      ok: false,
+      error: 'Supabase service client not configured (missing service role key?)',
+    } as const;
   }
 
   try {
