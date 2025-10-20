@@ -22,7 +22,11 @@ serve(async (req: Request) => {
     });
 
     const body = await req.json();
-    const { fromAccountId, toAccountId, amount } = body;
+    const fromAccountId =
+      body.fromAccountId ?? body.from_account_id ?? body.fromId ?? body.sender_account_id;
+    const toAccountId =
+      body.toAccountId ?? body.to_account_id ?? body.toId ?? body.receiver_account_id;
+    const amount = body.amount;
 
     // Validation
     const MAX_TRANSFER_AMOUNT = 10000;
@@ -46,7 +50,7 @@ serve(async (req: Request) => {
     const { data: todays, error: tErr } = await supabase
       .from('transfers')
       .select('amount')
-      .eq('actor_id', userId)
+      .eq('sender_user_id', userId)
       .gte('created_at', startOfDay.toISOString());
     if (tErr)
       return new Response(JSON.stringify({ error: 'Failed to check transfer history' }), {
@@ -75,13 +79,13 @@ serve(async (req: Request) => {
     // Create transfer record (the DB should have RLS/triggers to perform balance updates atomically)
     const insertPayload = {
       id: crypto.randomUUID(),
-      from_account_id: fromAccountId,
-      to_account_id: toAccountId,
+      sender_user_id: userId,
+      sender_account_id: fromAccountId,
+      receiver_account_id: toAccountId ?? null,
       amount: amt,
-      currency: 'USD',
-      actor_id: userId,
       status: 'pending',
-      created_at: new Date().toISOString(),
+      transaction_reference: `TRF-${Date.now()}`,
+      description: body.description || null,
     } as any;
 
     const { data: ins, error: insErr } = await supabase

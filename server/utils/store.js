@@ -87,13 +87,44 @@ async function addTransaction(tx) {
 }
 async function listTransactionsForUser(userId) {
   const sb = getSupabase();
-  const { data, error } = await sb
-    .from('transactions')
-    .select('*')
-    .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+  // Find all account ids owned by this user (support both owner_id and user_id)
+  const { data: accts, error: accErr } = await sb
+    .from('accounts')
+    .select('id')
+    .or(`owner_id.eq.${userId},user_id.eq.${userId}`);
+  if (accErr) throw accErr;
+  const ids = (accts || []).map((a) => a.id);
+  if (!ids.length) return [];
+
+  // Perform three parallel queries for each relevant column and merge results to avoid complex or() filter formatting
+  const [q1, q2, q3] = await Promise.all([
+    sb.from('transactions').select('*').in('account_id', ids),
+    sb.from('transactions').select('*').in('sender_account_id', ids),
+    sb.from('transactions').select('*').in('receiver_account_id', ids),
+  ]);
+
+  const results = [];
+  const errors = [q1.error, q2.error, q3.error].filter(Boolean);
+  if (errors.length) throw errors[0];
+
+  if (Array.isArray(q1.data)) results.push(...q1.data);
+  if (Array.isArray(q2.data)) results.push(...q2.data);
+  if (Array.isArray(q3.data)) results.push(...q3.data);
+
+  // Deduplicate by transaction id
+  const map = new Map();
+  for (const r of results) {
+    if (!r || !r.id) continue;
+    map.set(r.id, r);
+  }
+  const merged = Array.from(map.values());
+  // Sort by created_at descending if available
+  merged.sort((a, b) => {
+    const ta = a?.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b?.created_at ? new Date(b.created_at).getTime() : 0;
+    return tb - ta;
+  });
+  return merged;
 }
 async function updateTransactionById(id, patch) {
   const sb = getSupabase();
