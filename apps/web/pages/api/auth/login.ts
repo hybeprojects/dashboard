@@ -25,11 +25,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const token = data?.session?.access_token || '';
     const expiresAt = data?.session?.expires_at || null;
-    const maxAge = typeof expiresAt === 'number' ? Math.max(0, expiresAt - Math.floor(Date.now() / 1000)) : undefined;
+    const maxAge =
+      typeof expiresAt === 'number'
+        ? Math.max(0, expiresAt - Math.floor(Date.now() / 1000))
+        : undefined;
     // Use cookie serialize
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const cookie = require('cookie');
-    const cookieOpts: any = { path: '/', httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
+    const cookieOpts: any = {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    };
     if (typeof maxAge === 'number') cookieOpts.maxAge = maxAge;
     const cookieStr = cookie.serialize('sb-access-token', String(token), cookieOpts);
     res.setHeader('Set-Cookie', cookieStr);
