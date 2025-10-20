@@ -1,104 +1,117 @@
-import type { Accounts, Cards, KycDocuments, KycSubmissions, LargeTransactionDocs, LimitTiersConfig, LimitUpgradeRequests, Profiles, ProfilesPublic, Transactions, Transfers, UUID, Timestamp } from '../db-types';
+// This file is generated from your Supabase schema
+// Do not edit manually — regenerate using scripts/generate-supabase-types.js
 
-// Standard Supabase JSON type
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
-
-export type TablesInsert<T> = Partial<T>;
-export type TablesUpdate<T> = Partial<T>;
-
-export interface Database {
-  public: {
-    Tables: {
-      profiles: {
-        Row: Profiles;
-        Insert: TablesInsert<Profiles>;
-        Update: TablesUpdate<Profiles>;
-        Relationships: [];
-      };
-      profiles_public: {
-        Row: ProfilesPublic;
-        Insert: TablesInsert<ProfilesPublic>;
-        Update: TablesUpdate<ProfilesPublic>;
-        Relationships: [];
-      };
+export namespace Database {
+  export namespace public {
+    export interface Tables {
       accounts: {
-        Row: Accounts;
-        Insert: TablesInsert<Accounts>;
-        Update: TablesUpdate<Accounts>;
-        Relationships: [];
-      };
-      cards: {
-        Row: Cards;
-        Insert: TablesInsert<Cards>;
-        Update: TablesUpdate<Cards>;
-        Relationships: [];
-      };
-      transactions: {
-        Row: Transactions;
-        Insert: TablesInsert<Transactions>;
-        Update: TablesUpdate<Transactions>;
-        Relationships: [];
-      };
-      transfers: {
-        Row: Transfers;
-        Insert: TablesInsert<Transfers>;
-        Update: TablesUpdate<Transfers>;
-        Relationships: [];
-      };
-      kyc_documents: {
-        Row: KycDocuments;
-        Insert: TablesInsert<KycDocuments>;
-        Update: TablesUpdate<KycDocuments>;
-        Relationships: [];
+        Row: {
+          id: string;
+          user_id: string;
+          account_number: string;
+          routing_number: string | null;
+          type: any;
+          name: string;
+          balance: number;
+          available_balance: number;
+          currency: string | null;
+          status: string | null;
+          interest_rate: number | null;
+          overdraft_limit: number | null;
+          opened_at: string | null;
+          closed_at: string | null;
+          transfer_limit_tier: any | null;
+          daily_transfer_limit: number | null;
+          monthly_transfer_limit: number | null;
+          used_daily_limit: number | null;
+          used_monthly_limit: number | null;
+          limit_reset_date: string | null;
+          credit_limit: number | null;
+          outstanding_balance: number | null;
+          minimum_payment: number | null;
+          payment_due_date: string | null;
+          created_at: string | null;
+          owner_id: string;
+        };
+        Insert: Partial<Row>;
+        Update: Partial<Row>;
       };
       kyc_submissions: {
-        Row: KycSubmissions;
-        Insert: TablesInsert<KycSubmissions>;
-        Update: TablesUpdate<KycSubmissions>;
-        Relationships: [];
+        Row: {
+          id: string;
+          submission_id: string;
+          user_id: string | null;
+          email: string | null;
+          full_name: string;
+          dob: string | null;
+          ssn_last4: string | null;
+          address: string | null;
+          open_savings: boolean | null;
+          id_front_path: string | null;
+          id_back_path: string | null;
+          proof_path: string | null;
+          status: string | null;
+          review_note: string | null;
+          created_at: string | null;
+          reviewed_at: string | null;
+        };
+        Insert: Partial<Row>;
+        Update: Partial<Row>;
       };
-      limit_tiers_config: {
-        Row: LimitTiersConfig;
-        Insert: TablesInsert<LimitTiersConfig>;
-        Update: TablesUpdate<LimitTiersConfig>;
-        Relationships: [];
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          first_name: string;
+          last_name: string;
+          phone: string | null;
+          date_of_birth: string | null;
+          user_type: any;
+          address_line1: string | null;
+          address_line2: string | null;
+          city: string | null;
+          state: string | null;
+          zip_code: string | null;
+          country: string | null;
+          ssn_encrypted: string | null;
+          kyc_status: any | null;
+          kyc_verified_at: string | null;
+          risk_level: string | null;
+          business_name: string | null;
+          business_tax_id: string | null;
+          business_type: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          is_admin: boolean;
+        };
+        Insert: Partial<Row>;
+        Update: Partial<Row>;
       };
-      limit_upgrade_requests: {
-        Row: LimitUpgradeRequests;
-        Insert: TablesInsert<LimitUpgradeRequests>;
-        Update: TablesUpdate<LimitUpgradeRequests>;
-        Relationships: [];
+      transactions: {
+        Row: {
+          id: string;
+          account_id: string;
+          card_id: string | null;
+          amount: number;
+          type: any;
+          status: any | null;
+          description: string;
+          merchant_name: string | null;
+          merchant_category: string | null;
+          reference: string | null;
+          authorization_code: string | null;
+          sender_account_id: string | null;
+          receiver_account_id: string | null;
+          receiver_name: string | null;
+          receiver_email: string | null;
+          running_balance: number;
+          location: string | null;
+          metadata: string | null;
+          created_at: string | null;
+        };
+        Insert: Partial<Row>;
+        Update: Partial<Row>;
       };
-      large_transaction_docs: {
-        Row: LargeTransactionDocs;
-        Insert: TablesInsert<LargeTransactionDocs>;
-        Update: TablesUpdate<LargeTransactionDocs>;
-        Relationships: [];
-      };
-    };
-    Views: {};
-    Functions: {};
-    Enums: {
-      // enums used across tables
-      user_type: Profiles['user_type'];
-      account_type: Accounts['type'];
-      transaction_type: Transactions['type'];
-      transaction_status: NonNullable<Transactions['status']>;
-      transfer_status: NonNullable<Transfers['status']>;
-      kyc_status: NonNullable<Profiles['kyc_status']>;
-      limit_tier: NonNullable<Accounts['transfer_limit_tier']>;
-    };
-    CompositeTypes: {};
-  };
+    }
+  }
 }
-
-// Helper utility types similar to supabase typegen
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type TablesInsertType<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
-export type TablesUpdateType<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
