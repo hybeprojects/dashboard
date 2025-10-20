@@ -1,6 +1,7 @@
 import getServerSupabase from '../_serverSupabase';
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
+import getServerSupabase from '../_serverSupabase';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
