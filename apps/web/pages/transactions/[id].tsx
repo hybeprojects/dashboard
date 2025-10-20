@@ -1,4 +1,3 @@
-import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +8,10 @@ import type { Database } from '../../lib/supabase/types.gen';
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function TransactionDetail() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../../hooks/useRequireAuth').default;
+  useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
   const supabase = createClient();
@@ -56,4 +59,23 @@ export default function TransactionDetail() {
       </Card>
     </div>
   );
+}
+
+// Server-side auth guard
+export async function getServerSideProps(context: any) {
+  const cookiesHeader = context.req.headers.cookie || '';
+  const cookie = require('cookie');
+  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
+  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: {} };
 }
