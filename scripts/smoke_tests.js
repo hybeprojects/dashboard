@@ -39,7 +39,13 @@ async function main() {
     const signup = await fetch(`${base}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName: 'Smoke', lastName: 'Test', userType: 'personal' }),
+      body: JSON.stringify({
+        email,
+        password,
+        firstName: 'Smoke',
+        lastName: 'Test',
+        userType: 'personal',
+      }),
     });
     const signupBody = await signup.json();
     console.log('Signup response', signup.status, signupBody?.message || signupBody?.error || 'ok');
@@ -49,7 +55,9 @@ async function main() {
     console.error('Signup/login test failed', e && e.message);
   }
 
-  console.log('Testing transfer RPC (requires accounts rows and process_transfer_with_limits function)');
+  console.log(
+    'Testing transfer RPC (requires accounts rows and process_transfer_with_limits function)',
+  );
   try {
     // Attempt to call RPC with service role to validate signature
     const rpc = await supabase.rpc('process_transfer_with_limits', {

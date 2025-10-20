@@ -15,7 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const cookie = require('cookie');
     const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
-    const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+    const token =
+      cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
 
     if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
