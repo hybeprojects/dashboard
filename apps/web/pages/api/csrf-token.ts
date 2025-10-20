@@ -1,4 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+
+function buildCookie(token: string) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const parts = [`XSRF-TOKEN=${token}`, 'Path=/', 'Max-Age=3600', 'SameSite=Lax'];
+  if (isProd) parts.push('Secure');
+  // httpOnly must be false for double-submit cookie pattern (readable by JS)
+  // Don't set HttpOnly
+  return parts.join('; ');
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -83,6 +93,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.send(body);
   } catch (err: any) {
     console.error('Error proxying CSRF token:', err?.message || err);
-    res.status(502).json({ error: 'Bad gateway' });
+    // As a last resort, issue a local token so the frontend can continue in dev
+    try {
+      const token = crypto.randomBytes(24).toString('hex');
+      res.setHeader('Set-Cookie', buildCookie(token));
+      return res.status(200).json({ csrfToken: token, fallback: true, error: String(err) });
+    } catch (e) {
+      res.status(502).json({ error: 'Bad gateway' });
+    }
   }
 }
