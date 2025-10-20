@@ -7,6 +7,12 @@ const fallbackMemory: any[] = [];
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const supabaseService = getServerSupabase();
 
+  // Validate token server-side using helper
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getUserFromRequest } = require('../../lib/serverAuth');
+  const user = await getUserFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
   // Parse cookies for user session token (double-check multiple cookie names)
   const cookieHeader = (req.headers.cookie as string) || '';
   const cookie = require('cookie');
