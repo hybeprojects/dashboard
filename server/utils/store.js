@@ -95,14 +95,36 @@ async function listTransactionsForUser(userId) {
   if (accErr) throw accErr;
   const ids = (accts || []).map((a) => a.id);
   if (!ids.length) return [];
-  const list = ids.join(',');
-  const { data, error } = await sb
-    .from('transactions')
-    .select('*')
-    .or(`account_id.in.(${list}),sender_account_id.in.(${list}),receiver_account_id.in.(${list})`)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+
+  // Perform three parallel queries for each relevant column and merge results to avoid complex or() filter formatting
+  const [q1, q2, q3] = await Promise.all([
+    sb.from('transactions').select('*').in('account_id', ids),
+    sb.from('transactions').select('*').in('sender_account_id', ids),
+    sb.from('transactions').select('*').in('receiver_account_id', ids),
+  ]);
+
+  const results = [];
+  const errors = [q1.error, q2.error, q3.error].filter(Boolean);
+  if (errors.length) throw errors[0];
+
+  if (Array.isArray(q1.data)) results.push(...q1.data);
+  if (Array.isArray(q2.data)) results.push(...q2.data);
+  if (Array.isArray(q3.data)) results.push(...q3.data);
+
+  // Deduplicate by transaction id
+  const map = new Map();
+  for (const r of results) {
+    if (!r || !r.id) continue;
+    map.set(r.id, r);
+  }
+  const merged = Array.from(map.values());
+  // Sort by created_at descending if available
+  merged.sort((a, b) => {
+    const ta = a?.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b?.created_at ? new Date(b.created_at).getTime() : 0;
+    return tb - ta;
+  });
+  return merged;
 }
 async function updateTransactionById(id, patch) {
   const sb = getSupabase();
