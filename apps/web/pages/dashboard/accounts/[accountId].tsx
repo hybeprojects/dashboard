@@ -1,6 +1,6 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+// Supabase client will be required dynamically inside server-side props to avoid module name collisions
 import { GetServerSidePropsContext } from 'next';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+// Supabase client will be required dynamically inside server-side props to avoid module name collisions
 
 // Define types inline instead of importing
 type Account = {
