@@ -267,7 +267,7 @@ export default function Dashboard() {
                   <div key={i} className="flex items-center justify-between px-4 py-3">
                     <div>
                       <div className="text-sm text-gray-500">
-                        {acct?.name || acct?.accountName || `Account ${i + 1}`} 
+                        {acct?.name || acct?.accountName || `Account ${i + 1}`}
                         {acct?.number ? `- ${String(acct.number).slice(-4)}` : ''}
                       </div>
                       <div className="text-2xl font-bold">
