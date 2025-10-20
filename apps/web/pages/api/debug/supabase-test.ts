@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { validateServerEnv, safeTestSupabaseConnection } from '../../../lib/supabase/server-utils';
+import { logger } from '../../../lib/logger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
