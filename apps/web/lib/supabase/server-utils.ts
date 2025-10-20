@@ -98,15 +98,56 @@ async function getTableInfo(table: string) {
   const supabase = getServerSupabase();
   if (!supabase) return { exists: false } as const;
 
-  // Check existence and try to infer columns and recent rows
   try {
-    const sample = await supabase
-      .from(table)
-      .select('*')
-      .limit(1)
-      .order('id', { ascending: false });
+    // Try information_schema first for column metadata
+    try {
+      const cols = await supabase
+        .from('information_schema.columns')
+        .select('column_name,data_type,is_nullable,column_default,ordinal_position')
+        .eq('table_schema', 'public')
+        .eq('table_name', table)
+        .order('ordinal_position', { ascending: true })
+        .limit(200);
+
+      if (!cols.error && Array.isArray(cols.data) && cols.data.length) {
+        const columns = cols.data.map((c: any) => ({
+          name: c.column_name,
+          data_type: c.data_type,
+          is_nullable: c.is_nullable,
+          default: c.column_default,
+          position: c.ordinal_position,
+        }));
+
+        // get count and recent rows
+        let count: number | null = null;
+        try {
+          const head = await supabase.from(table).select('id', { count: 'exact' }).limit(1);
+          if (!head.error) count = typeof (head.count as number) === 'number' ? head.count : (Array.isArray(head.data) ? head.data.length : null);
+        } catch (e) {
+          // ignore
+        }
+
+        let recent: any[] = [];
+        try {
+          const recentRes = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(5);
+          if (!recentRes.error && Array.isArray(recentRes.data)) recent = recentRes.data;
+          else {
+            const recentRes2 = await supabase.from(table).select('*').order('id', { ascending: false }).limit(5);
+            if (!recentRes2.error && Array.isArray(recentRes2.data)) recent = recentRes2.data;
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        return { exists: true, columns, count, recent } as const;
+      }
+    } catch (e) {
+      // ignore information_schema errors and fallback
+    }
+
+    // Fallback: infer via select *
+    const sample = await supabase.from(table).select('*').limit(1).order('id', { ascending: false });
     if (sample.error) {
-      // Table might be empty or not exist; try head query for count
       const head = await supabase.from(table).select('id', { count: 'exact' }).limit(1);
       if (head.error) return { exists: false, error: head.error.message } as const;
       const count = typeof (head.count as number) === 'number' ? head.count : null;
@@ -114,23 +155,14 @@ async function getTableInfo(table: string) {
     }
 
     const row = Array.isArray(sample.data) && sample.data.length ? sample.data[0] : null;
-    const columns = row ? Object.keys(row) : null;
+    const columns = row ? Object.keys(row).map((n) => ({ name: n })) : null;
 
-    // Fetch recent rows (prefer created_at, fallback to id desc)
     let recent: any[] = [];
     try {
-      const recentRes = await supabase
-        .from(table)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const recentRes = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(5);
       if (!recentRes.error && Array.isArray(recentRes.data)) recent = recentRes.data;
       else {
-        const recentRes2 = await supabase
-          .from(table)
-          .select('*')
-          .order('id', { ascending: false })
-          .limit(5);
+        const recentRes2 = await supabase.from(table).select('*').order('id', { ascending: false }).limit(5);
         if (!recentRes2.error && Array.isArray(recentRes2.data)) recent = recentRes2.data;
       }
     } catch (e) {
