@@ -122,17 +122,31 @@ async function getTableInfo(table: string) {
         let count: number | null = null;
         try {
           const head = await supabase.from(table).select('id', { count: 'exact' }).limit(1);
-          if (!head.error) count = typeof (head.count as number) === 'number' ? head.count : (Array.isArray(head.data) ? head.data.length : null);
+          if (!head.error)
+            count =
+              typeof (head.count as number) === 'number'
+                ? head.count
+                : Array.isArray(head.data)
+                  ? head.data.length
+                  : null;
         } catch (e) {
           // ignore
         }
 
         let recent: any[] = [];
         try {
-          const recentRes = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(5);
+          const recentRes = await supabase
+            .from(table)
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
           if (!recentRes.error && Array.isArray(recentRes.data)) recent = recentRes.data;
           else {
-            const recentRes2 = await supabase.from(table).select('*').order('id', { ascending: false }).limit(5);
+            const recentRes2 = await supabase
+              .from(table)
+              .select('*')
+              .order('id', { ascending: false })
+              .limit(5);
             if (!recentRes2.error && Array.isArray(recentRes2.data)) recent = recentRes2.data;
           }
         } catch (e) {
@@ -146,7 +160,11 @@ async function getTableInfo(table: string) {
     }
 
     // Fallback: infer via select *
-    const sample = await supabase.from(table).select('*').limit(1).order('id', { ascending: false });
+    const sample = await supabase
+      .from(table)
+      .select('*')
+      .limit(1)
+      .order('id', { ascending: false });
     if (sample.error) {
       const head = await supabase.from(table).select('id', { count: 'exact' }).limit(1);
       if (head.error) return { exists: false, error: head.error.message } as const;
@@ -159,10 +177,18 @@ async function getTableInfo(table: string) {
 
     let recent: any[] = [];
     try {
-      const recentRes = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(5);
+      const recentRes = await supabase
+        .from(table)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
       if (!recentRes.error && Array.isArray(recentRes.data)) recent = recentRes.data;
       else {
-        const recentRes2 = await supabase.from(table).select('*').order('id', { ascending: false }).limit(5);
+        const recentRes2 = await supabase
+          .from(table)
+          .select('*')
+          .order('id', { ascending: false })
+          .limit(5);
         if (!recentRes2.error && Array.isArray(recentRes2.data)) recent = recentRes2.data;
       }
     } catch (e) {
@@ -228,7 +254,10 @@ export async function fetchInformationSchema(tables: string[]) {
       return { ok: true, columns: q.data } as const;
     }
 
-    logger.warn('information_schema.columns query failed or returned no rows', q.error && q.error.message);
+    logger.warn(
+      'information_schema.columns query failed or returned no rows',
+      q.error && q.error.message,
+    );
 
     // Fallback: attempt to call a DB RPC that the project can add to expose column metadata
     try {
@@ -238,7 +267,10 @@ export async function fetchInformationSchema(tables: string[]) {
         return { ok: true, columns: rpcRes.data } as const;
       }
       logger.warn('RPC get_table_columns failed', rpcRes.error && rpcRes.error.message);
-      return { ok: false, error: q.error ? q.error.message : 'no information_schema rows and rpc failed' } as const;
+      return {
+        ok: false,
+        error: q.error ? q.error.message : 'no information_schema rows and rpc failed',
+      } as const;
     } catch (re: any) {
       logger.warn('RPC get_table_columns exception', re && (re.message || re));
       return { ok: false, error: q.error ? q.error.message : re?.message || String(re) } as const;
