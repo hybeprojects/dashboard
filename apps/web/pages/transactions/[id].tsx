@@ -8,6 +8,10 @@ import type { Database } from '../../lib/supabase/types.gen';
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function TransactionDetail() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../../hooks/useRequireAuth').default;
+  useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
   const supabase = createClient();
