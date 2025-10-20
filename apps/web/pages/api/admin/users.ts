@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
     // Validate token and get user
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token ? { accessToken: token } : undefined);
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token as string);
     if (userErr || !userData?.user) return res.status(401).json({ error: 'Invalid token' });
 
     const userId = userData.user.id;
