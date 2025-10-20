@@ -5,34 +5,54 @@ import api from '../../lib/api';
 const fallbackMemory: any[] = [];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const supabase = getServerSupabase();
+  const supabaseService = getServerSupabase();
+
+  // Validate token server-side using helper
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getUserFromRequest } = require('../../lib/serverAuth');
+  const user = await getUserFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
+  // Parse cookies for user session token (double-check multiple cookie names)
+  const cookieHeader = (req.headers.cookie as string) || '';
+  const cookie = require('cookie');
+  const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
+  const token =
+    cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'] || null;
+
+  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+
+  // Create a user-scoped Supabase client using the anon key but with Authorization header
+  const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  if (!anonUrl || !anonKey)
+    return res.status(500).json({ error: 'Supabase anon key not configured' });
+
+  // Import createClient lazily to avoid pulling into client bundles
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createClient } = require('@supabase/supabase-js');
+  const userClient = createClient(anonUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
 
   if (req.method === 'GET') {
-    if (supabase) {
-      const { data, error } = await supabase
+    try {
+      const { data, error } = await userClient
         .from('transactions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data || []);
+    } catch (e: any) {
+      return res.status(500).json({ error: e?.message || 'Unknown error' });
     }
-    // fallback: try backend API
-    try {
-      const r = await api.get('/transactions');
-      if (r?.data) return res.status(200).json(r.data);
-    } catch (e) {
-      // ignore
-    }
-    return res.status(200).json(fallbackMemory);
   }
 
   if (req.method === 'POST') {
     const body = req.body;
-    // Basic validation
     if (!body || !body.amount) return res.status(400).json({ error: 'Missing amount' });
 
-    // Normalize possible field names to new schema
     const sender =
       body.sender_account_id ?? body.fromAccountId ?? body.from_account_id ?? body.account_id;
     const receiver =
@@ -47,81 +67,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
-    // If server supabase available try to perform transfer RPC or insert a transaction
-    if (supabase) {
-      try {
-        // Require a sender account id for a valid transaction row
-        const accountId = sender || body.account_id;
-        if (!accountId)
-          return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
-
-        // Fetch current balance to compute running_balance (required by schema)
-        const { data: fromAcc, error: accErr } = await supabase
-          .from('accounts')
-          .select('id,balance')
-          .eq('id', accountId)
-          .maybeSingle();
-        if (accErr) return res.status(500).json({ error: accErr.message });
-        if (!fromAcc) return res.status(404).json({ error: 'Sender account not found' });
-
-        const newBalance = Number(fromAcc.balance || 0) - amount;
-
-        // Prefer using DB RPC that enforces limits and performs atomic balance updates
-        try {
-          const rpcRes = await supabase.rpc('process_transfer_with_limits', {
-            from_account_id: accountId,
-            to_account_id: receiver || null,
-            amount: amount,
-          });
-          if (rpcRes.error) {
-            // If RPC fails because not found or permission denied, fall back to insert
-            // but surface message to client
-            // eslint-disable-next-line no-console
-            console.warn('RPC process_transfer_with_limits failed', rpcRes.error.message);
-          } else if (rpcRes.data) {
-            return res.status(200).json(rpcRes.data);
-          }
-        } catch (e) {
-          // ignore and fall through to insert
-        }
-
-        const insertPayload: any = {
-          account_id: accountId,
-          sender_account_id: accountId,
-          receiver_account_id: receiver || null,
-          receiver_email: receiverEmail,
-          receiver_name: receiverName,
-          amount: amount,
-          type: 'transfer',
-          status: 'completed',
-          description: body.description || `Transfer from ${accountId} to ${receiver ?? ''}`.trim(),
-          reference: body.reference || `TRF-${Date.now()}`,
-          running_balance: newBalance,
-        };
-
-        const { data: inserted, error: insertError } = await supabase
-          .from('transactions')
-          .insert([insertPayload]);
-        if (insertError) return res.status(500).json({ error: insertError.message });
-
-        return res.status(200).json(inserted?.[0] ?? { success: true });
-      } catch (err: any) {
-        return res.status(500).json({ error: err?.message || 'Unknown error' });
-      }
-    }
-
-    // Fallback: try backend API
     try {
-      const r = await api.post('/transactions', body);
-      if (r?.data) return res.status(200).json(r.data);
-    } catch (e) {
-      // ignore
-    }
+      const accountId = sender || body.account_id;
+      if (!accountId)
+        return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
 
-    // Final fallback: store in memory (simulated)
-    const tx = { id: `sim_${Date.now()}`, created_at: new Date().toISOString(), ...body };
-    fallbackMemory.unshift(tx);
-    return res.status(200).json(tx);
+      // Fetch current balance under the user's credentials (RLS should enforce ownership)
+      const { data: fromAcc, error: accErr } = await userClient
+        .from('accounts')
+        .select('id,balance')
+        .eq('id', accountId)
+        .maybeSingle();
+      if (accErr) return res.status(500).json({ error: accErr.message });
+      if (!fromAcc)
+        return res.status(404).json({ error: 'Sender account not found or not authorized' });
+
+      if (Number(fromAcc.balance) < amount)
+        return res.status(400).json({ error: 'Insufficient funds' });
+
+      const newBalance = Number(fromAcc.balance || 0) - amount;
+
+      const insertPayload: any = {
+        account_id: accountId,
+        sender_account_id: accountId,
+        receiver_account_id: receiver || null,
+        receiver_email: receiverEmail,
+        receiver_name: receiverName,
+        amount: amount,
+        type: 'transfer',
+        status: 'completed',
+        description: body.description || `Transfer from ${accountId} to ${receiver ?? ''}`.trim(),
+        reference: body.reference || `TRF-${Date.now()}`,
+        running_balance: newBalance,
+      };
+
+      // Insert under user client so RLS and policies apply
+      const { data: inserted, error: insertError } = await userClient
+        .from('transactions')
+        .insert([insertPayload]);
+      if (insertError) return res.status(500).json({ error: insertError.message });
+
+      return res.status(200).json(inserted?.[0] ?? { success: true });
+    } catch (err: any) {
+      return res.status(500).json({ error: err?.message || 'Unknown error' });
+    }
   }
 
   res.setHeader('Allow', ['GET', 'POST']);

@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
+import React, { useState } from 'react';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
 type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
 
 export default function TransferPage() {
+  // client-side guard
+  // eslint-disable-next-line global-require
+  const useRequireAuth = require('../hooks/useRequireAuth').default;
+  useRequireAuth();
   const qc = useQueryClient();
   const supabase = createClient();
 
@@ -135,4 +139,23 @@ export default function TransferPage() {
       </Card>
     </div>
   );
+}
+
+// Server-side auth guard
+export async function getServerSideProps(context: any) {
+  const cookiesHeader = context.req.headers.cookie || '';
+  const cookie = require('cookie');
+  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
+  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: {} };
 }

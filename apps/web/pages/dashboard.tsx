@@ -267,7 +267,7 @@ export default function Dashboard() {
                   <div key={i} className="flex items-center justify-between px-4 py-3">
                     <div>
                       <div className="text-sm text-gray-500">
-                        {acct?.name || acct?.accountName || `Account ${i + 1}`}{' '}
+                        {acct?.name || acct?.accountName || `Account ${i + 1}`}
                         {acct?.number ? `- ${String(acct.number).slice(-4)}` : ''}
                       </div>
                       <div className="text-2xl font-bold">
@@ -337,4 +337,27 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+// server-side auth guard to protect the dashboard route
+export async function getServerSideProps(context: any) {
+  // parse cookies for Supabase session tokens
+  const cookiesHeader = context.req.headers.cookie || '';
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const cookie = require('cookie');
+  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
+  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 }
