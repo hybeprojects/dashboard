@@ -295,8 +295,8 @@ export async function runDiagnostics() {
   if (schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0) {
     try {
       information_schema = await fetchInformationSchema(schema.tables);
-    } catch (e) {
-      logger.warn('Failed to fetch information_schema', e && (e.message || e));
+    } catch (e: any) {
+      logger.warn('Failed to fetch information_schema', e && (e.message || String(e)));
     }
   }
 
