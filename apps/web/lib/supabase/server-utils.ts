@@ -210,6 +210,32 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
   return { ok: true, results } as const;
 }
 
+export async function fetchInformationSchema(tables: string[]) {
+  const supabase = getServerSupabase();
+  if (!supabase) return { ok: false, error: 'Supabase service client not configured' } as const;
+
+  try {
+    const q = await supabase
+      .from('information_schema.columns')
+      .select('table_name,column_name,data_type,is_nullable,column_default,ordinal_position')
+      .eq('table_schema', 'public')
+      .in('table_name', tables)
+      .order('table_name', { ascending: true })
+      .order('ordinal_position', { ascending: true })
+      .limit(1000);
+
+    if (q.error) {
+      logger.warn('information_schema.columns query failed', q.error.message);
+      return { ok: false, error: q.error.message } as const;
+    }
+
+    return { ok: true, columns: q.data } as const;
+  } catch (err: any) {
+    logger.error('information_schema.columns exception', err?.message || err);
+    return { ok: false, error: err?.message || String(err) } as const;
+  }
+}
+
 export async function runDiagnostics() {
   logger.info('Running full Supabase diagnostics');
   const schema = await getSchemaInfo();
@@ -220,5 +246,14 @@ export async function runDiagnostics() {
 
   const counts = await sampleCounts(tablesToCheck);
 
-  return { ok: true, schema, counts } as const;
+  let information_schema: any = { ok: false, error: 'not attempted' };
+  if (schema.ok && Array.isArray(schema.tables) && schema.tables.length > 0) {
+    try {
+      information_schema = await fetchInformationSchema(schema.tables);
+    } catch (e) {
+      logger.warn('Failed to fetch information_schema', e && (e.message || e));
+    }
+  }
+
+  return { ok: true, schema, counts, information_schema } as const;
 }
