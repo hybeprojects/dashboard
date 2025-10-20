@@ -4,21 +4,24 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/ui/Card';
 import { createClient } from '../../lib/supabase/client';
+import type { Database } from '../../lib/supabase/types.gen';
+
+type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function TransactionDetail() {
   const router = useRouter();
   const { id } = router.query;
   const supabase = createClient();
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [] } = useQuery<TransactionRow[]>({
     queryKey: ['transactions'],
-    queryFn: async () => {
+    queryFn: async (): Promise<TransactionRow[]> => {
       const { data } = await supabase.from('transactions').select('*');
-      return data;
+      return data ?? [];
     },
   });
 
-  const tx = transactions?.find((t: any) => String(t.id) === String(id));
+  const tx = transactions.find((t) => String(t.id) === String(id));
 
   if (!tx) {
     return (
@@ -47,9 +50,9 @@ export default function TransactionDetail() {
       <Card>
         <div className="text-sm text-gray-500">{tx.description || 'Transaction details'}</div>
         <div className="text-2xl font-bold my-2">${tx.amount}</div>
-        <div className="text-sm text-gray-500">From: {tx.fromAccountId || tx.account_id}</div>
-        <div className="text-sm text-gray-500">To: {tx.toAccountId || tx.recipient_account}</div>
-        <div className="text-xs text-gray-400 mt-2">{tx.createdAt}</div>
+        <div className="text-sm text-gray-500">From: {tx.sender_account_id || tx.account_id}</div>
+        <div className="text-sm text-gray-500">To: {tx.receiver_account_id}</div>
+        <div className="text-xs text-gray-400 mt-2">{tx.created_at}</div>
       </Card>
     </div>
   );
