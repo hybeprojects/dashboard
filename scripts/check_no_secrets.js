@@ -12,8 +12,14 @@ const patterns = [
   { re: /MYSQL_ROOT_PASSWORD\s*[:=]/i, reason: 'MYSQL_ROOT_PASSWORD set in repo' },
   { re: /MYSQL_PASSWORD\s*[:=]/i, reason: 'MYSQL_PASSWORD set in repo' },
   { re: /BEGIN RSA PRIVATE KEY/, reason: 'Private key block present' },
-  { re: /SUPABASE_SERVICE_ROLE_KEY\s*=\s*['\"]?\w+['\"]?/i, reason: 'Possible service role key committed' },
-  { re: /NEXT_PUBLIC_SUPABASE_ANON_KEY\s*=\s*['\"]?\w+['\"]?/i, reason: 'Public anon key present in code' },
+  {
+    re: /SUPABASE_SERVICE_ROLE_KEY\s*=\s*['\"]?\w+['\"]?/i,
+    reason: 'Possible service role key committed',
+  },
+  {
+    re: /NEXT_PUBLIC_SUPABASE_ANON_KEY\s*=\s*['\"]?\w+['\"]?/i,
+    reason: 'Public anon key present in code',
+  },
 ];
 
 let findings = [];
