@@ -104,6 +104,9 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   const accountId = context.params?.accountId as string;
 
   // Create a user-scoped client that attaches the user's access token in the Authorization header
+  // Require dynamically to avoid top-level duplicate imports and keep this code server-only
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
   const userClient = createSupabaseClient(url, anon, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
