@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+// Supabase client will be required dynamically inside server-side props to avoid module name collisions
 import { GetServerSidePropsContext } from 'next';
-import { serialize } from 'cookie';
+// Supabase client will be required dynamically inside server-side props to avoid module name collisions
 
 // Define types inline instead of importing
 type Account = {
@@ -78,12 +78,14 @@ export default function AccountDetailsPage({ account, transactions }: AccountDet
 }
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    console.error('Supabase not configured for SSR');
+    return { notFound: true };
+  }
 
-  // Check for Supabase auth token in cookies (server-side)
+  // Parse cookies to extract the user's Supabase access token
   const cookiesHeader = context.req.headers.cookie || '';
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const cookie = require('cookie');
@@ -101,13 +103,22 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   const accountId = context.params?.accountId as string;
 
-  const { data: account, error: accountError } = await supabase
+  // Create a user-scoped client that attaches the user's access token in the Authorization header
+  // Require dynamically to avoid top-level duplicate imports and keep this code server-only
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
+  const userClient = createSupabaseClient(url, anon, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  // Fetch account and transactions using the user's client so RLS policies apply
+  const { data: account, error: accountError } = await userClient
     .from('accounts')
     .select('*')
     .eq('id', accountId)
     .single();
 
-  const { data: transactions, error: transactionsError } = await supabase
+  const { data: transactions, error: transactionsError } = await userClient
     .from('transactions')
     .select('*')
     .or(`sender_account_id.eq.${accountId},receiver_account_id.eq.${accountId}`)

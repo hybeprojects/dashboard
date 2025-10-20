@@ -16,5 +16,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: error.message });
   }
 
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const cookie = require('cookie');
+    const cookieStr = cookie.serialize('sb-access-token', '', {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 0,
+    });
+    res.setHeader('Set-Cookie', cookieStr);
+  } catch (e) {
+    // ignore
+  }
+
   return res.status(200).json({ message: 'Logged out' });
 }
