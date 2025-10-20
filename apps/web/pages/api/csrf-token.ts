@@ -50,9 +50,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (!response) {
-      // Nothing succeeded
+      // Nothing succeeded — log and fall back to issuing a local token so frontend can continue (dev-friendly).
       console.error('CSRF proxy: all targets failed', lastError);
-      return res.status(502).json({ error: 'Bad gateway' });
+      try {
+        const token = crypto.randomBytes(24).toString('hex');
+        // set fallback cookie (non-httpOnly for double-submit pattern)
+        res.setHeader('Set-Cookie', buildCookie(token));
+        return res.status(200).json({ csrfToken: token, fallback: true, error: lastError });
+      } catch (e) {
+        return res.status(502).json({ error: 'Bad gateway' });
+      }
     }
 
     // Forward status
