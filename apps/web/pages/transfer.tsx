@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
@@ -63,7 +62,7 @@ export default function TransferPage() {
         reference: `TRF-${Date.now()}`,
       };
 
-      const { error } = await supabase.from('transactions').insert([payload]);
+      const { error } = await (supabase as any).from('transactions').insert([payload as any]);
 
       if (error) {
         throw error;
