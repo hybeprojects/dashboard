@@ -50,36 +50,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // If server supabase available try to perform transfer RPC or insert a transaction
     if (supabase) {
       try {
-        // attempt RPC transfer if sender and receiver and RPC exists
-        let rpcResult: any = null;
-        if (sender && receiver) {
-          try {
-            rpcResult = await supabase.rpc('transfer_funds', {
-              from_id: sender,
-              to_account_number: receiver,
-              amount: String(amount),
-            });
-          } catch (e) {
-            // ignore rpc failure and fallback to inserting transaction
-            rpcResult = { error: (e as any).message || 'rpc_failed' };
-          }
-        }
+        // Require a sender account id for a valid transaction row
+        const accountId = sender || body.account_id;
+        if (!accountId) return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
+
+        // Fetch current balance to compute running_balance (required by schema)
+        const { data: fromAcc, error: accErr } = await supabase
+          .from('accounts')
+          .select('id,balance')
+          .eq('id', accountId)
+          .maybeSingle();
+        if (accErr) return res.status(500).json({ error: accErr.message });
+        if (!fromAcc) return res.status(404).json({ error: 'Sender account not found' });
+
+        const newBalance = Number(fromAcc.balance || 0) - amount;
 
         const insertPayload: any = {
-          sender_account_id: sender || null,
+          account_id: accountId,
+          sender_account_id: accountId,
           receiver_account_id: receiver || null,
           receiver_email: receiverEmail,
           receiver_name: receiverName,
           amount: amount,
           type: 'transfer',
           status: 'completed',
-          description: body.description || `Transfer from ${sender} to ${receiver}`,
+          description: body.description || `Transfer from ${accountId} to ${receiver ?? ''}`.trim(),
           reference: body.reference || `TRF-${Date.now()}`,
+          running_balance: newBalance,
         };
-
-        // optional running_balance if provided or calculable
-        if (typeof body.running_balance !== 'undefined')
-          insertPayload.running_balance = Number(body.running_balance);
 
         const { data: inserted, error: insertError } = await supabase
           .from('transactions')
