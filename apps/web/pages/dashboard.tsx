@@ -86,7 +86,10 @@ export default function Dashboard() {
   const { data: transactions = [], isLoading: txLoading } = useQuery<TransactionRow[]>({
     queryKey: ['transactions'],
     queryFn: async (): Promise<TransactionRow[]> => {
-      const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
       return data ?? [];
     },
     staleTime: 15_000,
@@ -132,7 +135,8 @@ export default function Dashboard() {
             if (!newRow) return list;
             // for inserts, add to top; for updates, replace
             const idx = list.findIndex(
-              (t: any) => t.id === (newRow as any).id || t.transactionId === (newRow as any).transactionId,
+              (t: any) =>
+                t.id === (newRow as any).id || t.transactionId === (newRow as any).transactionId,
             );
             if (idx === -1) list.unshift(newRow);
             else list[idx] = { ...list[idx], ...newRow };
@@ -156,7 +160,7 @@ export default function Dashboard() {
     };
   }, [qc, supabase]);
 
-  const accountsArr = useMemo(() => Array.isArray(accounts) ? accounts : [], [accounts]);
+  const accountsArr = useMemo(() => (Array.isArray(accounts) ? accounts : []), [accounts]);
   const transactionsArr = Array.isArray(transactions) ? transactions : [];
   const notificationsArr = Array.isArray(notifications) ? notifications : [];
 
