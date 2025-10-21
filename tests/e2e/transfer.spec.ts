@@ -44,7 +44,7 @@ test.describe('End-to-end transfer flow', () => {
       return;
     }
 
-    const alicePassword = 'password123';
+    const alicePassword = process.env.SEED_ADMIN_PASSWORD || 'password123';
 
     // Login as Alice
     await page.goto(`${WEB_BASE}/login`);
