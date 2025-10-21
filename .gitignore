@@ -18,3 +18,6 @@ build
 # test reports
 playwright-report/
 test-results/
+
+# log files
+*.log

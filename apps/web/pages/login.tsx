@@ -61,6 +61,11 @@ export default function Login() {
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Signing in…' : 'Sign In'}
             </Button>
+            <div className="mt-4 text-center">
+              <a href="/forgot-password"className="text-sm text-gray-600 hover:underline">
+                Forgot Password?
+              </a>
+            </div>
           </form>
 
           <div className="mt-4 space-y-3">{msg && <Alert kind="error">{msg}</Alert>}</div>
