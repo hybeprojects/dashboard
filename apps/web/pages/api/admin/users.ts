@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Validate token and get user via serverAuth helper
 
-    const { getUserFromRequest } = require('../../lib/serverAuth');
+    const { getUserFromRequest } = require('../../../lib/serverAuth');
     const user = await getUserFromRequest(req);
     if (!user) return res.status(401).json({ error: 'Not authenticated' });
     const userId = user.id;
