@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
 import useRequireAuth from '../hooks/useRequireAuth';
+import cookie from 'cookie';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
 
