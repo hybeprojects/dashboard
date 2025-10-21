@@ -18,7 +18,7 @@
     "ci": "npm ci && npm run lint || true && npm run typecheck && npm run build",
     "start:prod": "npm --prefix apps/web run build && npm --prefix apps/web run start",
     "semgrep": "semgrep --config .semgrep.yml || true"
-    },
+  },
   "devDependencies": {
     "@eslint/js": "^8.57.1",
     "@tanstack/react-query-devtools": "^5.90.2",

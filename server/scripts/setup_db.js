@@ -68,7 +68,8 @@ async function run() {
     `);
 
     console.log('Seeding initial users...');
-    const defaultSeedPwd = process.env.DEFAULT_SEED_PASSWORD || require('crypto').randomBytes(8).toString('hex');
+    const defaultSeedPwd =
+      process.env.DEFAULT_SEED_PASSWORD || require('crypto').randomBytes(8).toString('hex');
     const seedUsers = [
       {
         id: '11111111-1111-1111-1111-111111111111',

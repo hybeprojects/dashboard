@@ -5,7 +5,7 @@ Requires env vars: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUB
 */
 
 const { createClient } = require('@supabase/supabase-js');
-let fetchFunc = (typeof fetch !== 'undefined' ? fetch : null);
+let fetchFunc = typeof fetch !== 'undefined' ? fetch : null;
 if (!fetchFunc) {
   try {
     fetchFunc = require('node-fetch');

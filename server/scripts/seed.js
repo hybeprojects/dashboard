@@ -42,7 +42,8 @@ async function ensureClearingAccount() {
 
 async function ensureUser(firstName, email, openingDeposit = 0) {
   // create local app user record and persist to Supabase app_users
-  const seedPwd = process.env.SEED_ADMIN_PASSWORD || require('crypto').randomBytes(8).toString('hex');
+  const seedPwd =
+    process.env.SEED_ADMIN_PASSWORD || require('crypto').randomBytes(8).toString('hex');
   let user = {
     id: uuidv4(),
     firstName,

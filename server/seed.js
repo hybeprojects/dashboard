@@ -10,12 +10,13 @@ async function seed() {
   try {
     for (const name of names) {
       const email = `${name.toLowerCase()}@example.com`;
-      const password = process.env.SEED_ADMIN_PASSWORD || require('crypto').randomBytes(8).toString('hex');
-    // call signup
-    console.log('Creating', email);
-    await axios
-      .post(`${BASE}/auth/signup`, { firstName: name, lastName: 'Demo', email, password })
-      .catch(() => {});
+      const password =
+        process.env.SEED_ADMIN_PASSWORD || require('crypto').randomBytes(8).toString('hex');
+      // call signup
+      console.log('Creating', email);
+      await axios
+        .post(`${BASE}/auth/signup`, { firstName: name, lastName: 'Demo', email, password })
+        .catch(() => {});
     }
     console.log('Seed complete');
   } catch (e) {

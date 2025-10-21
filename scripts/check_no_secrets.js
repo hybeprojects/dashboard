@@ -54,7 +54,9 @@ walk(root);
 if (findings.length) {
   console.warn('Secret scan found potential issues:');
   for (const f of findings) console.warn('-', f.file, ':', f.reason);
-  console.warn('Proceeding (scan is advisory). Please rotate secrets and remove credentials from source control.');
+  console.warn(
+    'Proceeding (scan is advisory). Please rotate secrets and remove credentials from source control.',
+  );
 } else {
   console.log('Secret scan: no obvious issues found.');
 }
