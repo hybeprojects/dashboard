@@ -4,13 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/ui/Card';
 import { createClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/types.gen';
+import useRequireAuth from '../../hooks/useRequireAuth';
+import cookie from 'cookie';
 
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function TransactionDetail() {
   // client-side guard
-  // eslint-disable-next-line global-require
-  const useRequireAuth = require('../../hooks/useRequireAuth').default;
   useRequireAuth();
   const router = useRouter();
   const { id } = router.query;

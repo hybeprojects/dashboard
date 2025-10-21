@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
+import useRequireAuth from '../hooks/useRequireAuth';
+import cookie from 'cookie';
 import React, { useState } from 'react';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
@@ -10,8 +12,6 @@ type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
 
 export default function TransferPage() {
   // client-side guard
-  // eslint-disable-next-line global-require
-  const useRequireAuth = require('../hooks/useRequireAuth').default;
   useRequireAuth();
   const qc = useQueryClient();
   const supabase = createClient();

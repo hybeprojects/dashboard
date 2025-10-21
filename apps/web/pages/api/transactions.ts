@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import getServerSupabase from './_serverSupabase';
 import api from '../../lib/api';
+import cookie from 'cookie';
+import { getUserFromRequest } from '../../lib/serverAuth';
+import { createClient } from '@supabase/supabase-js';
 
 const fallbackMemory: any[] = [];
 
@@ -8,14 +11,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const supabaseService = getServerSupabase();
 
   // Validate token server-side using helper
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getUserFromRequest } = require('../../lib/serverAuth');
   const user = await getUserFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
   // Parse cookies for user session token (double-check multiple cookie names)
   const cookieHeader = (req.headers.cookie as string) || '';
-  const cookie = require('cookie');
   const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
   const token =
     cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'] || null;
@@ -28,9 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!anonUrl || !anonKey)
     return res.status(500).json({ error: 'Supabase anon key not configured' });
 
-  // Import createClient lazily to avoid pulling into client bundles
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { createClient } = require('@supabase/supabase-js');
   const userClient = createClient(anonUrl, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });

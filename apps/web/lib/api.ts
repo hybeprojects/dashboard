@@ -45,8 +45,8 @@ api.interceptors.request.use(async (config) => {
         // attach Supabase access token if available
         try {
           // lazy import to avoid SSR issues
-          // eslint-disable-next-line global-require, import/no-extraneous-dependencies
-          const { getSupabase } = require('./supabase');
+          // lazily import to avoid SSR/client issues
+          const { getSupabase } = await import('./supabase');
           const supabase = getSupabase();
           if (supabase) {
             const s = await supabase.auth.getSession();
