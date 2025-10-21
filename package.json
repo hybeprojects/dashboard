@@ -2,9 +2,7 @@
   "name": "premium-banking-monorepo",
   "private": true,
   "workspaces": [
-    "apps/web",
-    "server",
-    "client"
+    "apps/web"
   ],
   "scripts": {
     "dev": "npm --prefix apps/web run dev",
@@ -14,7 +12,6 @@
     "typecheck": "tsc -b",
     "test": "echo 'No tests yet' && exit 0",
     "test:e2e": "npx playwright test",
-    "db:setup": "node server/scripts/setup_db.js",
     "ci": "npm ci && npm run lint || true && npm run typecheck && npm run build",
     "start:prod": "npm --prefix apps/web run build && npm --prefix apps/web run start",
     "semgrep": "semgrep --config .semgrep.yml || true"
@@ -40,7 +37,6 @@
   "author": "BLCK-DEV",
   "license": "MIT",
   "dependencies": {
-    "@nestjs/throttler": "^6.4.0",
     "framer-motion": "^10.12.16"
   }
 }

@@ -1,12 +1,16 @@
-# dashboard# dashboard
+# Premium Banking Dashboard
 
 [![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
 
-built
-
 > Replace <OWNER>/<REPO> with your GitHub repository owner/name to enable the badge.
 
-## CI notes
+## Architecture
 
-- Workflow caches node_modules per workspace using a key that includes the workspace name for more granular cache hits.
-- The workflow sets NEXT_PUBLIC_API_URL to http://localhost:5000 during build to avoid network-dependent prerender failures; replace with your API URL or set repository secrets for production builds.
+This project is a Next.js web application that uses Supabase for its backend. It is a single-page application that provides a dashboard for managing bank accounts, transactions, and KYC submissions.
+
+The application is built with the following technologies:
+
+*   **Frontend**: Next.js, React, Tailwind CSS
+*   **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+*   **Data Fetching**: React Query
+*   **State Management**: Zustand
