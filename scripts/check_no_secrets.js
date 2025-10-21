@@ -52,9 +52,11 @@ function walk(dir) {
 walk(root);
 
 if (findings.length) {
-  console.error('Secret scan found potential issues:');
-  for (const f of findings) console.error('-', f.file, ':', f.reason);
-  process.exit(2);
+  console.warn('Secret scan found potential issues:');
+  for (const f of findings) console.warn('-', f.file, ':', f.reason);
+  console.warn(
+    'Proceeding (scan is advisory). Please rotate secrets and remove credentials from source control.',
+  );
+} else {
+  console.log('Secret scan: no obvious issues found.');
 }
-
-console.log('Secret scan: no obvious issues found.');

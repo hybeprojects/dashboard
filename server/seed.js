@@ -10,7 +10,8 @@ async function seed() {
   try {
     for (const name of names) {
       const email = `${name.toLowerCase()}@example.com`;
-      const password = process.env.SEED_ADMIN_PASSWORD || 'password123';
+      const password =
+        process.env.SEED_ADMIN_PASSWORD || require('crypto').randomBytes(8).toString('hex');
       // call signup
       console.log('Creating', email);
       await axios

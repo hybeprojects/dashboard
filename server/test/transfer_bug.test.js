@@ -6,7 +6,7 @@ async function runTest() {
   const { default: fetch } = await import('node-fetch');
   // 1. Create a user and get a token
   const email = `testuser_${Date.now()}@example.com`;
-  const password = 'password123';
+  const password = process.env.SEED_ADMIN_PASSWORD || 'password123';
   let signupRes = await fetch(`${API_BASE}/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

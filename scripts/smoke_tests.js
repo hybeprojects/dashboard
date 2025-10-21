@@ -5,7 +5,16 @@ Requires env vars: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUB
 */
 
 const { createClient } = require('@supabase/supabase-js');
-const fetch = require('node-fetch');
+let fetchFunc = typeof fetch !== 'undefined' ? fetch : null;
+if (!fetchFunc) {
+  try {
+    fetchFunc = require('node-fetch');
+  } catch (e) {
+    // if node-fetch not installed, we'll attempt globalThis.fetch (node 18+)
+    fetchFunc = globalThis.fetch || null;
+  }
+}
+const fetch = fetchFunc;
 
 async function main() {
   const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

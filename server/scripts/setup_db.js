@@ -68,27 +68,29 @@ async function run() {
     `);
 
     console.log('Seeding initial users...');
+    const defaultSeedPwd =
+      process.env.DEFAULT_SEED_PASSWORD || require('crypto').randomBytes(8).toString('hex');
     const seedUsers = [
       {
         id: '11111111-1111-1111-1111-111111111111',
         first: 'Personal1',
         last: 'User',
         email: 'personal1@example.com',
-        pwd: 'password123',
+        pwd: defaultSeedPwd,
       },
       {
         id: '22222222-2222-2222-2222-222222222222',
         first: 'Personal2',
         last: 'User',
         email: 'personal2@example.com',
-        pwd: 'password123',
+        pwd: defaultSeedPwd,
       },
       {
         id: '33333333-3333-3333-3333-333333333333',
         business: 'Demo Business LLC',
         contact: 'BizOwner',
         email: 'business@example.com',
-        pwd: 'password123',
+        pwd: defaultSeedPwd,
       },
     ];
 
