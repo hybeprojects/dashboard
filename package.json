@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm --prefix apps/web run dev",
     "build": "npm --prefix apps/web run build",
-    "lint": "eslint .",
+    "lint": "eslint -c .eslintrc.cjs .",
     "format": "prettier --write .",
     "typecheck": "tsc -b",
     "test": "echo 'No tests yet' && exit 0",
