@@ -33,5 +33,13 @@ module.exports = {
         'no-undef': 'off',
       },
     },
+    {
+      files: ['pages/**/*.{ts,tsx,js,jsx}', 'server/**/*.{ts,js}', 'scripts/**/*.{js,ts}'],
+      env: { node: true },
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        '@typescript-eslint/no-require-imports': 'off',
+      },
+    },
   ],
 };
