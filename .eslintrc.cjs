@@ -38,8 +38,8 @@ module.exports = {
       env: { node: true },
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
-        '@typescript-eslint/no-require-imports': 'off'
-      }
-    }
+        '@typescript-eslint/no-require-imports': 'off',
+      },
+    },
   ],
 };
