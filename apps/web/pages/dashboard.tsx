@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
 import { createClient } from '../lib/supabase/client';
+import { createPagesServerClient } from '@supabase/ssr';
 import type { Database } from '../lib/supabase/types.gen';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
@@ -17,6 +18,28 @@ function Icon({ d, className = '' }: { d: string; className?: string }) {
     </svg>
   );
 }
+
+export const getServerSideProps = async (ctx: any) => {
+  const supabase = createPagesServerClient(ctx);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session)
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+
+  return {
+    props: {
+      initialSession: session,
+      user: session.user,
+    },
+  };
+};
 
 const icons = {
   menu: 'M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z',
@@ -339,25 +362,3 @@ export default function Dashboard() {
   );
 }
 
-// server-side auth guard to protect the dashboard route
-export async function getServerSideProps(context: any) {
-  // parse cookies for Supabase session tokens
-  const cookiesHeader = context.req.headers.cookie || '';
-
-  const cookie = require('cookie');
-  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
-  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
-
-  if (!token) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
-}
