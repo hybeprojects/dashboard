@@ -9,7 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const serverSupabase = getServerSupabase();
-  if (!serverSupabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+  if (!serverSupabase)
+    return res.status(500).json({ error: 'Supabase service client not configured' });
 
   const user = await getUserFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
@@ -23,7 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const amount = typeof amountRaw === 'string' ? parseFloat(amountRaw) : Number(amountRaw);
 
   if (!from_account_id || !to_account_id || !isFinite(amount) || amount <= 0) {
-    return res.status(400).json({ error: 'Invalid input; require from_account_id, to_account_id and positive amount' });
+    return res
+      .status(400)
+      .json({ error: 'Invalid input; require from_account_id, to_account_id and positive amount' });
   }
 
   try {
