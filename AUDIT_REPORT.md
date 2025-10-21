@@ -1,85 +1,55 @@
-Full repo audit - premium-banking-monorepo
+# Full Stack Audit Report
 
-## Summary
+## Executive Summary
 
-I scanned the repository for package.json files, ESLint and Next.js configs, TypeScript settings, environment variable usage, and Supabase integrations. Key issues and recommendations are listed below.
+This report details the findings of a full stack audit of the premium-banking-monorepo project. The audit revealed a critical architectural flaw: the project is structured as a monorepo with a Next.js frontend and an Express.js backend, but the two are completely disconnected. The frontend is a full-stack Supabase application that communicates directly with the Supabase database, while the Express backend is configured to use a MySQL database and is effectively unused.
 
-## Inventory
+This fundamental disconnect is the root cause of many other issues identified in this report. The backend is non-functional due to a database schema mismatch and a missing `auth.js` file, and any security measures implemented in the backend are completely ineffective because the frontend bypasses it entirely.
 
-- package.json files found:
-  - package.json (root)
-  - server/package.json
-  - apps/web/package.json
-- ESLint configs:
-  - apps/web/.eslintrc.js (updated to include parser/plugins)
-  - eslint.config.js (root)
-- Next.js config:
-  - apps/web/next.config.js
-  - vercel.json points to apps/web/package.json (correct for monorepo)
-- Many server scripts and server/ code depend on SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL
+The most critical security vulnerability identified is an insecure Row Level Security (RLS) policy on the `kyc_submissions` table, which could expose sensitive user data.
 
-## Findings and recommended fixes
+## Key Findings
 
-1. ESLint: "Failed to load config 'next/core-web-vitals'"
-   - Cause: eslint-config-next or supporting parser/plugins missing in the workspace devDependencies.
-   - Action taken: added eslint-config-next and TypeScript ESLint parser/plugin entries to apps/web/package.json and updated apps/web/.eslintrc.js to set parser and plugin.
-   - Recommendation: commit these changes and ensure CI/Vercel installs workspace devDependencies.
+### 1. Architectural Mismatch
 
-2. Inconsistent lockfiles / Next.js versions
-   - The apps/web package.json lists next ^14.2.4; lockfile contains references to Next 13 packages.
-   - Risk: mismatched Next/SWC packages can cause install or build-time resolution issues on CI.
-   - Recommendation: pick a single Next version, remove sub-folder package-lock.json files (keep root lockfile) and run a clean npm install at repo root to regenerate lockfile.
+*   **Finding**: The frontend is a full-stack Supabase application that does not communicate with the Express backend. The backend is completely unused.
+*   **Impact**: This is a major architectural flaw that renders the backend and its security measures useless. It also introduces unnecessary complexity and confusion.
+*   **Recommendation**: The development team needs to make a clear architectural decision. Either:
+    *   **Option A: Embrace the Supabase-centric architecture.** Remove the Express backend and implement all backend logic using Supabase's features (e.g., database functions, edge functions).
+    *   **Option B: Integrate the frontend and backend.** Refactor the frontend to make API calls to the Express backend for all data fetching and mutations. The backend should then be responsible for all database interactions.
 
-3. Monorepo workspace warnings in CI
-   - Vercel logs showed: "premium-banking-web in filter set, but no workspace folder present" earlier. Ensure Vercel project configuration references correct root and build settings (vercel.json is correct) and that package manager installs workspace dependencies.
-   - Recommendation: ensure root package.json lists "workspaces": ["apps/web", ...] (it does), then run npm ci at repo root locally and verify workspace installs correctly.
+### 2. Database Inconsistency
 
-4. Environment variables / secrets required
-   - Multiple server and tests require SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, DB_URL, and ENV_CHECK_SECRET.
-   - If these are missing in Vercel, runtime scripts and some build-time checks may fail.
-   - Recommendation: add required secrets in Vercel dashboard or via MCP connection (Supabase). For Supabase-related work, connect Supabase via MCP.
+*   **Finding**: The backend is configured for MySQL, but the database schema files are for PostgreSQL (Supabase).
+*   **Impact**: The required tables are not being created in the MySQL database, rendering the backend non-functional.
+*   **Recommendation**: Align the database technology. If the team chooses to use the Express backend, they should migrate the database to MySQL and create the necessary tables. If they choose to use Supabase, the MySQL configuration should be removed.
 
-5. TypeScript / typecheck
-   - apps/web has "typecheck": "tsc --noEmit" available. Recommend running tsc -b at repo root to catch type issues.
+### 3. Security Vulnerabilities
 
-6. Security headers & CSP
-   - next.config.js contains a Content-Security-Policy builder using NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_API_URL; verify these env variables are set in production.
+*   **Insecure RLS Policy on `kyc_submissions` Table**:
+    *   **Finding**: The RLS policy on the `kyc_submissions` table is too permissive, allowing any authenticated user to potentially access or modify any other user's KYC data.
+    *   **Impact**: This is a critical vulnerability that could lead to a data breach of sensitive user information.
+    *   **Recommendation**: Immediately update the RLS policy to restrict access to a user's own data: `USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())`.
+*   **Missing Password Reset Functionality**:
+    *   **Finding**: There is no password reset functionality.
+    *   **Impact**: This is a major security oversight that would make it difficult for users to regain access to their accounts if they forget their password.
+    *   **Recommendation**: Implement a secure password reset feature.
+*   **Missing `auth.js` File**:
+    *   **Finding**: The `server.js` file attempts to mount a route from `server/routes/auth.js`, but this file does not exist.
+    *   **Impact**: This is a denial of service vulnerability that will cause the backend to crash on startup.
+    *   **Recommendation**: Create the `auth.js` file or remove the code that attempts to mount it.
+*   **Lack of Input Validation and CSRF Protection on Backend**:
+    *   **Finding**: The backend lacks consistent input validation and CSRF protection.
+    *   **Impact**: This could leave the application vulnerable to various attacks, such as XSS and SQL injection, if the backend is ever used.
+    *   **Recommendation**: Implement a robust input validation strategy and add CSRF protection to the backend.
 
-7. Tests & utilities
-   - server/test and scripts reference Supabase service keys. Running tests in CI will require secrets.
+### 4. Other Issues
 
-## Actionable next steps (PR-ready)
+*   **Redundant Authentication**: Both the frontend and backend have their own authentication logic that uses Supabase.
+*   **Inconsistent Validation Libraries**: The frontend uses `yup` for validation, while the backend uses `joi`.
+*   **Unused Fineract API**: The `accounts.js` route makes calls to a "Fineract" API, but it's unclear what this API is or how it's used.
+*   **No Tests**: The project has no unit or integration tests.
 
-- Commit the apps/web/package.json and apps/web/.eslintrc.js changes (already applied in workspace).
-- Remove apps/web/package-lock.json and server/package-lock.json (if you prefer single root lockfile) and run npm install at repo root to regenerate lockfile.
-- Ensure Vercel project environment variables include:
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-  - SUPABASE_SERVICE_ROLE_KEY (secret)
-  - NEXT_PUBLIC_API_URL
-  - ENV_CHECK_SECRET (secret)
-  - DB_URL and DB_PASSWORD if server jobs run on deployment
-- Run locally: npm ci && npm run typecheck && npm run lint && npm run build from repo root to verify.
-- Verify Node engine/versions: ensure Node >= 18 for some dependencies/plugins used.
+## Conclusion
 
-## MCP integrations (recommended)
-
-When helpful, you can connect these MCP integrations from the UI (Open MCP popover):
-
-- Supabase — for DB, auth, and real-time features. Connect: [Connect to Supabase](#open-mcp-popover)
-- Neon — as an alternative Postgres provider. Connect: [Connect to Neon](#open-mcp-popover)
-- Netlify — for hosting (if you use Netlify instead of Vercel). Connect: [Connect to Netlify](#open-mcp-popover)
-- Zapier — automation and workflows. Connect: [Connect to Zapier](#open-mcp-popover)
-- Figma — design to code (use Builder.io Figma plugin). Get plugin via MCP: [Connect to Figma](#open-mcp-popover)
-- Builder.io — CMS and content management. Connect: [Connect to Builder.io](#open-mcp-popover)
-- Linear — issue tracking and management. Connect: [Connect to Linear](#open-mcp-popover)
-- Notion — docs and knowledge base. Connect: [Connect to Notion](#open-mcp-popover)
-- Sentry — error monitoring. Connect: [Connect to Sentry](#open-mcp-popover)
-- Context7 — docs lookup. Connect: [Connect to Context7](#open-mcp-popover)
-- Semgrep — security scanning. Connect: [Connect to Semgrep](#open-mcp-popover)
-- Prisma Postgres — for ORM/db management. Connect: [Connect to Prisma](#open-mcp-popover)
-
-## Notes
-
-- I updated ESLint config and workspace package.json in apps/web to fix the immediate Vercel build failure. Push and redeploy to confirm.
-- If you want, I can run a deeper scan for unused components and broken imports (this requires running typecheck and possibly static analysis). Do you want me to run full typecheck and produce a file-by-file findings list?
+The premium-banking-monorepo project has a number of critical issues that need to be addressed before it can be considered a secure and functional application. The most important step is to resolve the architectural mismatch between the frontend and backend. Once a clear architectural direction is chosen, the other issues, such as the database inconsistency and security vulnerabilities, can be addressed.
