@@ -18,6 +18,7 @@ module.exports = [
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ['apps/web/**/*.ts', 'apps/web/**/*.tsx'],
     plugins: {
       '@next/next': nextPlugin,
     },

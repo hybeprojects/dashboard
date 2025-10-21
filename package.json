@@ -38,6 +38,7 @@
   "author": "BLCK-DEV",
   "license": "MIT",
   "dependencies": {
+    "@supabase/ssr": "^0.7.0",
     "@tailwindcss/postcss": "^4.1.15",
     "framer-motion": "^10.12.16"
   }

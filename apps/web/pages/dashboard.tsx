@@ -1,3 +1,4 @@
+// apps/web/pages/dashboard.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -5,8 +6,9 @@ import Card from '../components/ui/Card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
 import { createClient } from '../lib/supabase/client';
-import { createPagesServerClient } from '@supabase/ssr';
+import { createServerSupabaseClient } from '../lib/supabase/server';
 import type { Database } from '../lib/supabase/types.gen';
+import { type GetServerSidePropsContext } from 'next';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
@@ -19,8 +21,8 @@ function Icon({ d, className = '' }: { d: string; className?: string }) {
   );
 }
 
-export const getServerSideProps = async (ctx: any) => {
-  const supabase = createPagesServerClient(ctx);
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const supabase = createServerSupabaseClient(ctx);
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -361,4 +363,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

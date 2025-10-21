@@ -29,6 +29,7 @@ function buildCSP() {
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
+    dirs: ['pages', 'components', 'lib', 'hooks', 'state', 'styles', 'types', '.'],
   },
   typescript: {
     ignoreBuildErrors: false,
