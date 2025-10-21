@@ -4,14 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/ui/Card';
 import { createClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/types.gen';
+import useRequireAuth from '../../hooks/useRequireAuth';
+import cookie from 'cookie';
 
 type AccountRow = Database['public']['Tables']['accounts']['Row'];
 type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function AccountDetail() {
   // client-side guard
-  // eslint-disable-next-line global-require
-  const useRequireAuth = require('../../hooks/useRequireAuth').default;
   useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
@@ -79,7 +79,6 @@ export default function AccountDetail() {
 // Server-side auth guard
 export async function getServerSideProps(context: any) {
   const cookiesHeader = context.req.headers.cookie || '';
-  const cookie = require('cookie');
   const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
   const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
 

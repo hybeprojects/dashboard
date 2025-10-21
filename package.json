@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^8.57.1",
+    "@playwright/test": "^1.43.0",
+    "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query-devtools": "^5.90.2",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
@@ -29,8 +31,7 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.3",
-    "@playwright/test": "^1.43.0"
+    "typescript": "^5.9.3"
   },
   "packageManager": "npm@11.6.2",
   "version": "1.0.0",
