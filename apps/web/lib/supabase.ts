@@ -14,7 +14,7 @@ export function getSupabase(): SupabaseClient | null {
   if (!url || !anon) {
     if (typeof window !== 'undefined') {
       // Only warn in the browser; server logs may be sensitive.
-      // eslint-disable-next-line no-console
+
       console.warn('NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing');
     }
     return null;

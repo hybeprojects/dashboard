@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const cookiesHeader = req.headers.cookie || '';
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const cookie = require('cookie');
     const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
     const token =
@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Spawn reconcile script in background
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const { spawn } = require('child_process');
     const child = spawn(process.execPath, ['server/scripts/reconcile_fineract.js'], {
       cwd: process.cwd(),

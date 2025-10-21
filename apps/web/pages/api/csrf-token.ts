@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const t of targets) {
       try {
         // attempt fetch
-        // eslint-disable-next-line no-await-in-loop
+
         const r = await fetch(t, { method: 'GET', headers });
         // treat 2xx as success; otherwise try next
         if (r.ok) {

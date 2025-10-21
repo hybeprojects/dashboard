@@ -87,7 +87,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   // Parse cookies to extract the user's Supabase access token
   const cookiesHeader = context.req.headers.cookie || '';
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const cookie = require('cookie');
   const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
   const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
@@ -105,7 +105,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   // Create a user-scoped client that attaches the user's access token in the Authorization header
   // Require dynamically to avoid top-level duplicate imports and keep this code server-only
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
   const userClient = createSupabaseClient(url, anon, {
     global: { headers: { Authorization: `Bearer ${token}` } },
