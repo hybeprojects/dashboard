@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await supabase.from('profiles').upsert(profile, { onConflict: 'id' });
       } catch (e) {
         // ignore profile insert errors but log to server console
-        // eslint-disable-next-line no-console
+
         console.warn('Failed to upsert profile', e);
       }
 
@@ -96,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             await supabase.from('app_users').upsert(appUser, { onConflict: 'id' });
           } catch (e) {
             // best-effort: don't fail signup if app_users table doesn't exist
-            // eslint-disable-next-line no-console
+
             console.warn(
               'Failed to upsert app_users',
               e && (e as any).message ? (e as any).message : e,
@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       } catch (e) {
         // log but don't fail signup
-        // eslint-disable-next-line no-console
+
         console.warn(
           'Fineract client creation failed',
           e && (e as any).message ? (e as any).message : e,

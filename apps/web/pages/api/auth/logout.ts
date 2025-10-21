@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const cookie = require('cookie');
     const cookieStr = cookie.serialize('sb-access-token', '', {
       path: '/',

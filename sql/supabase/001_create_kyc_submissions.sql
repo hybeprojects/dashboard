@@ -42,4 +42,4 @@ CREATE POLICY "kyc_own_records" ON public.kyc_submissions
 --   USING (coalesce((auth.jwt()).claims->>'is_admin','') = 'true');
 
 -- Grant minimal privileges to authenticated role (optional; Supabase usually manages this)
-GRANT SELECT, INSERT, UPDATE ON public.kyc_submissions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.kyc_submissions TO authenticated;

@@ -14,3 +14,7 @@ build
 .vscode
 .DS_Store
 *.tsbuildinfo
+
+# test reports
+playwright-report/
+test-results/

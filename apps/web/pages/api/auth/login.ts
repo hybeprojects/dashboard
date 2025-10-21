@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? Math.max(0, expiresAt - Math.floor(Date.now() / 1000))
         : undefined;
     // Use cookie serialize
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const cookie = require('cookie');
     const cookieOpts: any = {
       path: '/',

@@ -34,7 +34,7 @@ export default function AdminKyc() {
       const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`);
       setSubs(res.data.submissions || []);
     } catch (e) {
-      // eslint-disable-next-line no-console
+
       console.error(e);
     } finally {
       setLoading(false);
@@ -50,7 +50,7 @@ export default function AdminKyc() {
         if (u) window.open(String(u), '_blank');
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
+
       console.error('preview error', e);
       alert('Failed to fetch preview URLs. Are you logged in as an admin?');
     }
@@ -61,7 +61,7 @@ export default function AdminKyc() {
       await api.post('/admin/kyc/decision', { submissionId, decision });
       load();
     } catch (e) {
-      // eslint-disable-next-line no-console
+
       console.error('decision error', e);
       alert('Failed to set decision');
     }
