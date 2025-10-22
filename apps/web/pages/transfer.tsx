@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
 import useRequireAuth from '../hooks/useRequireAuth';
