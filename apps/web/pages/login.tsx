@@ -47,28 +47,41 @@ export default function Login() {
   return (
     <div className="container-page">
       <Navbar />
-      <main className="section py-10 grid md:grid-cols-2 gap-8 items-start">
+      <main className="section py-16 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="hidden lg:block">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Welcome back</h1>
+            <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-md">Securely access your PremierBank account. Enterprise‑grade encryption, 24/7 monitoring, and FDIC‑insured partner banks.</p>
+            <ul className="mt-6 space-y-3 text-sm text-gray-700 dark:text-gray-300">
+              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary" /> Real‑time transaction alerts</li>
+              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary" /> Advanced fraud protection</li>
+              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary" /> Priority customer support</li>
+            </ul>
+          </div>
+        </div>
         <div>
-          <h2 className="text-2xl font-bold mb-4">Welcome back</h2>
-          <form className="card-surface p-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
-            <FormInput
-              label="Password"
-              type="password"
-              {...register('password')}
-              error={errors.password}
-            />
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in…' : 'Sign In'}
-            </Button>
-            <div className="mt-4 text-center">
-              <a href="/forgot-password"className="text-sm text-gray-600 hover:underline">
-                Forgot Password?
-              </a>
-            </div>
-          </form>
-
-          <div className="mt-4 space-y-3">{msg && <Alert kind="error">{msg}</Alert>}</div>
+          <div className="card-surface p-8 shadow-sm">
+            <h2 className="text-xl font-semibold">Sign in to your account</h2>
+            <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+              <FormInput label="Email" type="email" {...register('email')} error={errors.email} />
+              <FormInput
+                label="Password"
+                type="password"
+                {...register('password')}
+                error={errors.password}
+              />
+              <div className="flex items-center justify-between">
+                <a href="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</a>
+              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing in…' : 'Sign In'}
+              </Button>
+            </form>
+            {msg && <div className="mt-4"><Alert kind="error">{msg}</Alert></div>}
+            <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+              New to PremierBank? <a href="/register" className="text-primary hover:underline">Open an account</a>
+            </p>
+          </div>
         </div>
       </main>
     </div>
