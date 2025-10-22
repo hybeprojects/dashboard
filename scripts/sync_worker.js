@@ -5,9 +5,16 @@ const axios = require('axios');
 
 async function processJob(supabase, job) {
   const userId = job.user_id;
-  const { data: profile } = await supabase.from('profiles').select('id,fineract_client_id').eq('id', userId).single();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id,fineract_client_id')
+    .eq('id', userId)
+    .single();
   if (!profile) {
-    await supabase.from('fineract_sync_queue').update({ status: 'failed', updated_at: new Date().toISOString() }).eq('id', job.id);
+    await supabase
+      .from('fineract_sync_queue')
+      .update({ status: 'failed', updated_at: new Date().toISOString() })
+      .eq('id', job.id);
     return;
   }
   const clientId = profile.fineract_client_id;
@@ -20,14 +27,29 @@ async function processJob(supabase, job) {
 
   try {
     if (!clientId) throw new Error('no fineract client id');
-    const r = await axios.get(`${fineractUrl.replace(/\/$/, '')}/clients/${clientId}/accounts`, axiosConfig);
+    const r = await axios.get(
+      `${fineractUrl.replace(/\/$/, '')}/clients/${clientId}/accounts`,
+      axiosConfig,
+    );
     const accounts = r.data;
-    await supabase.from('accounts').upsert({ user_id: userId, data: accounts }, { onConflict: 'user_id' });
-    await supabase.from('fineract_sync_queue').update({ status: 'done', updated_at: new Date().toISOString(), result: accounts }).eq('id', job.id);
+    await supabase
+      .from('accounts')
+      .upsert({ user_id: userId, data: accounts }, { onConflict: 'user_id' });
+    await supabase
+      .from('fineract_sync_queue')
+      .update({ status: 'done', updated_at: new Date().toISOString(), result: accounts })
+      .eq('id', job.id);
     console.log('Processed job', job.id);
   } catch (e) {
     console.warn('Job failed', job.id, e && e.message ? e.message : e);
-    await supabase.from('fineract_sync_queue').update({ status: 'failed', updated_at: new Date().toISOString(), error: e?.message || String(e) }).eq('id', job.id);
+    await supabase
+      .from('fineract_sync_queue')
+      .update({
+        status: 'failed',
+        updated_at: new Date().toISOString(),
+        error: e?.message || String(e),
+      })
+      .eq('id', job.id);
   }
 }
 
@@ -45,11 +67,19 @@ async function main() {
   // Polling loop as a safe fallback if realtime not configured
   while (true) {
     try {
-      const { data: jobs } = await supabase.from('fineract_sync_queue').select('*').eq('status', 'pending').limit(10).order('created_at', { ascending: true });
+      const { data: jobs } = await supabase
+        .from('fineract_sync_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .limit(10)
+        .order('created_at', { ascending: true });
       if (jobs && jobs.length) {
         for (const job of jobs) {
           // mark processing
-          await supabase.from('fineract_sync_queue').update({ status: 'processing', updated_at: new Date().toISOString() }).eq('id', job.id);
+          await supabase
+            .from('fineract_sync_queue')
+            .update({ status: 'processing', updated_at: new Date().toISOString() })
+            .eq('id', job.id);
           await processJob(supabase, job);
         }
       }

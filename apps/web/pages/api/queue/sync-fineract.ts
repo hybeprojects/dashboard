@@ -14,7 +14,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   try {
-    const { error } = await supabase.from('fineract_sync_queue').insert([{ user_id: userId, status: 'pending', created_at: new Date().toISOString() }]);
+    const { error } = await supabase
+      .from('fineract_sync_queue')
+      .insert([{ user_id: userId, status: 'pending', created_at: new Date().toISOString() }]);
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ ok: true });
   } catch (e: any) {
