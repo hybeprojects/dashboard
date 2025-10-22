@@ -50,7 +50,10 @@ export default function Landing() {
         </section>
 
         {/* Features */}
-        <section aria-labelledby="features-heading" className="section py-12 grid gap-6 md:grid-cols-3">
+        <section
+          aria-labelledby="features-heading"
+          className="section py-12 grid gap-6 md:grid-cols-3"
+        >
           <h2 id="features-heading" className="sr-only">
             Key features
           </h2>
@@ -70,7 +73,11 @@ export default function Landing() {
           ].map((f) => {
             const id = 'feat-' + f.title.replace(/\s+/g, '-').toLowerCase();
             return (
-              <article key={f.title} className="card-surface p-6 flex flex-col gap-3" aria-labelledby={id}>
+              <article
+                key={f.title}
+                className="card-surface p-6 flex flex-col gap-3"
+                aria-labelledby={id}
+              >
                 <div className="flex items-center gap-3">
                   <span
                     className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold"
@@ -89,7 +96,10 @@ export default function Landing() {
         </section>
 
         {/* Stats */}
-        <section aria-labelledby="stats-heading" className="section py-12 grid gap-6 sm:grid-cols-3">
+        <section
+          aria-labelledby="stats-heading"
+          className="section py-12 grid gap-6 sm:grid-cols-3"
+        >
           <h2 id="stats-heading" className="sr-only">
             Platform statistics
           </h2>
@@ -111,7 +121,10 @@ export default function Landing() {
         </section>
 
         {/* Products */}
-        <section aria-labelledby="products-heading" className="section py-12 grid gap-6 md:grid-cols-2">
+        <section
+          aria-labelledby="products-heading"
+          className="section py-12 grid gap-6 md:grid-cols-2"
+        >
           <h2 id="products-heading" className="sr-only">
             Products
           </h2>
@@ -121,7 +134,12 @@ export default function Landing() {
               Multi-user, approvals, virtual cards, and accounting integrations.
             </p>
             <div className="mt-4">
-              <Link href="/register/business" className="btn-primary text-sm" role="button" aria-label="Open a business account">
+              <Link
+                href="/register/business"
+                className="btn-primary text-sm"
+                role="button"
+                aria-label="Open a business account"
+              >
                 Open Business Account
               </Link>
             </div>
@@ -132,7 +150,12 @@ export default function Landing() {
               No hidden fees, free ATM withdrawals, and smart savings goals.
             </p>
             <div className="mt-4">
-              <Link href="/register/personal" className="btn-primary text-sm" role="button" aria-label="Open a personal account">
+              <Link
+                href="/register/personal"
+                className="btn-primary text-sm"
+                role="button"
+                aria-label="Open a personal account"
+              >
                 Get Started
               </Link>
             </div>
@@ -162,7 +185,12 @@ export default function Landing() {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Open an account in minutes. No branch visit required.
           </p>
-          <Link href="/register" className="btn-primary" role="button" aria-label="Open your account — Get started">
+          <Link
+            href="/register"
+            className="btn-primary"
+            role="button"
+            aria-label="Open your account — Get started"
+          >
             Open Your Account
           </Link>
         </section>
