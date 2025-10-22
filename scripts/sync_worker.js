@@ -110,7 +110,11 @@ async function main() {
               continue;
             }
             const backoffSec = Math.min(3600, 30 * Math.pow(2, attempts));
-            const updatedAt = job.updated_at ? new Date(job.updated_at).getTime() : (job.created_at ? new Date(job.created_at).getTime() : 0);
+            const updatedAt = job.updated_at
+              ? new Date(job.updated_at).getTime()
+              : job.created_at
+                ? new Date(job.created_at).getTime()
+                : 0;
             if (now - updatedAt >= backoffSec * 1000) shouldProcess = true;
           }
 

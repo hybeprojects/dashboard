@@ -24,9 +24,9 @@ async function enqueueSyncJob(userId) {
       return;
     }
 
-    const { error } = await supabase.from('fineract_sync_queue').insert([
-      { user_id: userId, status: 'pending', created_at: new Date().toISOString() },
-    ]);
+    const { error } = await supabase
+      .from('fineract_sync_queue')
+      .insert([{ user_id: userId, status: 'pending', created_at: new Date().toISOString() }]);
     if (error) {
       console.error('Failed to enqueue job', error);
     } else {
