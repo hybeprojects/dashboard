@@ -24,7 +24,11 @@ function CurrencyTooltip({ active, payload, label }: any) {
 export default function OverviewChart({ data }: { data: { name: string; value: number }[] }) {
   if (!data || !data.length) {
     return (
-      <div className="h-64 flex items-center justify-center text-sm text-gray-500" role="img" aria-label="No cashflow data">
+      <div
+        className="h-64 flex items-center justify-center text-sm text-gray-500"
+        role="img"
+        aria-label="No cashflow data"
+      >
         No data available
       </div>
     );

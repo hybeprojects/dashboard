@@ -15,7 +15,11 @@ function DonutTooltip({ active, payload }: any) {
 export default function DonutChart({ data }: { data: { name: string; value: number }[] }) {
   if (!data || !data.length) {
     return (
-      <div className="h-64 flex items-center justify-center text-sm text-gray-500" role="img" aria-label="No spending data">
+      <div
+        className="h-64 flex items-center justify-center text-sm text-gray-500"
+        role="img"
+        aria-label="No spending data"
+      >
         No data available
       </div>
     );

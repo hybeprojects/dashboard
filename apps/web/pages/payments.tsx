@@ -86,13 +86,20 @@ export default function Payments() {
                 )}
               </div>
 
-              <FormInput label="Recipient Account ID" {...register('to')} error={errors.to as any} />
+              <FormInput
+                label="Recipient Account ID"
+                {...register('to')}
+                error={errors.to as any}
+              />
 
               <div className="md:col-span-2 text-xs text-gray-500">
                 {watchedTo && watchedTo.length < 5 ? (
                   <div>Recipient ID looks short — ensure you entered a full account ID.</div>
                 ) : (
-                  <div>Enter the recipient's account ID. For external transfers, use the provided reference.</div>
+                  <div>
+                    Enter the recipient's account ID. For external transfers, use the provided
+                    reference.
+                  </div>
                 )}
               </div>
 
@@ -111,7 +118,9 @@ export default function Payments() {
               </div>
 
               <div className="md:col-span-2" aria-live="polite">
-                {alert && <Alert kind={alert.kind === 'error' ? 'error' : alert.kind}>{alert.msg}</Alert>}
+                {alert && (
+                  <Alert kind={alert.kind === 'error' ? 'error' : alert.kind}>{alert.msg}</Alert>
+                )}
               </div>
             </form>
           </Card>

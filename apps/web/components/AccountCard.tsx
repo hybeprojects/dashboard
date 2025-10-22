@@ -26,7 +26,11 @@ export default function AccountCard({ account, loading }: { account?: any; loadi
         </div>
         <div className="text-xs text-gray-400">
           {accountId ? (
-            <Link href={`/dashboard/accounts/${accountId}`} className="hover:underline" aria-label={`View account ${accountId}`}>
+            <Link
+              href={`/dashboard/accounts/${accountId}`}
+              className="hover:underline"
+              aria-label={`View account ${accountId}`}
+            >
               Acct #{String(accountId)}
             </Link>
           ) : (
