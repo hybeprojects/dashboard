@@ -1,28 +1,26 @@
 module.exports = {
   apps: [
     {
-      name: 'dashboard-server',
-      script: 'server/server.js',
+      name: 'fineract-sync-worker',
+      script: './scripts/sync_worker.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
+    {
+      name: 'fineract-realtime-trigger',
+      script: './scripts/realtime_trigger.js',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '200M',
-    },
-    {
-      name: 'reconcile-worker',
-      script: 'server/jobs/reconcile_worker.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '100M',
-    },
-    {
-      name: 'backup-worker',
-      script: 'server/jobs/backup_worker.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '100M',
+      env: {
+        NODE_ENV: 'production',
+      },
     },
   ],
 };

@@ -1,48 +1,80 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import cookie from 'cookie';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { createClient } from '@supabase/supabase-js';
+import { ensureFineractClient } from '../../../lib/fineract';
+import { getServiceRoleClient } from '../../../lib/supabase/api';
+import { recordMetric } from '../../../lib/metrics';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // This endpoint is a best-effort callback handler for OAuth/magic-link redirects.
-  // It will set a server-side cookie when Supabase returns tokens in query params.
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).end('Method Not Allowed');
+  }
+
+  const { access_token } = req.body || {};
+  if (!access_token) return res.status(400).json({ error: 'access_token required' });
+
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !SUPABASE_ANON)
+    return res.status(500).json({ error: 'Supabase not configured' });
+
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON, {
+    global: { headers: { Authorization: `Bearer ${access_token}` } },
+    auth: { persistSession: false },
+  });
+
   try {
-    const { access_token, refresh_token, expires_in, error, error_description } = req.query as any;
+    const { data: userData, error: userErr } = await client.auth.getUser(access_token as any);
+    if (userErr) return res.status(400).json({ error: userErr.message || 'Failed to get user' });
+    const user = userData?.data?.user;
+    if (!user) return res.status(400).json({ error: 'No user from token' });
 
-    if (error) {
-      // Redirect to login with error message
-      const dest = '/login';
-      return res.redirect(dest);
-    }
+    // Use service role client to update backend mapping
+    const serviceSupabase = getServiceRoleClient();
+    if (!serviceSupabase) return res.status(500).json({ error: 'Service client not configured' });
 
-    if (access_token) {
-      const token = String(access_token);
-      const maxAge = expires_in ? Number(expires_in) : undefined;
-      const cookieOpts: any = {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      };
-      if (typeof maxAge === 'number' && !Number.isNaN(maxAge)) cookieOpts.maxAge = maxAge;
+    const firstName = user.user_metadata?.first_name || user.user_metadata?.firstName || '';
+    const lastName = user.user_metadata?.last_name || user.user_metadata?.lastName || '';
 
-      res.setHeader('Set-Cookie', cookie.serialize('sb-access-token', token, cookieOpts));
-
-      // Optionally set refresh token
-      if (refresh_token) {
-        res.setHeader(
-          'Set-Cookie',
-          cookie.serialize('sb-refresh-token', String(refresh_token), { ...cookieOpts }),
-        );
+    try {
+      const clientId = await ensureFineractClient(serviceSupabase, user.id, {
+        firstName,
+        lastName,
+        email: user.email,
+      });
+      if (clientId) {
+        await recordMetric('fineract.link.success', { userId: user.id, clientId });
+      } else {
+        await recordMetric('fineract.link.missing', { userId: user.id });
       }
 
-      // Redirect to dashboard or provided next param
-      const redirectTo = (req.query.next as string) || '/dashboard';
-      return res.redirect(redirectTo);
-    }
+      // Set server-side cookie so SSR can pick up session similar to login flow
+      try {
+        const cookie = require('cookie');
+        const token = access_token;
+        const cookieOpts: any = {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        };
+        const cookieStr = cookie.serialize('sb-access-token', String(token), cookieOpts);
+        res.setHeader('Set-Cookie', cookieStr);
+      } catch (e) {
+        // ignore cookie errors
+      }
 
-    // Nothing to do — redirect to login
-    return res.redirect('/login');
-  } catch (err) {
-    console.error('Auth callback error', err);
-    return res.redirect('/login');
+      return res.status(200).json({ ok: true, fineract_client_id: clientId });
+    } catch (e: any) {
+      await recordMetric('fineract.link.failure', {
+        userId: user.id,
+        error: e?.message || String(e),
+      });
+      return res.status(500).json({ error: e?.message || 'Linking failed' });
+    }
+  } catch (e: any) {
+    console.error('OAuth callback error', e);
+    await recordMetric('fineract.callback.error', { error: e?.message || String(e) });
+    return res.status(500).json({ error: e?.message || 'Unknown error' });
   }
 }
