@@ -17,7 +17,11 @@ export default function RegisterIndex() {
               No monthly fees, free ATM withdrawals, and smart savings goals.
             </p>
             <div className="mt-4">
-              <Link href="/register/personal" className="btn-primary text-sm" aria-label="Open a personal account">
+              <Link
+                href="/register/personal"
+                className="btn-primary text-sm"
+                aria-label="Open a personal account"
+              >
                 Continue — Personal
               </Link>
             </div>
@@ -28,7 +32,11 @@ export default function RegisterIndex() {
               Multi-user, approvals, virtual cards, and accounting integrations.
             </p>
             <div className="mt-4">
-              <Link href="/register/business" className="btn-primary text-sm" aria-label="Open a business account">
+              <Link
+                href="/register/business"
+                className="btn-primary text-sm"
+                aria-label="Open a business account"
+              >
                 Continue — Business
               </Link>
             </div>

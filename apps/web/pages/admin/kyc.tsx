@@ -127,9 +127,7 @@ export default function AdminKyc() {
     const term = q.trim().toLowerCase();
     return subs.filter((s) => {
       const matchesStatus = status === 'all' ? true : s.status === status;
-      const matchesQuery = term
-        ? `${s.full_name} ${s.email}`.toLowerCase().includes(term)
-        : true;
+      const matchesQuery = term ? `${s.full_name} ${s.email}`.toLowerCase().includes(term) : true;
       return matchesStatus && matchesQuery;
     });
   }, [subs, q, status]);
@@ -159,7 +157,9 @@ export default function AdminKyc() {
               ))}
             </div>
             <div className="flex-1 sm:flex-initial">
-              <label className="sr-only" htmlFor="search">Search</label>
+              <label className="sr-only" htmlFor="search">
+                Search
+              </label>
               <input
                 id="search"
                 className="input-field w-full"
@@ -171,9 +171,7 @@ export default function AdminKyc() {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</div>
-        )}
+        {error && <div className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
         {loading ? (
           <div className="space-y-4">
@@ -247,11 +245,19 @@ export default function AdminKyc() {
           {previewData && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {Object.entries(previewData).map(([label, url]) => (
-                <div key={label} className="border border-gray-200 dark:border-gray-800 rounded-lg p-2">
+                <div
+                  key={label}
+                  className="border border-gray-200 dark:border-gray-800 rounded-lg p-2"
+                >
                   <div className="text-xs mb-1 text-gray-600 dark:text-gray-400">{label}</div>
                   {url ? (
                     url.match(/\.pdf($|\?)/i) ? (
-                      <a href={url} target="_blank" rel="noreferrer" className="text-primary text-sm">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary text-sm"
+                      >
                         Open PDF in new tab
                       </a>
                     ) : (
