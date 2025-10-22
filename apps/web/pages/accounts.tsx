@@ -38,7 +38,7 @@ export default function AccountsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-gray-500">{a.name || 'Account'}</div>
-                  <div className="font-medium">{`$${Number(a.balance ?? 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`}</div>
+                  <div className="font-medium">{`$${Number(a.balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
                 </div>
                 <Link href={`/accounts/${a.id}`} className="text-primary text-sm font-semibold">
                   View

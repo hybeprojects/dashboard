@@ -51,7 +51,9 @@ export default function Landing() {
           ].map((f) => (
             <div key={f.title} className="card-surface p-6 flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <span className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">{f.title[0]}</span>
+                <span className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                  {f.title[0]}
+                </span>
                 <div className="text-lg font-semibold">{f.title}</div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>

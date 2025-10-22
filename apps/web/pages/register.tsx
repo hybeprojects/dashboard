@@ -16,10 +16,14 @@ export default function Register() {
             className="card-surface p-6 block text-left hover:shadow-md transition-shadow duration-200 rounded-lg"
           >
             <div className="flex items-start gap-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">P</div>
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                P
+              </div>
               <div>
                 <h3 className="text-xl font-semibold mb-1">Personal Account</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">For individuals. Get a free checking and savings account with no monthly fees.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  For individuals. Get a free checking and savings account with no monthly fees.
+                </p>
                 <div className="mt-4">
                   <span className="text-primary font-medium">Get Started →</span>
                 </div>
@@ -31,10 +35,15 @@ export default function Register() {
             className="card-surface p-6 block text-left hover:shadow-md transition-shadow duration-200 rounded-lg"
           >
             <div className="flex items-start gap-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">B</div>
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                B
+              </div>
               <div>
                 <h3 className="text-xl font-semibold mb-1">Business Account</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">For businesses of all sizes. Get a powerful checking account with business-focused features.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  For businesses of all sizes. Get a powerful checking account with business-focused
+                  features.
+                </p>
                 <div className="mt-4">
                   <span className="text-primary font-medium">Open Business →</span>
                 </div>
