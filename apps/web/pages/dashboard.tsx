@@ -317,9 +317,31 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <button className={`${primary} w-full rounded-xl px-4 py-4 text-center font-semibold`}>
-            Open a savings account
-          </button>
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-medium">Recent activity</div>
+              <Link href="/transactions" className="text-sm text-gray-500 hover:underline">View all</Link>
+            </div>
+            <div className="space-y-3">
+              {(txLoading ? [undefined, undefined, undefined] : transactionsArr.slice(0, 3)).map((t: any, i: number) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">{t ? t.description || 'Transaction' : <span className="inline-block h-4 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />}</div>
+                    <div className="text-xs text-gray-500">{t ? new Date(t.created_at).toLocaleString() : <span className="inline-block h-3 w-32 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />}</div>
+                  </div>
+                  <div className={`font-medium ${t ? (t.type === 'credit' ? 'text-green-600' : 'text-gray-900') : 'text-gray-900'}`}>
+                    {t ? `$${Number(t.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : <span className="inline-block h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <div>
+            <Button className="w-full" type="button">
+              Open a savings account
+            </Button>
+          </div>
         </main>
 
         <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
