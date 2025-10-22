@@ -11,9 +11,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: 18
+      NODE_VERSION: 20
       NEXT_BASE_URL: http://localhost:3000
-      SERVER_BASE_URL: http://localhost:5000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,33 +29,21 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Seed server data
-        run: node server/seed.js
-
-      - name: Start backend server
-        run: |
-          nohup node server/server.js > server.log 2>&1 &
-          echo $! > server.pid
+      - name: Build Next.js app
+        run: npm run build
 
       - name: Start Next.js app
         run: |
-          nohup npm --prefix apps/web run dev > next.log 2>&1 &
+          nohup npm --prefix apps/web run start > next.log 2>&1 &
           echo $! > next.pid
 
-      - name: Wait for services
+      - name: Wait for Next.js app
         run: |
           set -e
-          echo "Waiting for backend..."
-          for i in {1..60}; do
-            if curl -sSf ${SERVER_BASE_URL}/api/health >/dev/null 2>&1; then
-              echo "Backend ready"; break
-            fi
-            sleep 1
-          done
-          echo "Waiting for web..."
+          echo "Waiting for Next.js app..."
           for i in {1..60}; do
             if curl -sSf ${NEXT_BASE_URL} >/dev/null 2>&1; then
-              echo "Web ready"; break
+              echo "Next.js app ready"; break
             fi
             sleep 1
           done
@@ -75,6 +62,5 @@ jobs:
         if: always()
         run: |
           set +e
-          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
           if [ -f next.pid ]; then kill $(cat next.pid) || true; fi
-          pkill -f node || true
+          pkill -f "next start" || true
