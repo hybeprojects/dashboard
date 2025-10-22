@@ -33,6 +33,9 @@ module.exports = [
       // Basic Next.js rules without the problematic plugin
       'react/no-unescaped-entities': 'off',
       'react/display-name': 'off',
+      // Turn off rules that require optional plugins not present in CI
+      'react-hooks/exhaustive-deps': 'off',
+      '@next/next/no-img-element': 'off',
     },
   },
   prettierConfig,
