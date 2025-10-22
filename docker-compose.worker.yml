@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  fineract-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - FINERACT_URL=${FINERACT_URL}
+      - FINERACT_USERNAME=${FINERACT_USERNAME}
+      - FINERACT_PASSWORD=${FINERACT_PASSWORD}
+      - FINERACT_TENANT_ID=${FINERACT_TENANT_ID}
+    volumes:
+      - ./scripts:/app/scripts:ro
+    restart: unless-stopped

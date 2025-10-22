@@ -19,7 +19,6 @@
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@playwright/test": "^1.56.1",
-    "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query-devtools": "^5.90.2",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
@@ -40,6 +39,8 @@
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
     "@tailwindcss/postcss": "^4.1.15",
-    "framer-motion": "^10.12.16"
+    "framer-motion": "^10.12.16",
+    "@supabase/supabase-js": "^2.76.1",
+    "axios": "^1.12.2"
   }
 }
