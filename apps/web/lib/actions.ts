@@ -91,13 +91,11 @@ export async function triggerFineractSync(userId: string) {
     const serviceClient = getServiceRoleClient();
     if (!serviceClient) return { success: false, error: 'Service client not configured' };
 
-    const { error } = await serviceClient
-      .from('fineract_sync_queue')
-      .insert({
-        user_id: userId,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      });
+    const { error } = await serviceClient.from('fineract_sync_queue').insert({
+      user_id: userId,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    });
 
     if (error) throw error;
     return { success: true };
