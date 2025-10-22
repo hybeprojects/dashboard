@@ -14,11 +14,7 @@ export default function Landing() {
 
       <main id="main" role="main">
         {/* Hero */}
-        <section
-          id="hero"
-          aria-labelledby="hero-heading"
-          className="section py-20"
-        >
+        <section id="hero" aria-labelledby="hero-heading" className="section py-20">
           <div className="max-w-3xl">
             <motion.h1
               id="hero-heading"
@@ -71,26 +67,25 @@ export default function Landing() {
               title: 'Real-time Insights',
               desc: 'Track spending, budgets, and cash flow with live analytics.',
             },
-          ].map((f) => (
-            <article
-              key={f.title}
-              className="card-surface p-6 flex flex-col gap-3"
-              aria-labelledby={`feat-${f.title.replace(/\s+/g, '-').toLowerCase()}`}
-            >
-              <div className="flex items-center gap-3">
-                <span
-                  className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold"
-                  aria-hidden
-                >
-                  {f.title[0]}
-                </span>
-                <div id={`feat-${f.title.replace(/\s+/g, '-').toLowerCase()`} className="text-lg font-semibold">
-                  {f.title}
+          ].map((f) => {
+            const id = 'feat-' + f.title.replace(/\s+/g, '-').toLowerCase();
+            return (
+              <article key={f.title} className="card-surface p-6 flex flex-col gap-3" aria-labelledby={id}>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold"
+                    aria-hidden
+                  >
+                    {f.title[0]}
+                  </span>
+                  <div id={id} className="text-lg font-semibold">
+                    {f.title}
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
-            </article>
-          ))}
+                <p className="text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
+              </article>
+            );
+          })}
         </section>
 
         {/* Stats */}
@@ -107,7 +102,7 @@ export default function Landing() {
               key={s.v}
               className="rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center"
               role="group"
-              aria-label={`${s.v} ${s.k}`}
+              aria-label={s.v + ' ' + s.k}
             >
               <div className="text-3xl font-bold text-primary">{s.k}</div>
               <div className="text-sm mt-1 text-gray-600 dark:text-gray-400">{s.v}</div>
@@ -126,12 +121,7 @@ export default function Landing() {
               Multi-user, approvals, virtual cards, and accounting integrations.
             </p>
             <div className="mt-4">
-              <Link
-                href="/register/business"
-                className="btn-primary text-sm"
-                role="button"
-                aria-label="Open a business account"
-              >
+              <Link href="/register/business" className="btn-primary text-sm" role="button" aria-label="Open a business account">
                 Open Business Account
               </Link>
             </div>
@@ -142,12 +132,7 @@ export default function Landing() {
               No hidden fees, free ATM withdrawals, and smart savings goals.
             </p>
             <div className="mt-4">
-              <Link
-                href="/register/personal"
-                className="btn-primary text-sm"
-                role="button"
-                aria-label="Open a personal account"
-              >
+              <Link href="/register/personal" className="btn-primary text-sm" role="button" aria-label="Open a personal account">
                 Get Started
               </Link>
             </div>
@@ -177,12 +162,7 @@ export default function Landing() {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Open an account in minutes. No branch visit required.
           </p>
-          <Link
-            href="/register"
-            className="btn-primary"
-            role="button"
-            aria-label="Open your account — Get started"
-          >
+          <Link href="/register" className="btn-primary" role="button" aria-label="Open your account — Get started">
             Open Your Account
           </Link>
         </section>
