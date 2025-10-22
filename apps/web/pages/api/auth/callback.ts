@@ -47,6 +47,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         await recordMetric('fineract.link.missing', { userId: user.id });
       }
+
+      // Set server-side cookie so SSR can pick up session similar to login flow
+      try {
+        const cookie = require('cookie');
+        const token = access_token;
+        const cookieOpts: any = {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        };
+        const cookieStr = cookie.serialize('sb-access-token', String(token), cookieOpts);
+        res.setHeader('Set-Cookie', cookieStr);
+      } catch (e) {
+        // ignore cookie errors
+      }
+
       return res.status(200).json({ ok: true, fineract_client_id: clientId });
     } catch (e: any) {
       await recordMetric('fineract.link.failure', {
