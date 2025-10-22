@@ -246,7 +246,7 @@ export default function Dashboard() {
                 <Icon d={icons.search} />
               </span>
               <input
-                className="w-full rounded-full bg-gray-100 dark:bg-gray-800 pl-10 pr-4 py-2 text-sm outline-none"
+                className="input-field rounded-full pl-10 pr-4 text-sm"
                 placeholder="How can we help?"
                 aria-label="Search"
               />
