@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
 import useRequireAuth from '../hooks/useRequireAuth';
@@ -96,11 +97,7 @@ export default function TransferPage() {
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600">From</label>
-            <select
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="w-full border rounded p-2"
-            >
+            <select value={from} onChange={(e) => setFrom(e.target.value)} className="input-field">
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name} • ${Number(a.balance ?? 0).toLocaleString()}
@@ -111,11 +108,7 @@ export default function TransferPage() {
 
           <div>
             <label className="block text-xs text-gray-600">To (account id)</label>
-            <input
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="w-full border rounded p-2"
-            />
+            <input value={to} onChange={(e) => setTo(e.target.value)} className="input-field" />
           </div>
 
           <div>
@@ -123,7 +116,7 @@ export default function TransferPage() {
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded p-2"
+              className="input-field"
             />
           </div>
 
@@ -131,9 +124,9 @@ export default function TransferPage() {
           {success && <div className="text-green-600">{success}</div>}
 
           <div>
-            <button disabled={loading} className="w-full bg-blue-600 text-white rounded py-2">
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Sending…' : 'Send Transfer'}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>

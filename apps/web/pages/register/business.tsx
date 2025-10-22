@@ -160,7 +160,7 @@ export default function BusinessRegister() {
           <div>
             <label className="block text-sm mb-1">ID document (front)</label>
             <input
-              className="w-full"
+              className="input-field"
               type="file"
               accept="image/*,.pdf"
               {...register('idFront' as any)}
@@ -169,7 +169,7 @@ export default function BusinessRegister() {
           <div>
             <label className="block text-sm mb-1">ID document (back)</label>
             <input
-              className="w-full"
+              className="input-field"
               type="file"
               accept="image/*,.pdf"
               {...register('idBack' as any)}
@@ -180,7 +180,7 @@ export default function BusinessRegister() {
               Proof of address (utility bill or bank statement)
             </label>
             <input
-              className="w-full"
+              className="input-field"
               type="file"
               accept="image/*,.pdf"
               {...register('proofAddress' as any)}

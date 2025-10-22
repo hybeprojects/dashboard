@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
 import { createClient } from '../lib/supabase/client';
@@ -219,25 +220,41 @@ export default function Dashboard() {
       <div className="md:hidden min-h-screen pb-20">
         <header className="px-4 pt-3">
           <div className="flex items-center justify-between">
-            <button className="flex items-center gap-1 text-sm" aria-label="Menu">
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2 text-sm"
+              aria-label="Menu"
+            >
               <Icon d={icons.menu} />
               <span>Menu</span>
-            </button>
+            </Button>
             <div className="text-sm text-gray-500">Dashboard</div>
-            <div className="flex items-center gap-4">
-              <button aria-label="Inbox" className="text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                aria-label="Inbox"
+                className="h-10 w-10 p-0 flex items-center justify-center"
+              >
                 <Icon d={icons.inbox} />
-              </button>
-              <button aria-label="Products" className="text-gray-600 dark:text-gray-300">
+              </Button>
+              <Button
+                variant="secondary"
+                aria-label="Products"
+                className="h-10 w-10 p-0 flex items-center justify-center"
+              >
                 <Icon d={icons.products} />
-              </button>
-              <button aria-label="Log out" className="text-gray-600 dark:text-gray-300">
+              </Button>
+              <Button
+                variant="secondary"
+                aria-label="Log out"
+                className="h-10 w-10 p-0 flex items-center justify-center"
+              >
                 <Icon d={icons.power} />
-              </button>
+              </Button>
             </div>
           </div>
-          <div className="mt-3 flex gap-6 border-b border-gray-200 dark:border-gray-800 text-sm">
-            <button className="-mb-px pb-2 border-b-2 border-red-600 font-medium">Accounts</button>
+          <div className="mt-3 flex gap-4 border-b border-gray-200 dark:border-gray-800 text-sm">
+            <button className="-mb-px pb-2 border-b-2 border-primary font-medium">Accounts</button>
             <button className="pb-2 text-gray-500">Dashboard</button>
           </div>
           <div className="mt-3">
@@ -246,7 +263,7 @@ export default function Dashboard() {
                 <Icon d={icons.search} />
               </span>
               <input
-                className="w-full rounded-full bg-gray-100 dark:bg-gray-800 pl-10 pr-4 py-2 text-sm outline-none"
+                className="input-field rounded-full pl-10 pr-4 text-sm"
                 placeholder="How can we help?"
                 aria-label="Search"
               />
@@ -256,17 +273,20 @@ export default function Dashboard() {
 
         <main className="px-4 py-4 space-y-3">
           <Card className="p-0">
-            <button className="w-full flex items-center justify-between px-4 py-4">
-              <div className="text-left">
+            <Button variant="secondary" className="w-full justify-between px-4 py-4 text-left">
+              <div>
                 <div className="text-sm text-gray-500">
                   Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
-            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+            </Button>
+            <Button
+              variant="secondary"
+              className="w-full justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800"
+            >
               <div className="flex items-start gap-3">
-                <Icon d={icons.radio} className="text-blue-600" />
+                <Icon d={icons.radio} className="text-primary" />
                 <div className="text-left">
                   <div className="font-medium">PremierBank Life Plan</div>
                   <div className="text-xs text-gray-500">
@@ -275,11 +295,14 @@ export default function Dashboard() {
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
-            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+            </Button>
+            <Button
+              variant="secondary"
+              className="w-full justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800"
+            >
               <div className="text-left">My Rewards</div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
+            </Button>
           </Card>
 
           <Card className="p-0 overflow-hidden">
@@ -305,7 +328,7 @@ export default function Dashboard() {
                     </div>
                     <Link
                       href={`/accounts/${acct ? (acct.id ?? acct.accountId ?? acct.number ?? i) : i}`}
-                      className="text-blue-700 font-semibold text-sm"
+                      className="text-primary font-semibold text-sm"
                     >
                       VIEW
                     </Link>
@@ -320,12 +343,59 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <button className={`${primary} w-full rounded-xl px-4 py-4 text-center font-semibold`}>
-            Open a savings account
-          </button>
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-medium">Recent activity</div>
+              <Link href="/transactions" className="text-sm text-gray-500 hover:underline">
+                View all
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {(txLoading ? [undefined, undefined, undefined] : transactionsArr.slice(0, 3)).map(
+                (t: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">
+                        {t ? (
+                          t.description || 'Transaction'
+                        ) : (
+                          <span className="inline-block h-4 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {t ? (
+                          new Date(t.created_at).toLocaleString()
+                        ) : (
+                          <span className="inline-block h-3 w-32 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`font-medium ${t ? (t.type === 'credit' ? 'text-green-600' : 'text-gray-900') : 'text-gray-900'}`}
+                    >
+                      {t ? (
+                        `$${Number(t.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      ) : (
+                        <span className="inline-block h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                      )}
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          </Card>
+
+          <div>
+            <Button className="w-full" type="button">
+              Open a savings account
+            </Button>
+          </div>
         </main>
 
-        <nav className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <nav
+          aria-label="Primary mobile navigation"
+          className="fixed bottom-0 inset-x-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+        >
           <ul className="grid grid-cols-5 text-xs">
             <li className="flex flex-col items-center py-2 text-primary">
               <Link href="/accounts" className="flex flex-col items-center">
