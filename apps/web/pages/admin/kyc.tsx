@@ -83,12 +83,19 @@ export default function AdminKyc() {
                 className="card-surface p-4 flex flex-col md:flex-row md:items-center md:justify-between"
               >
                 <div className="flex-1">
-                  <div className="font-medium">
-                    {s.full_name} — {s.email}
+                  <div className="flex items-center gap-3">
+                    <div className="font-medium">{s.full_name} — {s.email}</div>
+                    <div>
+                      {s.status === 'approved' ? (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800">Approved</span>
+                      ) : s.status === 'rejected' ? (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800">Rejected</span>
+                      ) : (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-yellow-50 text-yellow-800">Pending</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Submitted {new Date(s.created_at).toLocaleString()}
-                  </div>
+                  <div className="text-sm text-gray-500">Submitted {new Date(s.created_at).toLocaleString()}</div>
                   <div className="text-sm">Address: {s.address}</div>
                   <div className="text-sm">SSN last4: •••• {s.ssn_last4}</div>
                 </div>
