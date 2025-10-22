@@ -1,4 +1,4 @@
-import getServerSupabase from '../../pages/api/_serverSupabase';
+import { getServiceRoleClient } from './api';
 import { logger } from '../logger';
 
 export function validateServerEnv() {
@@ -24,7 +24,7 @@ export function validateServerEnv() {
 
 export async function safeTestSupabaseConnection() {
   logger.info('Starting Supabase test query');
-  const supabase = getServerSupabase();
+  const supabase = getServiceRoleClient();
   if (!supabase) {
     logger.error('getServerSupabase returned null');
     return {
@@ -48,7 +48,7 @@ export async function safeTestSupabaseConnection() {
 }
 
 export async function getSchemaInfo() {
-  const supabase = getServerSupabase();
+  const supabase = getServiceRoleClient();
   if (!supabase) {
     logger.error('getServerSupabase returned null for schema check');
     return { ok: false, error: 'Supabase service client not configured' } as const;
@@ -95,7 +95,7 @@ export async function getSchemaInfo() {
 }
 
 async function getTableInfo(table: string) {
-  const supabase = getServerSupabase();
+  const supabase = getServiceRoleClient();
   if (!supabase) return { exists: false } as const;
 
   try {
@@ -202,7 +202,7 @@ async function getTableInfo(table: string) {
 }
 
 export async function sampleCounts(tables: string[] = ['profiles', 'accounts', 'transactions']) {
-  const supabase = getServerSupabase();
+  const supabase = getServiceRoleClient();
   if (!supabase) {
     logger.error('getServerSupabase returned null for sampleCounts');
     return { ok: false, error: 'Supabase service client not configured' } as const;
@@ -237,7 +237,7 @@ export async function sampleCounts(tables: string[] = ['profiles', 'accounts', '
 }
 
 export async function fetchInformationSchema(tables: string[]) {
-  const supabase = getServerSupabase();
+  const supabase = getServiceRoleClient();
   if (!supabase) return { ok: false, error: 'Supabase service client not configured' } as const;
 
   try {
