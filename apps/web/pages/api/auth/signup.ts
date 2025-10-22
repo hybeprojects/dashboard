@@ -54,62 +54,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.warn('Failed to upsert profile', e);
       }
 
-      // attempt to create a Fineract client (best-effort)
+      // attempt to create or link a Fineract client (best-effort)
       try {
-        const fineractUrl = process.env.FINERACT_URL || process.env.FINERACT_BASE_URL;
-        const username = process.env.FINERACT_USERNAME;
-        const passwordEnv = process.env.FINERACT_PASSWORD;
-        const tenant = process.env.FINERACT_TENANT_ID || process.env.FINERACT_TENANT;
-        if (fineractUrl && username && passwordEnv) {
-          const body = { firstname: firstName || '', lastname: lastName || '' };
-          const axiosConfig: any = {
-            auth: { username, password: passwordEnv },
-            headers: {},
-            timeout: 10000,
-          };
-          if (tenant) axiosConfig.headers['Fineract-Platform-TenantId'] = tenant;
-          const resp = await axios.post(
-            `${fineractUrl.replace(/\/$/, '')}/clients`,
-            body,
-            axiosConfig,
-          );
-          const clientData = resp?.data || null;
-          // try to extract client id from common fields
-          const clientId = clientData?.clientId || clientData?.resourceId || clientData?.id || null;
-          if (clientId) {
-            await supabase
-              .from('profiles')
-              .update({ fineract_client_id: clientId })
-              .eq('id', user.id);
-          }
-
-          // Ensure app_users mapping exists for server routes that previously used users.json
-          try {
-            const appUser = {
-              id: user.id,
-              email: user.email,
-              fineract_client_id: clientId || null,
-              account_id: null,
-              first_name: firstName || null,
-              last_name: lastName || null,
-            };
-            await supabase.from('app_users').upsert(appUser, { onConflict: 'id' });
-          } catch (e) {
-            // best-effort: don't fail signup if app_users table doesn't exist
-
-            console.warn(
-              'Failed to upsert app_users',
-              e && (e as any).message ? (e as any).message : e,
-            );
-          }
-        }
+        const { ensureFineractClient } = require('../../../lib/fineract');
+        // don't block signup if linking fails
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        ensureFineractClient(supabase, user.id, {
+          firstName: firstName || user.user_metadata?.first_name || '',
+          lastName: lastName || user.user_metadata?.last_name || '',
+          email: user.email,
+        });
       } catch (e) {
-        // log but don't fail signup
-
-        console.warn(
-          'Fineract client creation failed',
-          e && (e as any).message ? (e as any).message : e,
-        );
+        console.warn('Fineract linking failed during signup', e && (e as any).message ? (e as any).message : e);
       }
     }
 
