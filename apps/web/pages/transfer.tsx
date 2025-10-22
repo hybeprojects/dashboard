@@ -99,7 +99,7 @@ export default function TransferPage() {
             <select
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="w-full border rounded p-2"
+              className="input-field"
             >
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
