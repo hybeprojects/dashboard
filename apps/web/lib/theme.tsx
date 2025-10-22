@@ -20,9 +20,10 @@ export default function ThemeToggle() {
     );
   }
 
-  const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia
-    ? window.matchMedia('(prefers-color-scheme: dark)').matches
-    : false;
+  const systemPrefersDark =
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false;
   const isDark = theme === 'dark' || (theme === 'system' && systemPrefersDark);
 
   return (
