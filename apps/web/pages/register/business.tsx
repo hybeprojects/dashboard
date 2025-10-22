@@ -180,7 +180,7 @@ export default function BusinessRegister() {
               Proof of address (utility bill or bank statement)
             </label>
             <input
-              className="w-full"
+              className="input-field"
               type="file"
               accept="image/*,.pdf"
               {...register('proofAddress' as any)}
