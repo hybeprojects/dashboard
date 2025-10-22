@@ -76,7 +76,6 @@ export default function AdminKyc() {
 
   useEffect(() => {
     load();
-    
   }, [page]);
 
   async function load() {
@@ -261,7 +260,6 @@ export default function AdminKyc() {
                         Open PDF in new tab
                       </a>
                     ) : (
-                      
                       <img src={url} alt={label} className="w-full h-48 object-contain" />
                     )
                   ) : (
