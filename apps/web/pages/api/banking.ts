@@ -39,13 +39,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // default: return all
-    const [{ data: accounts }, { data: transactions }, { data: notifications }] = await Promise.all([
-      supabase.from('accounts').select('*'),
-      supabase.from('transactions').select('*').order('created_at', { ascending: false }),
-      supabase.from('notifications').select('*'),
-    ]);
+    const [{ data: accounts }, { data: transactions }, { data: notifications }] = await Promise.all(
+      [
+        supabase.from('accounts').select('*'),
+        supabase.from('transactions').select('*').order('created_at', { ascending: false }),
+        supabase.from('notifications').select('*'),
+      ],
+    );
 
-    return res.status(200).json({ accounts: accounts ?? [], transactions: transactions ?? [], notifications: notifications ?? [] });
+    return res
+      .status(200)
+      .json({
+        accounts: accounts ?? [],
+        transactions: transactions ?? [],
+        notifications: notifications ?? [],
+      });
   } catch (e: any) {
     console.error('banking api error', e?.message || e);
     return res.status(500).json({ error: e?.message || String(e) });

@@ -28,7 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Optionally set refresh token
       if (refresh_token) {
-        res.setHeader('Set-Cookie', cookie.serialize('sb-refresh-token', String(refresh_token), { ...cookieOpts }))
+        res.setHeader(
+          'Set-Cookie',
+          cookie.serialize('sb-refresh-token', String(refresh_token), { ...cookieOpts }),
+        );
       }
 
       // Redirect to dashboard or provided next param

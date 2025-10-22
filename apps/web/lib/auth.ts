@@ -13,18 +13,38 @@ export async function login(email: string, password: string) {
   });
   const data = await parseJson(res);
   // server returns Supabase response shape
-  const user = data?.user ? { id: data.user.id, email: data.user.email, firstName: data.user.user_metadata?.first_name, lastName: data.user.user_metadata?.last_name } : null;
+  const user = data?.user
+    ? {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+      }
+    : null;
   return { accessToken: data?.session?.access_token, user };
 }
 
-export async function register(payload: { email: string; password: string; firstName?: string; lastName?: string; userType?: string }) {
+export async function register(payload: {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  userType?: string;
+}) {
   const res = await fetch('/api/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const data = await parseJson(res);
-  const user = data?.user ? { id: data.user.id, email: data.user.email, firstName: data.user.user_metadata?.first_name, lastName: data.user.user_metadata?.last_name } : null;
+  const user = data?.user
+    ? {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+      }
+    : null;
   return { accessToken: data?.session?.access_token, user };
 }
 
