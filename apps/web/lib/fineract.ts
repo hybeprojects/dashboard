@@ -4,17 +4,23 @@ type CallOpts = {
   method?: string;
   query?: Record<string, string | number | boolean> | null;
   body?: any;
-  // If true, treat response as text and return it directly
   rawText?: boolean;
 };
 
+async function getSentry() {
+  try {
+    const Sentry = await import('@sentry/react');
+    return Sentry;
+  } catch (e) {
+    return null;
+  }
+}
+
 /**
  * Call the Supabase Edge Function `fineract-adapter` which proxies requests to Fineract.
- * The adapter requires an Authorization header (Bearer <supabase access token>).
- * This helper automatically attaches the current session access token and invokes
- * the Edge Function using the Supabase client.
  */
 export async function callFineract(path: string, opts: CallOpts = {}) {
+  const Sentry = await getSentry();
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase client not available (must call from browser)');
 
@@ -28,35 +34,36 @@ export async function callFineract(path: string, opts: CallOpts = {}) {
 
   const headers: Record<string, string> = { Authorization: `Bearer ${access}` };
 
-  // use Supabase Functions invoke API — this sends to the named Edge Function
   const fnName = 'fineract-adapter';
-  const invokeResp = await supabase.functions.invoke(fnName, {
-    body: payload,
-    headers,
-  });
+  try {
+    const invokeResp = await supabase.functions.invoke(fnName, {
+      body: payload,
+      headers,
+    });
 
-  if ((invokeResp as any).error) {
-    // invoke API surface may return an error object
-    const err = (invokeResp as any).error;
-    throw new Error(err?.message || JSON.stringify(err));
-  }
-
-  // invokeResp.data may be a string or already-parsed object depending on the function
-  const data = (invokeResp as any).data;
-  if (opts.rawText) return String(data);
-
-  // Try to parse string responses as JSON, otherwise return as-is
-  if (typeof data === 'string') {
-    try {
-      return JSON.parse(data);
-    } catch (e) {
-      return data;
+    if ((invokeResp as any).error) {
+      const err = (invokeResp as any).error;
+      if (Sentry && Sentry.captureException) Sentry.captureException(err);
+      throw new Error(err?.message || JSON.stringify(err));
     }
+
+    const data = (invokeResp as any).data;
+    if (opts.rawText) return String(data);
+
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return data;
+      }
+    }
+    return data;
+  } catch (e: any) {
+    if (Sentry && Sentry.captureException) Sentry.captureException(e);
+    throw new Error(e?.message || 'Fineract call failed');
   }
-  return data;
 }
 
-// Convenience wrappers
 export async function getFineract(path: string, query?: Record<string, any>) {
   return callFineract(path, { method: 'GET', query });
 }
