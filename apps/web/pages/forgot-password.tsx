@@ -1,13 +1,11 @@
 // apps/web/pages/forgot-password.tsx
 import Navbar from '../components/Navbar';
 import { useState } from 'react';
-import getSupabase from '../lib/supabase';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 
 const ForgotPassword = () => {
-  const supabase = getSupabase();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -17,19 +15,17 @@ const ForgotPassword = () => {
     setError('');
     setMessage('');
 
-    if (!supabase) {
-      setError('Supabase client not available');
-      return;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const res = await fetch('/api/auth/forgot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, redirectTo: `${window.location.origin}/reset-password` }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error || 'Failed to request reset');
       setMessage('Password reset link sent. Please check your email.');
+    } catch (err: any) {
+      setError(err?.message || 'Request failed');
     }
   };
 
