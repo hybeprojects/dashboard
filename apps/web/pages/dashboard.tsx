@@ -220,21 +220,21 @@ export default function Dashboard() {
       <div className="md:hidden min-h-screen pb-20">
         <header className="px-4 pt-3">
           <div className="flex items-center justify-between">
-            <button className="flex items-center gap-1 text-sm" aria-label="Menu">
+            <Button variant="secondary" className="flex items-center gap-2 text-sm" aria-label="Menu">
               <Icon d={icons.menu} />
               <span>Menu</span>
-            </button>
+            </Button>
             <div className="text-sm text-gray-500">Dashboard</div>
-            <div className="flex items-center gap-4">
-              <button aria-label="Inbox" className="text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" aria-label="Inbox" className="h-10 w-10 p-0 flex items-center justify-center">
                 <Icon d={icons.inbox} />
-              </button>
-              <button aria-label="Products" className="text-gray-600 dark:text-gray-300">
+              </Button>
+              <Button variant="secondary" aria-label="Products" className="h-10 w-10 p-0 flex items-center justify-center">
                 <Icon d={icons.products} />
-              </button>
-              <button aria-label="Log out" className="text-gray-600 dark:text-gray-300">
+              </Button>
+              <Button variant="secondary" aria-label="Log out" className="h-10 w-10 p-0 flex items-center justify-center">
                 <Icon d={icons.power} />
-              </button>
+              </Button>
             </div>
           </div>
           <div className="mt-3 flex gap-6 border-b border-gray-200 dark:border-gray-800 text-sm">
