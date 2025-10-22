@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import AccountCard from '../components/AccountCard';
 import Card from '../components/ui/Card';
 import { createClient } from '../lib/supabase/client';
 import type { Database } from '../lib/supabase/types.gen';
@@ -31,28 +32,16 @@ export default function AccountsPage() {
 
       <div className="space-y-3">
         {isLoading ? (
-          <div className="text-sm text-gray-500">Loading…</div>
+          Array.from({ length: 3 }).map((_, i) => <AccountCard key={i} loading />)
         ) : accounts && accounts.length > 0 ? (
-          accounts.map((a) => (
-            <Card key={a.id} className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-500">{a.name || 'Account'}</div>
-                  <div className="font-medium">{`$${Number(a.balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
-                </div>
-                <Link href={`/accounts/${a.id}`} className="text-primary text-sm font-semibold">
-                  View
-                </Link>
-              </div>
-            </Card>
-          ))
+          accounts.map((a) => <AccountCard key={a.id} account={a} />)
         ) : (
           <div className="text-sm text-gray-500">No accounts found</div>
         )}
       </div>
 
       <div className="mt-6">
-        <Link href="/open-account" className="btn-primary block text-center rounded-xl py-3">
+        <Link href="/register" className="btn-primary block text-center rounded-xl py-3">
           Open New Account
         </Link>
       </div>
