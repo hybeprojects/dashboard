@@ -97,11 +97,7 @@ export default function TransferPage() {
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600">From</label>
-            <select
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="input-field"
-            >
+            <select value={from} onChange={(e) => setFrom(e.target.value)} className="input-field">
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name} • ${Number(a.balance ?? 0).toLocaleString()}
@@ -112,11 +108,7 @@ export default function TransferPage() {
 
           <div>
             <label className="block text-xs text-gray-600">To (account id)</label>
-            <input
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="input-field"
-            />
+            <input value={to} onChange={(e) => setTo(e.target.value)} className="input-field" />
           </div>
 
           <div>
