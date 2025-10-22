@@ -26,20 +26,30 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 export async function signInWithEmailOtp(email: string, redirectTo?: string) {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase client not available');
   const redirect =
     redirectTo ??
     (process.env.NEXT_PUBLIC_SITE_URL
       ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(email)}`
       : undefined);
-  return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
+  const res = await fetch('/api/auth/magic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, redirectTo: redirect }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body?.error || 'Failed to send magic link');
+  return body;
 }
 
 export async function signInWithPhoneOtp(phone: string) {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase client not available');
-  return supabase.auth.signInWithOtp({ phone });
+  const res = await fetch('/api/auth/magic-phone', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body?.error || 'Failed to send phone OTP');
+  return body;
 }
 
 export async function signUpWithEmail(payload: {
@@ -48,24 +58,29 @@ export async function signUpWithEmail(payload: {
   options?: Record<string, unknown>;
   redirectTo?: string;
 }) {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase client not available');
-  const redirect =
-    payload.redirectTo ??
-    (process.env.NEXT_PUBLIC_SITE_URL
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?email=${encodeURIComponent(payload.email)}`
-      : undefined);
-  return supabase.auth.signUp({
-    email: payload.email,
-    password: payload.password,
-    options: { ...(payload.options || {}), emailRedirectTo: redirect },
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload }),
   });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body?.error || 'Signup failed');
+  return body;
 }
 
 export async function signOutSupabase() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch (e) {
+    // ignore
+  }
   const supabase = getSupabase();
   if (!supabase) return;
-  await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch (e) {
+    // ignore
+  }
 }
 
 export default getSupabase;

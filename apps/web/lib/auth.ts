@@ -1,26 +1,27 @@
 import { UserProfile } from '../types/api';
-import getSupabase from './supabase';
 
-function extractUser(dataUser: any): UserProfile | null {
-  if (!dataUser) return null;
-  return {
-    id: dataUser.id,
-    email: dataUser.email,
-    firstName: dataUser.user_metadata?.first_name,
-    lastName: dataUser.user_metadata?.last_name,
-  };
+function parseJson(res: Response) {
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  return res.json();
 }
 
 export async function login(email: string, password: string) {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message || 'Sign in failed');
-  const user = extractUser(data?.user);
-  return {
-    accessToken: data?.session?.access_token,
-    user,
-  };
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await parseJson(res);
+  // server returns Supabase response shape
+  const user = data?.user
+    ? {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+      }
+    : null;
+  return { accessToken: data?.session?.access_token, user };
 }
 
 export async function register(payload: {
@@ -30,48 +31,40 @@ export async function register(payload: {
   lastName?: string;
   userType?: string;
 }) {
-  const { email, password, firstName, lastName } = payload;
-  const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { first_name: firstName, last_name: lastName, user_type: payload.userType } },
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
-  if (error) throw error;
-  const user = data?.user || null;
-  return {
-    accessToken: data?.session?.access_token,
-    user: user
-      ? {
-          id: user.id,
-          email: user.email,
-          firstName: user.user_metadata?.first_name,
-          lastName: user.user_metadata?.last_name,
-        }
-      : null,
-  };
+  const data = await parseJson(res);
+  const user = data?.user
+    ? {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+      }
+    : null;
+  return { accessToken: data?.session?.access_token, user };
 }
 
 export async function logout() {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  await supabase.auth.signOut();
+  await fetch('/api/auth/logout', { method: 'POST' });
 }
 
 export async function me(): Promise<UserProfile | null> {
   try {
-    const supabase = getSupabase();
-    if (!supabase) return null;
-    const { data, error } = await supabase.auth.getUser();
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) return null;
+    const data = await res.json();
     const user = data?.user || null;
     if (!user) return null;
     return {
       id: user.id,
       email: user.email || '',
-      firstName: user.user_metadata?.first_name,
-      lastName: user.user_metadata?.last_name,
-    };
+      firstName: user.firstName,
+      lastName: user.lastName,
+    } as UserProfile;
   } catch (e) {
     return null;
   }
