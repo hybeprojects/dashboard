@@ -237,8 +237,8 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
-          <div className="mt-3 flex gap-6 border-b border-gray-200 dark:border-gray-800 text-sm">
-            <button className="-mb-px pb-2 border-b-2 border-red-600 font-medium">Accounts</button>
+          <div className="mt-3 flex gap-4 border-b border-gray-200 dark:border-gray-800 text-sm">
+            <button className="-mb-px pb-2 border-b-2 border-primary font-medium">Accounts</button>
             <button className="pb-2 text-gray-500">Dashboard</button>
           </div>
           <div className="mt-3">
