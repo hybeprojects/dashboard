@@ -104,27 +104,30 @@ export default function Dashboard() {
   const { data: accounts = [], isLoading: accLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
     queryFn: async (): Promise<AccountRow[]> => {
-      const { data } = await supabase.from('accounts').select('*');
-      return data ?? [];
+      const res = await fetch('/api/banking?type=accounts');
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      const json = await res.json();
+      return json.accounts ?? [];
     },
     staleTime: 30_000,
   });
   const { data: transactions = [], isLoading: txLoading } = useQuery<TransactionRow[]>({
     queryKey: ['transactions'],
     queryFn: async (): Promise<TransactionRow[]> => {
-      const { data } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      return data ?? [];
+      const res = await fetch('/api/banking?type=transactions');
+      if (!res.ok) throw new Error('Failed to fetch transactions');
+      const json = await res.json();
+      return json.transactions ?? [];
     },
     staleTime: 15_000,
   });
   const { data: notifications = [], isLoading: notifLoading } = useQuery<unknown[]>({
     queryKey: ['notifications'],
     queryFn: async (): Promise<unknown[]> => {
-      const { data } = await (supabase as any).from('notifications').select('*');
-      return (data as unknown[]) ?? [];
+      const res = await fetch('/api/banking?type=notifications');
+      if (!res.ok) throw new Error('Failed to fetch notifications');
+      const json = await res.json();
+      return (json.notifications as unknown[]) ?? [];
     },
     staleTime: 15_000,
   });
