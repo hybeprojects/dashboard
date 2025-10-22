@@ -1,6 +1,10 @@
 // apps/web/pages/forgot-password.tsx
+import Navbar from '../components/Navbar';
 import { useState } from 'react';
 import getSupabase from '../lib/supabase';
+import FormInput from '../components/ui/FormInput';
+import Button from '../components/ui/Button';
+import Alert from '../components/ui/Alert';
 
 const ForgotPassword = () => {
   const supabase = getSupabase();
@@ -30,21 +34,32 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div>
-      <h1>Forgot Password</h1>
-      <form onSubmit={handlePasswordReset}>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button type="submit">Send Reset Link</button>
-      </form>
-      {message && <p>{message}</p>}
-      {error && <p>{error}</p>}
+    <div className="container-page">
+      <Navbar />
+      <main className="section py-16">
+        <div className="max-w-md mx-auto">
+          <div className="card-surface p-6">
+            <h2 className="text-lg font-semibold">Forgot Password</h2>
+            <form className="mt-4 space-y-4" onSubmit={handlePasswordReset}>
+              <FormInput
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Button type="submit" className="w-full">
+                Send Reset Link
+              </Button>
+            </form>
+
+            <div className="mt-4">
+              {message && <Alert kind="success">{message}</Alert>}
+              {error && <Alert kind="error">{error}</Alert>}
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
