@@ -22,18 +22,20 @@ const FormInput = forwardRef<HTMLInputElement, Props>(
       else if (registerRef && typeof registerRef === 'object') (registerRef as any).current = el;
     };
 
+    const errorId = error ? `${String((props as any).name || label).replace(/\s+/g, '-')}-error` : undefined;
+
     return (
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">{label}</span>
+        <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
         <input
           ref={setRefs}
           className={inputClass}
           {...rest}
           aria-invalid={!!error}
-          aria-errormessage={error?.message}
+          aria-describedby={errorId}
         />
         {error && (
-          <span className="mt-1 block text-xs text-red-600" role="alert">
+          <span id={errorId} className="mt-1 block text-xs text-red-600" role="alert">
             {error.message}
           </span>
         )}
