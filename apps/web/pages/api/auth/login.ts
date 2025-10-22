@@ -53,15 +53,24 @@ export default async function handler(req: any, res: any) {
     const { ensureFineractClient } = require('../../../lib/fineract');
     const serviceSupabase = getServerSupabase();
     if (serviceSupabase && data?.user) {
-      const firstName = data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
-      const lastName = data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
+      const firstName =
+        data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
+      const lastName =
+        data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
       // don't block login response on linking
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      ensureFineractClient(serviceSupabase, data.user.id, { firstName, lastName, email: data.user.email });
+      ensureFineractClient(serviceSupabase, data.user.id, {
+        firstName,
+        lastName,
+        email: data.user.email,
+      });
     }
   } catch (e) {
     // ignore fineract linking errors
-    console.warn('Fineract linking failed in login handler', e && (e as any).message ? (e as any).message : e);
+    console.warn(
+      'Fineract linking failed in login handler',
+      e && (e as any).message ? (e as any).message : e,
+    );
   }
 
   return res.status(200).json(data);

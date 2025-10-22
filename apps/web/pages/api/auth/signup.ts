@@ -65,7 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           email: user.email,
         });
       } catch (e) {
-        console.warn('Fineract linking failed during signup', e && (e as any).message ? (e as any).message : e);
+        console.warn(
+          'Fineract linking failed during signup',
+          e && (e as any).message ? (e as any).message : e,
+        );
       }
     }
 

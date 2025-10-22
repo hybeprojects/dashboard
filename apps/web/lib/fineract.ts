@@ -1,12 +1,21 @@
 import axios from 'axios';
 
-export async function ensureFineractClient(supabase: any, userId: string, opts: { firstName?: string; lastName?: string; email?: string } = {}) {
+export async function ensureFineractClient(
+  supabase: any,
+  userId: string,
+  opts: { firstName?: string; lastName?: string; email?: string } = {},
+) {
   if (!supabase) return null;
 
   try {
     // Check existing mapping in profiles
-    const { data: profileData, error: profileErr } = await supabase.from('profiles').select('fineract_client_id').eq('id', userId).single();
-    if (!profileErr && profileData && profileData.fineract_client_id) return profileData.fineract_client_id;
+    const { data: profileData, error: profileErr } = await supabase
+      .from('profiles')
+      .select('fineract_client_id')
+      .eq('id', userId)
+      .single();
+    if (!profileErr && profileData && profileData.fineract_client_id)
+      return profileData.fineract_client_id;
   } catch (e) {
     // ignore lookup errors and proceed to try create
   }
@@ -54,7 +63,10 @@ export async function ensureFineractClient(supabase: any, userId: string, opts: 
 
     return clientId || null;
   } catch (e) {
-    console.warn('Fineract client creation failed', e && (e as any).message ? (e as any).message : e);
+    console.warn(
+      'Fineract client creation failed',
+      e && (e as any).message ? (e as any).message : e,
+    );
     return null;
   }
 }

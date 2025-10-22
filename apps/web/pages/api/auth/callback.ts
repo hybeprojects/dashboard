@@ -14,7 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !SUPABASE_ANON) return res.status(500).json({ error: 'Supabase not configured' });
+  if (!SUPABASE_URL || !SUPABASE_ANON)
+    return res.status(500).json({ error: 'Supabase not configured' });
 
   const client = createClient(SUPABASE_URL, SUPABASE_ANON, {
     global: { headers: { Authorization: `Bearer ${access_token}` } },
