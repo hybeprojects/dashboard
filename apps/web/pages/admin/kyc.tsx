@@ -34,7 +34,6 @@ export default function AdminKyc() {
       const res = await api.get(`/admin/kyc/submissions?page=${page}&limit=50`);
       setSubs(res.data.submissions || []);
     } catch (e) {
-
       console.error(e);
     } finally {
       setLoading(false);
@@ -50,7 +49,6 @@ export default function AdminKyc() {
         if (u) window.open(String(u), '_blank');
       });
     } catch (e) {
-
       console.error('preview error', e);
       alert('Failed to fetch preview URLs. Are you logged in as an admin?');
     }
@@ -61,7 +59,6 @@ export default function AdminKyc() {
       await api.post('/admin/kyc/decision', { submissionId, decision });
       load();
     } catch (e) {
-
       console.error('decision error', e);
       alert('Failed to set decision');
     }
@@ -83,8 +80,25 @@ export default function AdminKyc() {
                 className="card-surface p-4 flex flex-col md:flex-row md:items-center md:justify-between"
               >
                 <div className="flex-1">
-                  <div className="font-medium">
-                    {s.full_name} — {s.email}
+                  <div className="flex items-center gap-3">
+                    <div className="font-medium">
+                      {s.full_name} — {s.email}
+                    </div>
+                    <div>
+                      {s.status === 'approved' ? (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800">
+                          Approved
+                        </span>
+                      ) : s.status === 'rejected' ? (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800">
+                          Rejected
+                        </span>
+                      ) : (
+                        <span className="text-xs inline-flex items-center px-2 py-1 rounded-full bg-yellow-50 text-yellow-800">
+                          Pending
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-sm text-gray-500">
                     Submitted {new Date(s.created_at).toLocaleString()}
@@ -92,17 +106,33 @@ export default function AdminKyc() {
                   <div className="text-sm">Address: {s.address}</div>
                   <div className="text-sm">SSN last4: •••• {s.ssn_last4}</div>
                 </div>
-                <div className="flex items-center gap-2 mt-3 md:mt-0">
-                  <Button onClick={() => preview(s.submission_id)}>Preview</Button>
-                  <Button onClick={() => decide(s.submission_id, 'approved')}>Approve</Button>
-                  <Button onClick={() => decide(s.submission_id, 'rejected')}>Reject</Button>
+                <div className="flex items-center gap-3 mt-3 md:mt-0">
+                  <Button variant="secondary" onClick={() => preview(s.submission_id)}>
+                    Preview
+                  </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => decide(s.submission_id, 'approved')}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => decide(s.submission_id, 'rejected')}
+                  >
+                    Reject
+                  </Button>
                 </div>
               </div>
             ))}
             <div className="flex justify-between items-center">
-              <Button onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</Button>
+              <Button variant="secondary" onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                Prev
+              </Button>
               <div>Page {page}</div>
-              <Button onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="secondary" onClick={() => setPage((p) => p + 1)}>
+                Next
+              </Button>
             </div>
           </div>
         )}

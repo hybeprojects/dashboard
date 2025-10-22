@@ -52,10 +52,10 @@ export default function TransactionDetail() {
       </div>
       <Card>
         <div className="text-sm text-gray-500">{tx.description || 'Transaction details'}</div>
-        <div className="text-2xl font-bold my-2">${tx.amount}</div>
+        <div className="text-2xl font-bold my-2">{`$${Number(tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
         <div className="text-sm text-gray-500">From: {tx.sender_account_id || tx.account_id}</div>
-        <div className="text-sm text-gray-500">To: {tx.receiver_account_id}</div>
-        <div className="text-xs text-gray-400 mt-2">{tx.created_at}</div>
+        <div className="text-sm text-gray-500">To: {tx.receiver_account_id || '—'}</div>
+        <div className="text-xs text-gray-400 mt-2">{new Date(tx.created_at).toLocaleString()}</div>
       </Card>
     </div>
   );
