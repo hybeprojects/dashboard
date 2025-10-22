@@ -257,30 +257,26 @@ export default function Dashboard() {
 
         <main className="px-4 py-4 space-y-3">
           <Card className="p-0">
-            <button className="w-full flex items-center justify-between px-4 py-4">
-              <div className="text-left">
-                <div className="text-sm text-gray-500">
-                  Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}
-                </div>
+            <Button variant="secondary" className="w-full justify-between px-4 py-4 text-left">
+              <div>
+                <div className="text-sm text-gray-500">Hello{user?.firstName ? ',' : ''} {user?.firstName || 'there'}</div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
-            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+            </Button>
+            <Button variant="secondary" className="w-full justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
               <div className="flex items-start gap-3">
-                <Icon d={icons.radio} className="text-blue-600" />
+                <Icon d={icons.radio} className="text-primary" />
                 <div className="text-left">
                   <div className="font-medium">PremierBank Life Plan</div>
-                  <div className="text-xs text-gray-500">
-                    Set and track goals with personalized guidance
-                  </div>
+                  <div className="text-xs text-gray-500">Set and track goals with personalized guidance</div>
                 </div>
               </div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
-            <button className="w-full flex items-center justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+            </Button>
+            <Button variant="secondary" className="w-full justify-between px-4 py-4 border-t border-gray-100 dark:border-gray-800">
               <div className="text-left">My Rewards</div>
               <Icon d={icons.chevronR} className="text-gray-400" />
-            </button>
+            </Button>
           </Card>
 
           <Card className="p-0 overflow-hidden">
