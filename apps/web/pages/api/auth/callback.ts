@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { ensureFineractClient } from '../../../lib/fineract';
-import { getServiceRoleClient, createClientForRequest } from '../../../lib/supabase/api';
+import { getServiceRoleClient } from '../../../lib/supabase/api';
+import { recordMetric } from '../../../lib/metrics';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -14,8 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !SUPABASE_ANON)
-    return res.status(500).json({ error: 'Supabase not configured' });
+  if (!SUPABASE_URL || !SUPABASE_ANON) return res.status(500).json({ error: 'Supabase not configured' });
 
   const client = createClient(SUPABASE_URL, SUPABASE_ANON, {
     global: { headers: { Authorization: `Bearer ${access_token}` } },
@@ -35,15 +35,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const firstName = user.user_metadata?.first_name || user.user_metadata?.firstName || '';
     const lastName = user.user_metadata?.last_name || user.user_metadata?.lastName || '';
 
-    const clientId = await ensureFineractClient(serviceSupabase, user.id, {
-      firstName,
-      lastName,
-      email: user.email,
-    });
-
-    return res.status(200).json({ ok: true, fineract_client_id: clientId });
+    try {
+      const clientId = await ensureFineractClient(serviceSupabase, user.id, {
+        firstName,
+        lastName,
+        email: user.email,
+      });
+      if (clientId) {
+        await recordMetric('fineract.link.success', { userId: user.id, clientId });
+      } else {
+        await recordMetric('fineract.link.missing', { userId: user.id });
+      }
+      return res.status(200).json({ ok: true, fineract_client_id: clientId });
+    } catch (e: any) {
+      await recordMetric('fineract.link.failure', { userId: user.id, error: e?.message || String(e) });
+      return res.status(500).json({ error: e?.message || 'Linking failed' });
+    }
   } catch (e: any) {
     console.error('OAuth callback error', e);
+    await recordMetric('fineract.callback.error', { error: e?.message || String(e) });
     return res.status(500).json({ error: e?.message || 'Unknown error' });
   }
 }
