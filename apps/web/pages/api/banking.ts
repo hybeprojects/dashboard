@@ -58,13 +58,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .upsert({ user_id: user.id, data: accounts }, { onConflict: 'user_id' });
       } catch (e) {
         // ignore persistence errors
-        console.warn('Failed to persist accounts snapshot', e && (e as any).message ? (e as any).message : e);
+        console.warn(
+          'Failed to persist accounts snapshot',
+          e && (e as any).message ? (e as any).message : e,
+        );
       }
     } catch (e) {
       // If fetching accounts failed, try to return cached snapshot from Supabase
-      console.warn('Failed to fetch accounts from Fineract', e && (e as any).message ? (e as any).message : e);
+      console.warn(
+        'Failed to fetch accounts from Fineract',
+        e && (e as any).message ? (e as any).message : e,
+      );
       try {
-        const { data: cached } = await serviceSupabase.from('accounts').select('data').eq('user_id', user.id).single();
+        const { data: cached } = await serviceSupabase
+          .from('accounts')
+          .select('data')
+          .eq('user_id', user.id)
+          .single();
         accounts = cached?.data || [];
       } catch (e2) {
         accounts = [];
@@ -75,7 +85,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const balances: Record<string, number> = {};
     if (Array.isArray(accounts)) {
       accounts.forEach((a: any) => {
-        const id = a?.id || a?.accountId || a?.resourceId || String(a?.account_number || '') || '__unknown__';
+        const id =
+          a?.id ||
+          a?.accountId ||
+          a?.resourceId ||
+          String(a?.account_number || '') ||
+          '__unknown__';
         const bal = a?.balance ?? a?.currentBalance ?? a?.availableBalance ?? a?.amount ?? 0;
         const num = typeof bal === 'string' ? Number(bal) : typeof bal === 'number' ? bal : 0;
         balances[id] = isNaN(num) ? 0 : num;

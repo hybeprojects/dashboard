@@ -20,8 +20,10 @@ export async function signInAction(formData: FormData) {
   try {
     const service = getServiceRoleClient();
     if (service && data?.user) {
-      const firstName = data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
-      const lastName = data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
+      const firstName =
+        data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
+      const lastName =
+        data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       ensureFineractClient(service, data.user.id, { firstName, lastName, email: data.user.email });
     }
