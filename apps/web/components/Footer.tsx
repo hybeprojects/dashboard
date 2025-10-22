@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-gray-200 dark:border-gray-800">
-      <div className="section py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="mt-20 border-t border-gray-200 dark:border-gray-800">
+      <div className="section py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="text-xl font-semibold text-primary">
             <Link href="/">
@@ -14,8 +14,8 @@ export default function Footer() {
               />
             </Link>
           </div>
-          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-            Secure, modern banking for individuals and businesses. FDIC-insured partner banks. 24/7
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 max-w-sm">
+            Secure, modern banking for individuals and businesses. FDIC‑insured partner banks. 24/7
             support.
           </p>
         </div>
@@ -83,8 +83,27 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="section pb-8 text-xs text-gray-500 dark:text-gray-500">
-        © {new Date().getFullYear()} PremierBank. All rights reserved.
+      <div className="border-t border-gray-200 dark:border-gray-800">
+        <div className="section py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-500">
+          <p>Banking services are provided by partner banks; Member FDIC.</p>
+          <div className="flex items-center gap-5">
+            <Link href="/about" className="hover:underline">
+              About
+            </Link>
+            <Link href="/security" className="hover:underline">
+              Security
+            </Link>
+            <Link href="/support" className="hover:underline">
+              Support
+            </Link>
+            <Link href="/legal" className="hover:underline">
+              Legal
+            </Link>
+          </div>
+        </div>
+        <div className="section pb-8 text-xs text-gray-500 dark:text-gray-500">
+          © {new Date().getFullYear()} PremierBank. All rights reserved.
+        </div>
       </div>
     </footer>
   );

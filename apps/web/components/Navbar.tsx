@@ -35,13 +35,13 @@ export default function Navbar() {
               <Link href="/dashboard" className="text-sm">
                 {user.firstName || user.email}
               </Link>
-              <button className="text-sm text-primary" onClick={handleSignOut}>
+              <button className="btn-secondary text-sm" onClick={handleSignOut}>
                 Sign out
               </button>
             </div>
           ) : (
             <>
-              <Link href="/login" className="text-sm">
+              <Link href="/login" className="btn-secondary text-sm">
                 Login
               </Link>
               <Link href="/register" className="btn-primary text-sm">
