@@ -9,28 +9,27 @@ export default function Landing() {
       <Navbar />
       <main>
         {/* Hero */}
-        <section className="section py-16">
-          <motion.h1
-            className="text-4xl sm:text-5xl font-extrabold mb-4"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            Banking for the modern world
-          </motion.h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
-            Secure accounts, seamless payments, instant insights. Designed for reliability and
-            speed.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Link href="/register" className="btn-primary w-full sm:w-auto">
-              Get Started
-            </Link>
-            <Link
-              href="/login"
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 w-full sm:w-auto text-center"
+        <section className="section py-20">
+          <div className="max-w-3xl">
+            <motion.h1
+              className="text-4xl sm:text-5xl font-extrabold mb-4 leading-tight"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              Sign In
-            </Link>
+              Banking for the modern world
+            </motion.h1>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+              Secure accounts, seamless payments, instant insights. Designed for reliability and
+              speed.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Link href="/register" className="btn-primary w-full sm:w-auto">
+                Get Started
+              </Link>
+              <Link href="/login" className="btn-secondary w-full sm:w-auto">
+                Sign In
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -50,8 +49,11 @@ export default function Landing() {
               desc: 'Track spending, budgets, and cash flow with live analytics.',
             },
           ].map((f) => (
-            <div key={f.title} className="card-surface p-6">
-              <div className="text-lg font-semibold mb-1">{f.title}</div>
+            <div key={f.title} className="card-surface p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold">{f.title[0]}</span>
+                <div className="text-lg font-semibold">{f.title}</div>
+              </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
             </div>
           ))}
