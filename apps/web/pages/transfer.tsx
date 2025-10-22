@@ -123,7 +123,7 @@ export default function TransferPage() {
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded p-2"
+              className="input-field"
             />
           </div>
 
