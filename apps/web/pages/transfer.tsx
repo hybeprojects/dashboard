@@ -131,9 +131,9 @@ export default function TransferPage() {
           {success && <div className="text-green-600">{success}</div>}
 
           <div>
-            <button disabled={loading} className="w-full bg-blue-600 text-white rounded py-2">
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Sending…' : 'Send Transfer'}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>
