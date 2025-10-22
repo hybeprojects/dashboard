@@ -11,7 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { accessToken, password } = req.body;
-  if (!accessToken || !password) return res.status(400).json({ error: 'accessToken and password required' });
+  if (!accessToken || !password)
+    return res.status(400).json({ error: 'accessToken and password required' });
   if (!URL || !ANON) return res.status(500).json({ error: 'Supabase not configured' });
 
   try {

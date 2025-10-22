@@ -79,8 +79,8 @@ export default function Dashboard({ user: initialUser }: { user: any; initialSes
               ? {
                   id: u.id,
                   email: u.email || '',
-                  firstName: (u as any).user_metadata?.first_name || (u.firstName || null),
-                  lastName: (u as any).user_metadata?.last_name || (u.lastName || null),
+                  firstName: (u as any).user_metadata?.first_name || u.firstName || null,
+                  lastName: (u as any).user_metadata?.last_name || u.lastName || null,
                 }
               : null,
           );

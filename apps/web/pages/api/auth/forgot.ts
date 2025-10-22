@@ -14,8 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' });
 
   try {
-    const redirect = redirectTo || `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_API_URL || ''}/reset-password`;
-    const { data, error } = await supabase.auth.resetPasswordForEmail(String(email), { redirectTo: redirect });
+    const redirect =
+      redirectTo ||
+      `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_API_URL || ''}/reset-password`;
+    const { data, error } = await supabase.auth.resetPasswordForEmail(String(email), {
+      redirectTo: redirect,
+    });
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ ok: true, data });
   } catch (e: any) {
