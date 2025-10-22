@@ -1,28 +1,23 @@
 // apps/web/pages/reset-password.tsx
 import Navbar from '../components/Navbar';
 import { useState, useEffect } from 'react';
-import getSupabase from '../lib/supabase';
 import FormInput from '../components/ui/FormInput';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 
 const ResetPassword = () => {
-  const supabase = getSupabase();
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!supabase) return;
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
-
-    if (accessToken) {
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: '' });
-    }
-  }, [supabase]);
+    const token = params.get('access_token');
+    if (token) setAccessToken(token);
+  }, []);
 
   const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,18 +25,23 @@ const ResetPassword = () => {
     setError('');
     setMessage('');
 
-    if (!supabase) {
-      setError('Supabase client not available');
+    if (!accessToken) {
+      setError('Missing access token');
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const res = await fetch('/api/auth/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, password }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error || 'Failed to update password');
       setMessage('Password updated successfully. You can now log in with your new password.');
+    } catch (err: any) {
+      setError(err?.message || 'Update failed');
     }
     setLoading(false);
   };
