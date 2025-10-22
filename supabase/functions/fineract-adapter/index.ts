@@ -12,12 +12,24 @@ const FINERACT_PASSWORD = Deno.env.get('FINERACT_PASSWORD');
 const FINERACT_TENANT_ID = Deno.env.get('FINERACT_TENANT_ID');
 
 if (!FINERACT_URL || !FINERACT_USERNAME || !FINERACT_PASSWORD) {
-  console.warn('Fineract adapter: FINERACT_URL/USERNAME/PASSWORD not fully configured; adapter will fail');
+  console.warn(
+    'Fineract adapter: FINERACT_URL/USERNAME/PASSWORD not fully configured; adapter will fail',
+  );
 }
-if (!SERVICE_ROLE) console.warn('Fineract adapter: SUPABASE_SERVICE_ROLE_KEY not configured; some admin actions will fail');
+if (!SERVICE_ROLE)
+  console.warn(
+    'Fineract adapter: SUPABASE_SERVICE_ROLE_KEY not configured; some admin actions will fail',
+  );
 
 // Whitelist of allowed path prefixes to protect abuse. Extend as needed.
-const ALLOWED_PREFIXES = ['/accounts', '/clients', '/loans', '/transactions', '/users', '/customers'];
+const ALLOWED_PREFIXES = [
+  '/accounts',
+  '/clients',
+  '/loans',
+  '/transactions',
+  '/users',
+  '/customers',
+];
 const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 function isAllowedPath(path: string) {
@@ -45,7 +57,8 @@ serve(async (req: Request) => {
     });
 
     const userRes = await userClient.auth.getUser();
-    if (!userRes.data?.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    if (!userRes.data?.user)
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
     const userId = userRes.data.user.id;
     // check admin flag
@@ -68,16 +81,20 @@ serve(async (req: Request) => {
     }
 
     const { path, method = 'GET', query, body } = payload || {};
-    if (!path || typeof path !== 'string') return new Response(JSON.stringify({ error: 'Missing path' }), { status: 400 });
+    if (!path || typeof path !== 'string')
+      return new Response(JSON.stringify({ error: 'Missing path' }), { status: 400 });
 
-    if (!isAllowedPath(path)) return new Response(JSON.stringify({ error: 'Path not allowed' }), { status: 403 });
+    if (!isAllowedPath(path))
+      return new Response(JSON.stringify({ error: 'Path not allowed' }), { status: 403 });
 
     const m = String(method).toUpperCase();
-    if (!ALLOWED_METHODS.includes(m)) return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    if (!ALLOWED_METHODS.includes(m))
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
 
     // For mutating operations require admin
     const mutating = m !== 'GET';
-    if (mutating && !isAdmin) return new Response(JSON.stringify({ error: 'Admin required' }), { status: 403 });
+    if (mutating && !isAdmin)
+      return new Response(JSON.stringify({ error: 'Admin required' }), { status: 403 });
 
     // Build target
     const base = FINERACT_URL!.replace(/\/$/, '');
@@ -107,7 +124,10 @@ serve(async (req: Request) => {
     const text = await res.text();
     const contentType = res.headers.get('content-type') || 'application/json';
 
-    const responseInit: ResponseInit = { status: res.status, headers: { 'content-type': contentType } };
+    const responseInit: ResponseInit = {
+      status: res.status,
+      headers: { 'content-type': contentType },
+    };
     return new Response(text, responseInit);
   } catch (e: any) {
     console.error('Fineract adapter error', e?.message || e);
