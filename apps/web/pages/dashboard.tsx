@@ -36,10 +36,53 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
       },
     };
 
+  // attempt to fetch banking profile + data server-side for faster initial render
+  let bankingData = null;
+  let bankingError: string | null = null;
+  try {
+    // use service role client to lookup fineract_client_id
+    // require here to avoid changing top-level imports
+    const { getServiceRoleClient } = require('../lib/supabase/api');
+    const service = getServiceRoleClient();
+    if (service) {
+      const { data: profile, error: profileError } = await service
+        .from('profiles')
+        .select('fineract_client_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profileError && profile?.fineract_client_id) {
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+        const host = ctx.req.headers.host;
+        const resp = await fetch(`${protocol}://${host}/api/banking`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            Cookie: ctx.req.headers.cookie || '',
+          },
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          bankingData = json?.data ?? json;
+        } else {
+          bankingError = `Failed to load banking data: ${resp.status}`;
+        }
+      } else {
+        bankingError = 'Banking profile not setup';
+      }
+    } else {
+      bankingError = 'Service client not configured';
+    }
+  } catch (e: any) {
+    console.error('Dashboard banking data error:', e);
+    bankingError = 'Failed to load banking data';
+  }
+
   return {
     props: {
       initialSession: session,
       user: session.user,
+      bankingData,
+      bankingError,
     },
   };
 };
