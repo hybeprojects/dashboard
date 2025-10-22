@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { recordMetric } from './metrics';
 
 export async function ensureFineractClient(
   supabase: any,
@@ -14,8 +15,7 @@ export async function ensureFineractClient(
       .select('fineract_client_id')
       .eq('id', userId)
       .single();
-    if (!profileErr && profileData && profileData.fineract_client_id)
-      return profileData.fineract_client_id;
+    if (!profileErr && profileData && profileData.fineract_client_id) return profileData.fineract_client_id;
   } catch (e) {
     // ignore lookup errors and proceed to try create
   }
@@ -25,7 +25,10 @@ export async function ensureFineractClient(
   const password = process.env.FINERACT_PASSWORD;
   const tenant = process.env.FINERACT_TENANT_ID || process.env.FINERACT_TENANT;
 
-  if (!fineractUrl || !username || !password) return null;
+  if (!fineractUrl || !username || !password) {
+    await recordMetric('fineract.config.missing', { userId });
+    return null;
+  }
 
   const body: any = { firstname: opts.firstName || '', lastname: opts.lastName || '' };
 
@@ -61,12 +64,12 @@ export async function ensureFineractClient(
       }
     }
 
+    await recordMetric('fineract.client.created', { userId, clientId: clientId || null });
     return clientId || null;
-  } catch (e) {
-    console.warn(
-      'Fineract client creation failed',
-      e && (e as any).message ? (e as any).message : e,
-    );
+  } catch (e: any) {
+    const message = e && e.message ? e.message : String(e);
+    console.warn('Fineract client creation failed', message);
+    await recordMetric('fineract.client.creation_failed', { userId, error: message });
     return null;
   }
 }
