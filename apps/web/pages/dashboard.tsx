@@ -59,7 +59,7 @@ const icons = {
   chart: 'M5 19h14M7 17V9m5 8V5m5 12v-6',
 };
 
-export default function Dashboard() {
+export default function Dashboard({ user: initialUser }: { user: any; initialSession?: any }) {
   const qc = useQueryClient();
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
@@ -71,26 +71,24 @@ export default function Dashboard() {
     let mounted = true;
     (async () => {
       try {
-        const { data } = await supabase.auth.getUser();
-        const u = data?.user || null;
+        // Use server-provided user to initialize client state
+        const u = initialUser || null;
         if (mounted) {
           setUser(
             u
               ? {
                   id: u.id,
                   email: u.email || '',
-                  firstName: u.user_metadata?.first_name,
-                  lastName: u.user_metadata?.last_name,
+                  firstName: (u as any).user_metadata?.first_name || (u.firstName || null),
+                  lastName: (u as any).user_metadata?.last_name || (u.lastName || null),
                 }
               : null,
           );
         }
         if (!u && mounted) {
-          // Not authenticated -> redirect to login
           router.replace('/login');
         }
       } catch (e) {
-        // ignore and redirect
         if (mounted) router.replace('/login');
       } finally {
         if (mounted) setCheckingAuth(false);
@@ -99,7 +97,7 @@ export default function Dashboard() {
     return () => {
       mounted = false;
     };
-  }, [router, setUser, supabase]);
+  }, [router, setUser, initialUser]);
 
   const { data: accounts = [], isLoading: accLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
