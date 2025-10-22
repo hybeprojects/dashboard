@@ -42,7 +42,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data: upd, error: updErr } = await supabase
       .from('kyc_submissions')
-      .update({ status, reviewed_by: userId, review_note: note, reviewed_at: new Date().toISOString() })
+      .update({
+        status,
+        reviewed_by: userId,
+        review_note: note,
+        reviewed_at: new Date().toISOString(),
+      })
       .eq('id', submissionId)
       .select()
       .maybeSingle();

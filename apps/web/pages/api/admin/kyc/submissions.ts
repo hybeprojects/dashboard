@@ -36,7 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const limit = Math.min(Number(req.query.limit || 50), 200);
     const offset = (Math.max(1, page) - 1) * limit;
 
-    const { data: submissions, error: subsErr, count } = await supabase
+    const {
+      data: submissions,
+      error: subsErr,
+      count,
+    } = await supabase
       .from('kyc_submissions')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -44,7 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (subsErr) return res.status(500).json({ error: subsErr.message });
 
-    return res.status(200).json({ submissions: submissions || [], page, limit, total: typeof count === 'number' ? count : null });
+    return res
+      .status(200)
+      .json({
+        submissions: submissions || [],
+        page,
+        limit,
+        total: typeof count === 'number' ? count : null,
+      });
   } catch (e: any) {
     console.error('admin/kyc/submissions error', e?.message || e);
     return res.status(500).json({ error: 'Internal error' });
