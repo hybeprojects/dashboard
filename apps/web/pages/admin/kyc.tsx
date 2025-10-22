@@ -76,7 +76,7 @@ export default function AdminKyc() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+    
   }, [page]);
 
   async function load() {
@@ -261,7 +261,7 @@ export default function AdminKyc() {
                         Open PDF in new tab
                       </a>
                     ) : (
-                      // eslint-disable-next-line
+                      
                       <img src={url} alt={label} className="w-full h-48 object-contain" />
                     )
                   ) : (
