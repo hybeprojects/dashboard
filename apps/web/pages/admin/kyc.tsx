@@ -92,17 +92,23 @@ export default function AdminKyc() {
                   <div className="text-sm">Address: {s.address}</div>
                   <div className="text-sm">SSN last4: •••• {s.ssn_last4}</div>
                 </div>
-                <div className="flex items-center gap-2 mt-3 md:mt-0">
-                  <Button onClick={() => preview(s.submission_id)}>Preview</Button>
-                  <Button onClick={() => decide(s.submission_id, 'approved')}>Approve</Button>
-                  <Button onClick={() => decide(s.submission_id, 'rejected')}>Reject</Button>
+                <div className="flex items-center gap-3 mt-3 md:mt-0">
+                  <Button variant="secondary" onClick={() => preview(s.submission_id)}>
+                    Preview
+                  </Button>
+                  <Button className="bg-green-600 hover:bg-green-700" onClick={() => decide(s.submission_id, 'approved')}>
+                    Approve
+                  </Button>
+                  <Button className="bg-red-600 hover:bg-red-700" onClick={() => decide(s.submission_id, 'rejected')}>
+                    Reject
+                  </Button>
                 </div>
               </div>
             ))}
             <div className="flex justify-between items-center">
-              <Button onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</Button>
+              <Button variant="secondary" onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</Button>
               <div>Page {page}</div>
-              <Button onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="secondary" onClick={() => setPage((p) => p + 1)}>Next</Button>
             </div>
           </div>
         )}
