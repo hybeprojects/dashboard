@@ -1,10 +1,11 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @config "../tailwind.config.js";
 
 /* Base theme */
 @layer base {
-  html, body {
+  html,
+  body {
     @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
   }
 }
