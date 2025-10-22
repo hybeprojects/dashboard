@@ -89,14 +89,33 @@ async function main() {
   // Polling loop as a safe fallback if realtime not configured
   while (true) {
     try {
+      // fetch candidates: pending jobs and failed jobs that may be retried
       const { data: jobs } = await supabase
         .from('fineract_sync_queue')
         .select('*')
-        .eq('status', 'pending')
-        .limit(10)
+        .in('status', ['pending', 'failed'])
+        .limit(20)
         .order('created_at', { ascending: true });
       if (jobs && jobs.length) {
+        const now = Date.now();
         for (const job of jobs) {
+          // decide if job should be processed now
+          let shouldProcess = false;
+          if (job.status === 'pending') shouldProcess = true;
+          else if (job.status === 'failed') {
+            const attempts = typeof job.attempt_count === 'number' ? job.attempt_count : 0;
+            const maxAttempts = parseInt(process.env.SYNC_MAX_ATTEMPTS || '5', 10);
+            if (attempts >= maxAttempts) {
+              // give up
+              continue;
+            }
+            const backoffSec = Math.min(3600, 30 * Math.pow(2, attempts));
+            const updatedAt = job.updated_at ? new Date(job.updated_at).getTime() : (job.created_at ? new Date(job.created_at).getTime() : 0);
+            if (now - updatedAt >= backoffSec * 1000) shouldProcess = true;
+          }
+
+          if (!shouldProcess) continue;
+
           // mark processing
           await supabase
             .from('fineract_sync_queue')
