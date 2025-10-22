@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import getServerSupabase from '../_serverSupabase';
+import { createClient } from '@supabase/supabase-js';
+
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -7,8 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const supabase = getServerSupabase();
-  if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+  if (!URL || !ANON) return res.status(500).json({ error: 'Supabase not configured' });
+
+  const supabase = createClient(URL, ANON, { auth: { persistSession: false } });
 
   const { email, password } = req.body;
 
