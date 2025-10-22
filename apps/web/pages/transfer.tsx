@@ -114,7 +114,7 @@ export default function TransferPage() {
             <input
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="w-full border rounded p-2"
+              className="input-field"
             />
           </div>
 
