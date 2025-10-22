@@ -54,23 +54,41 @@ export default async function handler(req: any, res: any) {
     const { recordMetric } = require('../../../lib/metrics');
     const serviceSupabase = getServerSupabase();
     if (serviceSupabase && data?.user) {
-      const firstName = data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
-      const lastName = data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
+      const firstName =
+        data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
+      const lastName =
+        data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
       try {
         // Await linking so we can record a metric for success/failure.
-        const clientId = await ensureFineractClient(serviceSupabase, data.user.id, { firstName, lastName, email: data.user.email });
+        const clientId = await ensureFineractClient(serviceSupabase, data.user.id, {
+          firstName,
+          lastName,
+          email: data.user.email,
+        });
         if (!clientId) {
-          await recordMetric('fineract.link.missing', { userId: data.user.id, email: data.user.email });
+          await recordMetric('fineract.link.missing', {
+            userId: data.user.id,
+            email: data.user.email,
+          });
         } else {
           await recordMetric('fineract.link.success', { userId: data.user.id, clientId });
         }
       } catch (e: any) {
-        await recordMetric('fineract.link.failure', { userId: data.user.id, error: e?.message || String(e) });
-        console.warn('Fineract linking failed in login handler', e && (e as any).message ? (e as any).message : e);
+        await recordMetric('fineract.link.failure', {
+          userId: data.user.id,
+          error: e?.message || String(e),
+        });
+        console.warn(
+          'Fineract linking failed in login handler',
+          e && (e as any).message ? (e as any).message : e,
+        );
       }
     }
   } catch (e) {
-    console.warn('Fineract linking (outer) failed in login handler', e && (e as any).message ? (e as any).message : e);
+    console.warn(
+      'Fineract linking (outer) failed in login handler',
+      e && (e as any).message ? (e as any).message : e,
+    );
   }
 
   return res.status(200).json(data);

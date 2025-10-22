@@ -15,7 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !SUPABASE_ANON) return res.status(500).json({ error: 'Supabase not configured' });
+  if (!SUPABASE_URL || !SUPABASE_ANON)
+    return res.status(500).json({ error: 'Supabase not configured' });
 
   const client = createClient(SUPABASE_URL, SUPABASE_ANON, {
     global: { headers: { Authorization: `Bearer ${access_token}` } },
@@ -48,7 +49,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       return res.status(200).json({ ok: true, fineract_client_id: clientId });
     } catch (e: any) {
-      await recordMetric('fineract.link.failure', { userId: user.id, error: e?.message || String(e) });
+      await recordMetric('fineract.link.failure', {
+        userId: user.id,
+        error: e?.message || String(e),
+      });
       return res.status(500).json({ error: e?.message || 'Linking failed' });
     }
   } catch (e: any) {

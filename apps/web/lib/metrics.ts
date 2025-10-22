@@ -8,7 +8,9 @@ export async function recordMetric(kind: string, payload: Record<string, any> = 
     const svc = getServiceRoleClient();
     if (svc) {
       try {
-        await svc.from('system_metrics').insert({ kind, payload, created_at: new Date().toISOString() });
+        await svc
+          .from('system_metrics')
+          .insert({ kind, payload, created_at: new Date().toISOString() });
         return;
       } catch (e) {
         // ignore insert errors

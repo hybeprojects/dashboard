@@ -20,7 +20,10 @@ async function main() {
   const axiosConfig = { auth: { username, password }, headers: {}, timeout: 10000 };
   if (tenant) axiosConfig.headers['Fineract-Platform-TenantId'] = tenant;
 
-  const { data: profiles, error } = await supabase.from('profiles').select('id, fineract_client_id').not('fineract_client_id', 'is', null);
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('id, fineract_client_id')
+    .not('fineract_client_id', 'is', null);
   if (error) {
     console.error('Failed to fetch profiles', error);
     process.exit(1);
@@ -33,7 +36,9 @@ async function main() {
       const r = await axios.get(accountsUrl, axiosConfig);
       const accounts = r?.data || null;
       try {
-        await supabase.from('accounts').upsert({ user_id: p.id, data: accounts }, { onConflict: 'user_id' });
+        await supabase
+          .from('accounts')
+          .upsert({ user_id: p.id, data: accounts }, { onConflict: 'user_id' });
       } catch (e) {
         console.warn('Failed to upsert accounts for', p.id, e.message || e);
       }

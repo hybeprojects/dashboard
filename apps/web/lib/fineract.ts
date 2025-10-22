@@ -15,7 +15,8 @@ export async function ensureFineractClient(
       .select('fineract_client_id')
       .eq('id', userId)
       .single();
-    if (!profileErr && profileData && profileData.fineract_client_id) return profileData.fineract_client_id;
+    if (!profileErr && profileData && profileData.fineract_client_id)
+      return profileData.fineract_client_id;
   } catch (e) {
     // ignore lookup errors and proceed to try create
   }

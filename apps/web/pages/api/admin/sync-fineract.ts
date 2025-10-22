@@ -10,19 +10,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const secret = req.headers['x-sync-secret'] || req.query.secret || process.env.FINERACT_SYNC_SECRET;
+  const secret =
+    req.headers['x-sync-secret'] || req.query.secret || process.env.FINERACT_SYNC_SECRET;
   if (!secret || String(secret) !== String(process.env.FINERACT_SYNC_SECRET)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const serviceSupabase = getServiceRoleClient();
-  if (!serviceSupabase) return res.status(500).json({ error: 'Supabase service client not configured' });
+  if (!serviceSupabase)
+    return res.status(500).json({ error: 'Supabase service client not configured' });
 
   // Kick off background sync without blocking response
   (async () => {
     try {
       // Fetch all profiles with fineract_client_id
-      const { data: profiles } = await serviceSupabase.from('profiles').select('id, fineract_client_id').not('fineract_client_id', 'is', null);
+      const { data: profiles } = await serviceSupabase
+        .from('profiles')
+        .select('id, fineract_client_id')
+        .not('fineract_client_id', 'is', null);
       if (!profiles || !Array.isArray(profiles)) return;
 
       const fineractUrl = process.env.FINERACT_URL || '';
@@ -47,13 +52,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const accounts = r?.data || null;
           // store minimal snapshot in supabase accounts table if exists
           try {
-            await serviceSupabase.from('accounts').upsert({ user_id: p.id, data: accounts }, { onConflict: 'user_id' });
+            await serviceSupabase
+              .from('accounts')
+              .upsert({ user_id: p.id, data: accounts }, { onConflict: 'user_id' });
           } catch (e) {
             // ignore
           }
-          await recordMetric('fineract.sync.success', { userId: p.id, clientId, count: Array.isArray(accounts) ? accounts.length : 1 });
+          await recordMetric('fineract.sync.success', {
+            userId: p.id,
+            clientId,
+            count: Array.isArray(accounts) ? accounts.length : 1,
+          });
         } catch (e: any) {
-          await recordMetric('fineract.sync.failure', { userId: p.id, error: e?.message || String(e) });
+          await recordMetric('fineract.sync.failure', {
+            userId: p.id,
+            error: e?.message || String(e),
+          });
         }
       }
     } catch (e: any) {
