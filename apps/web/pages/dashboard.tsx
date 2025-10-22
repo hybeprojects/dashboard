@@ -302,7 +302,7 @@ export default function Dashboard() {
                     </div>
                     <Link
                       href={`/accounts/${acct ? (acct.id ?? acct.accountId ?? acct.number ?? i) : i}`}
-                      className="text-blue-700 font-semibold text-sm"
+                      className="text-primary font-semibold text-sm"
                     >
                       VIEW
                     </Link>
