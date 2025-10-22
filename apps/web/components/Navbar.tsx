@@ -41,7 +41,7 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="text-sm">
+              <Link href="/login" className="btn-secondary text-sm">
                 Login
               </Link>
               <Link href="/register" className="btn-primary text-sm">
