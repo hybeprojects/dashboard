@@ -38,9 +38,9 @@ export default function AccountsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-gray-500">{a.name || 'Account'}</div>
-                  <div className="font-medium">${Number(a.balance ?? 0).toLocaleString()}</div>
+                  <div className="font-medium">{`$${Number(a.balance ?? 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`}</div>
                 </div>
-                <Link href={`/accounts/${a.id}`} className="text-blue-600 text-sm font-semibold">
+                <Link href={`/accounts/${a.id}`} className="text-primary text-sm font-semibold">
                   View
                 </Link>
               </div>
@@ -52,10 +52,7 @@ export default function AccountsPage() {
       </div>
 
       <div className="mt-6">
-        <Link
-          href="/open-account"
-          className="block text-center bg-red-600 text-white rounded-xl py-3"
-        >
+        <Link href="/open-account" className="btn-primary block text-center rounded-xl py-3">
           Open New Account
         </Link>
       </div>
