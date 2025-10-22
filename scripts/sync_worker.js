@@ -13,7 +13,7 @@ async function processJob(supabase, job) {
   if (!profile) {
     await supabase
       .from('fineract_sync_queue')
-      .update({ status: 'failed', updated_at: new Date().toISOString() })
+      .update({ status: 'failed', updated_at: new Date().toISOString(), error: 'profile_missing' })
       .eq('id', job.id);
     return;
   }
@@ -41,15 +41,37 @@ async function processJob(supabase, job) {
       .eq('id', job.id);
     console.log('Processed job', job.id);
   } catch (e) {
-    console.warn('Job failed', job.id, e && e.message ? e.message : e);
-    await supabase
-      .from('fineract_sync_queue')
-      .update({
-        status: 'failed',
+    const errMsg = e && e.message ? e.message : String(e);
+    console.warn('Job failed', job.id, errMsg);
+
+    // retry handling
+    try {
+      // read latest attempt_count if present
+      const attempts = typeof job.attempt_count === 'number' ? job.attempt_count : 0;
+      const maxAttempts = parseInt(process.env.SYNC_MAX_ATTEMPTS || '5', 10);
+      const nextAttempt = attempts + 1;
+
+      const updatePayload = {
+        status: nextAttempt >= maxAttempts ? 'failed' : 'pending',
         updated_at: new Date().toISOString(),
-        error: e?.message || String(e),
-      })
-      .eq('id', job.id);
+        error: errMsg,
+      };
+      // attempt to set attempt_count if the column exists
+      try {
+        updatePayload.attempt_count = nextAttempt;
+      } catch (_) {
+        // ignore
+      }
+
+      await supabase.from('fineract_sync_queue').update(updatePayload).eq('id', job.id);
+      if (nextAttempt < maxAttempts) {
+        console.log(`Scheduled retry ${nextAttempt}/${maxAttempts} for job ${job.id}`);
+      } else {
+        console.log(`Job ${job.id} failed after ${nextAttempt} attempts`);
+      }
+    } catch (e2) {
+      console.error('Failed to update job retry state', e2 && e2.message ? e2.message : e2);
+    }
   }
 }
 
