@@ -63,6 +63,7 @@ async function ensureSchema(db: any) {
       name TEXT,
       balance REAL DEFAULT 0,
       currency TEXT,
+      data TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
