@@ -1,19 +1,22 @@
 import { getServiceRoleClient } from './supabase/api';
 
+import { getDb } from './db';
+
 export async function recordMetric(kind: string, payload: Record<string, any> = {}) {
   try {
-    // Attempt to write to a system_metrics table if available
-    const svc = getServiceRoleClient();
-    if (svc) {
-      try {
-        await svc
-          .from('system_metrics')
-          .insert({ kind, payload, created_at: new Date().toISOString() });
-        return;
-      } catch (e) {
-        // ignore insert errors
-        console.warn('Metrics insert failed', e && (e as any).message ? (e as any).message : e);
-      }
+    const db = await getDb();
+    try {
+      await db.run('INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata) VALUES (?, ?, ?, ?, ?, ?)',
+        `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+        null,
+        kind,
+        'metric',
+        null,
+        JSON.stringify(payload)
+      );
+      return;
+    } catch (e) {
+      // ignore db write errors
     }
   } catch (e) {
     // ignore
