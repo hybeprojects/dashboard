@@ -87,6 +87,35 @@ async function ensureSchema(db: any) {
       user_id TEXT,
       files TEXT,
       status TEXT DEFAULT 'pending',
+      reviewed_by TEXT,
+      review_note TEXT,
+      reviewed_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // App users mapping to Fineract
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS app_users (
+      id TEXT PRIMARY KEY,
+      email TEXT,
+      fineract_client_id TEXT,
+      account_id TEXT,
+      first_name TEXT,
+      last_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Audit logs
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      actor_id TEXT,
+      action TEXT,
+      target_type TEXT,
+      target_id TEXT,
+      metadata TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
