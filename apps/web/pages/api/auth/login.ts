@@ -1,95 +1,36 @@
-import { createClient } from '@supabase/supabase-js';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { verifyPassword, createSessionToken, getUserByEmail } from '../../../lib/db';
+import cookie from 'cookie';
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-export default async function handler(req: any, res: any) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end('Method Not Allowed');
   }
 
-  if (!URL || !ANON) return res.status(500).json({ error: 'Supabase not configured' });
-
-  const supabase = createClient(URL, ANON, { auth: { persistSession: false } });
-
   const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-
-  // Attempt to set a server-side cookie so SSR pages can validate sessions.
   try {
-    const token = data?.session?.access_token || '';
-    const expiresAt = data?.session?.expires_at || null;
-    const maxAge =
-      typeof expiresAt === 'number'
-        ? Math.max(0, expiresAt - Math.floor(Date.now() / 1000))
-        : undefined;
+    const user = await verifyPassword(email, password);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const cookie = require('cookie');
+    const token = createSessionToken(user.id);
+
     const cookieOpts: any = {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60,
     };
-    if (typeof maxAge === 'number') cookieOpts.maxAge = maxAge;
     const cookieStr = cookie.serialize('sb-access-token', String(token), cookieOpts);
     res.setHeader('Set-Cookie', cookieStr);
-  } catch (e) {
-    // ignore cookie set errors
-  }
 
-  // Attempt to ensure Fineract client mapping exists for this user and record metrics
-  try {
-    const getServerSupabase = require('../_serverSupabase').default;
-    const { ensureFineractClient } = require('../../../lib/fineract');
-    const { recordMetric } = require('../../../lib/metrics');
-    const serviceSupabase = getServerSupabase();
-    if (serviceSupabase && data?.user) {
-      const firstName =
-        data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
-      const lastName =
-        data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
-      try {
-        // Await linking so we can record a metric for success/failure.
-        const clientId = await ensureFineractClient(serviceSupabase, data.user.id, {
-          firstName,
-          lastName,
-          email: data.user.email,
-        });
-        if (!clientId) {
-          await recordMetric('fineract.link.missing', {
-            userId: data.user.id,
-            email: data.user.email,
-          });
-        } else {
-          await recordMetric('fineract.link.success', { userId: data.user.id, clientId });
-        }
-      } catch (e: any) {
-        await recordMetric('fineract.link.failure', {
-          userId: data.user.id,
-          error: e?.message || String(e),
-        });
-        console.warn(
-          'Fineract linking failed in login handler',
-          e && (e as any).message ? (e as any).message : e,
-        );
-      }
-    }
-  } catch (e) {
-    console.warn(
-      'Fineract linking (outer) failed in login handler',
-      e && (e as any).message ? (e as any).message : e,
-    );
+    // Return a supabase-like shape for compatibility
+    return res.status(200).json({ user: { id: user.id, email: user.email, user_metadata: { first_name: user.firstName, last_name: user.lastName } }, session: { access_token: token } });
+  } catch (e: any) {
+    console.error('login error', e?.message || e);
+    return res.status(500).json({ error: e?.message || 'Internal error' });
   }
-
-  return res.status(200).json(data);
 }

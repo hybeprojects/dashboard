@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
-import getServerSupabase from '../_serverSupabase';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { createUser, createSessionToken } from '../../../lib/db';
+import cookie from 'cookie';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,71 +8,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const supabase = getServerSupabase();
-  if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
-
-  const { email, password, firstName, lastName, userType } = req.body;
+  const { email, password, firstName, lastName } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-  // build email redirect URL for confirmation
-  const redirectTo =
-    (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SITE_URL || '') +
-    `/verify-email?email=${encodeURIComponent(email)}`;
-
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          user_type: userType,
-        },
-      },
+    const user = await createUser({ email, password, firstName, lastName });
+    const token = createSessionToken(user.id);
+
+    const cookieStr = cookie.serialize('sb-access-token', String(token), {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60,
     });
+    res.setHeader('Set-Cookie', cookieStr);
 
-    if (error) return res.status(400).json({ error: error.message });
-
-    const user = data?.user || null;
-
-    // create or upsert profile row in Supabase
-    if (user) {
-      const profile = {
-        id: user.id,
-        email: user.email,
-        first_name: firstName || user.user_metadata?.first_name || null,
-        last_name: lastName || user.user_metadata?.last_name || null,
-        user_type: userType || user.user_metadata?.user_type || null,
-      };
-      try {
-        await supabase.from('profiles').upsert(profile, { onConflict: 'id' });
-      } catch (e) {
-        // ignore profile insert errors but log to server console
-
-        console.warn('Failed to upsert profile', e);
-      }
-
-      // attempt to create or link a Fineract client (best-effort)
-      try {
-        const { ensureFineractClient } = require('../../../lib/fineract');
-        // don't block signup if linking fails
-        ensureFineractClient(supabase, user.id, {
-          firstName: firstName || user.user_metadata?.first_name || '',
-          lastName: lastName || user.user_metadata?.last_name || '',
-          email: user.email,
-        }).catch((err: any) => console.warn('Fineract sync best-effort failed', err));
-      } catch (e) {
-        console.warn(
-          'Fineract linking failed during signup',
-          e && (e as any).message ? (e as any).message : e,
-        );
-      }
-    }
-
-    return res.status(200).json({ user: data, message: 'Signup initiated' });
-  } catch (err: any) {
-    return res.status(500).json({ error: err?.message || 'Unknown error' });
+    return res.status(200).json({ user: { id: user.id, email: user.email, user_metadata: { first_name: user.firstName, last_name: user.lastName } }, session: { access_token: token } });
+  } catch (e: any) {
+    console.error('signup error', e?.message || e);
+    return res.status(400).json({ error: e?.message || 'Could not create user' });
   }
 }
