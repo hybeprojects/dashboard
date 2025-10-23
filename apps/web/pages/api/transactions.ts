@@ -1,115 +1,80 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import getServerSupabase from './_serverSupabase';
-import api from '../../lib/api';
-import cookie from 'cookie';
 import { getUserFromRequest } from '../../lib/serverAuth';
-import { createClient } from '@supabase/supabase-js';
-
-const fallbackMemory: any[] = [];
+import { getUserAccounts, createTransaction, getAccountById, updateAccountBalance } from '../../lib/db';
+import { createFineractTransfer } from '../../lib/fineract';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const supabaseService = getServerSupabase();
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
-  // Validate token server-side using helper
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not authenticated' });
-
-  // Parse cookies for user session token (double-check multiple cookie names)
-  const cookieHeader = (req.headers.cookie as string) || '';
-  const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
-  const token =
-    cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'] || null;
-
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
-
-  // Create a user-scoped Supabase client using the anon key but with Authorization header
-  const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  if (!anonUrl || !anonKey)
-    return res.status(500).json({ error: 'Supabase anon key not configured' });
-
-  const userClient = createClient(anonUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-
-  if (req.method === 'GET') {
-    try {
-      const { data, error } = await userClient
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) return res.status(500).json({ error: error.message });
-      return res.status(200).json(data || []);
-    } catch (e: any) {
-      return res.status(500).json({ error: e?.message || 'Unknown error' });
+    if (req.method === 'GET') {
+      // Return transactions for user's accounts
+      const accounts = await getUserAccounts(user.id);
+      const accountIds = accounts.map((a: any) => a.id);
+      if (accountIds.length === 0) return res.status(200).json([]);
+      const db = await (await import('../../lib/db')).getDb();
+      const rows = await db.all(
+        `SELECT * FROM transactions WHERE from_account_id IN (${accountIds.map(() => '?').join(',')}) OR to_account_id IN (${accountIds.map(() => '?').join(',')}) ORDER BY created_at DESC LIMIT 200`,
+        ...accountIds,
+        ...accountIds,
+      );
+      return res.status(200).json(rows || []);
     }
-  }
 
-  if (req.method === 'POST') {
-    const body = req.body;
-    if (!body || !body.amount) return res.status(400).json({ error: 'Missing amount' });
+    if (req.method === 'POST') {
+      const body = req.body;
+      if (!body || !body.amount) return res.status(400).json({ error: 'Missing amount' });
 
-    const sender =
-      body.sender_account_id ?? body.fromAccountId ?? body.from_account_id ?? body.account_id;
-    const receiver =
-      body.receiver_account_id ??
-      body.toAccountId ??
-      body.to_account_number ??
-      body.toAccountNumber ??
-      body.recipient_account;
-    const amount = Number(body.amount ?? body.amt);
-    const receiverEmail = body.receiver_email ?? body.recipient_email ?? null;
-    const receiverName = body.receiver_name ?? body.recipient_name ?? null;
+      const sender = body.sender_account_id ?? body.fromAccountId ?? body.from_account_id ?? body.account_id;
+      const receiver = body.receiver_account_id ?? body.toAccountId ?? body.to_account_number ?? body.toAccountNumber ?? body.recipient_account;
+      const amount = Number(body.amount ?? body.amt);
+      if (isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
-    if (isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+      if (!sender) return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
 
-    try {
-      const accountId = sender || body.account_id;
-      if (!accountId)
-        return res.status(400).json({ error: 'sender_account_id (or account_id) is required' });
+      // Verify ownership
+      const fromAcc = await getAccountById(sender);
+      if (!fromAcc) return res.status(404).json({ error: 'Sender account not found' });
+      if (fromAcc.user_id !== user.id) return res.status(403).json({ error: 'Not authorized to operate on this account' });
 
-      // Fetch current balance under the user's credentials (RLS should enforce ownership)
-      const { data: fromAcc, error: accErr } = await userClient
-        .from('accounts')
-        .select('id,balance')
-        .eq('id', accountId)
-        .maybeSingle();
-      if (accErr) return res.status(500).json({ error: accErr.message });
-      if (!fromAcc)
-        return res.status(404).json({ error: 'Sender account not found or not authorized' });
+      if (Number(fromAcc.balance) < amount) return res.status(400).json({ error: 'Insufficient funds' });
 
-      if (Number(fromAcc.balance) < amount)
-        return res.status(400).json({ error: 'Insufficient funds' });
+      // perform transfer locally
+      const toAcc = receiver ? await getAccountById(receiver) : null;
+      const newFromBalance = Number(fromAcc.balance) - amount;
+      await updateAccountBalance(fromAcc.id, newFromBalance);
+      if (toAcc) {
+        const newToBalance = Number(toAcc.balance) + amount;
+        await updateAccountBalance(toAcc.id, newToBalance);
+      }
 
-      const newBalance = Number(fromAcc.balance || 0) - amount;
-
-      const insertPayload: any = {
-        account_id: accountId,
-        sender_account_id: accountId,
-        receiver_account_id: receiver || null,
-        receiver_email: receiverEmail,
-        receiver_name: receiverName,
+      const txPayload: any = {
+        from_account_id: fromAcc.id,
+        to_account_id: toAcc ? toAcc.id : null,
         amount: amount,
-        type: 'transfer',
+        currency: body.currency || 'USD',
         status: 'completed',
-        description: body.description || `Transfer from ${accountId} to ${receiver ?? ''}`.trim(),
-        reference: body.reference || `TRF-${Date.now()}`,
-        running_balance: newBalance,
+        created_at: new Date().toISOString(),
       };
+      const txId = await createTransaction(txPayload);
 
-      // Insert under user client so RLS and policies apply
-      const { data: inserted, error: insertError } = await userClient
-        .from('transactions')
-        .insert([insertPayload]);
-      if (insertError) return res.status(500).json({ error: insertError.message });
+      // Best-effort Fineract sync
+      try {
+        await createFineractTransfer({ fromAccountId: fromAcc.id, toAccountId: toAcc?.id || null, amount, currency: txPayload.currency, reference: `TRF-${txId}` });
+      } catch (e) {
+        console.warn('Fineract sync failed for transaction', e && (e as any).message ? (e as any).message : e);
+      }
 
-      return res.status(200).json(inserted?.[0] ?? { success: true });
-    } catch (err: any) {
-      return res.status(500).json({ error: err?.message || 'Unknown error' });
+      const db = await (await import('../../lib/db')).getDb();
+      const row = await db.get('SELECT * FROM transactions WHERE id = ?', txId);
+      return res.status(200).json(row || { id: txId });
     }
-  }
 
-  res.setHeader('Allow', ['GET', 'POST']);
-  res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (e: any) {
+    console.error('transactions API error', e?.message || e);
+    res.status(500).json({ error: 'Internal error' });
+  }
 }
