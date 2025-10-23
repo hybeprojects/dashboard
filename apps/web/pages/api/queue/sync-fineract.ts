@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import getServiceRoleClient from '../_serverSupabase';
+import { getDb } from '../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -7,17 +7,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const supabase = getServiceRoleClient();
-  if (!supabase) return res.status(500).json({ error: 'Supabase service client not configured' });
-
   const { userId } = req.body || {};
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   try {
-    const { error } = await supabase
-      .from('fineract_sync_queue')
-      .insert([{ user_id: userId, status: 'pending', created_at: new Date().toISOString() }]);
-    if (error) return res.status(500).json({ error: error.message });
+    const db = await getDb();
+    const id = require('crypto').randomUUID();
+    await db.run(
+      'INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata) VALUES (?, ?, ?, ?, ?, ?)',
+      id,
+      userId,
+      'fineract_sync_requested',
+      'user',
+      userId,
+      JSON.stringify({ requested_at: new Date().toISOString() }),
+    );
     return res.status(200).json({ ok: true });
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || String(e) });

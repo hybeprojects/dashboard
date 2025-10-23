@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import getServerSupabase from '../../api/_serverSupabase';
-import { runDiagnostics } from '../../../lib/supabase/server-utils';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getUserFromRequest } from '../../../lib/serverAuth';
+import { getDb } from '../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -8,40 +9,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const serverSupabase = getServerSupabase();
-  if (!serverSupabase)
-    return res.status(500).json({ error: 'Supabase service client not configured' });
-
   try {
-    // extract token from cookies to verify caller
-    const cookiesHeader = req.headers.cookie || '';
+    const user = await getUserFromRequest(req as any);
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
-    const cookie = require('cookie');
-    const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
-    const token =
-      cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
-
-    if (!token) return res.status(401).json({ error: 'Not authenticated' });
-
-    // validate token using service client
-    const { data: userData, error: userErr } = await serverSupabase.auth.getUser(token as string);
-    if (userErr || !userData?.user) return res.status(401).json({ error: 'Invalid token' });
-    const userId = userData.user.id;
-
-    // load profile using service client (this is server trusted check)
-    const { data: profile, error: profileErr } = await serverSupabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (profileErr) return res.status(500).json({ error: 'Failed to load profile' });
+    const db = await getDb();
+    const profile = await db.get('SELECT is_admin FROM profiles WHERE id = ?', user.id);
     if (!profile || !profile.is_admin) return res.status(403).json({ error: 'Forbidden' });
 
-    const diagnostics = await runDiagnostics();
-    return res.status(200).json({ ok: true, diagnostics });
+    // Basic diagnostics: counts of key tables and env checks
+    const counts: Record<string, any> = {};
+    const tables = ['profiles', 'accounts', 'transactions', 'kyc_submissions', 'audit_logs'];
+    for (const t of tables) {
+      try {
+        const r = await db.get(`SELECT COUNT(1) as count FROM ${t}`);
+        counts[t] = r ? r.count : 0;
+      } catch (e) {
+        counts[t] = { error: 'table_missing_or_unreadable' };
+      }
+    }
+
+    const env = {
+      FINERACT_URL: !!process.env.FINERACT_URL,
+      FINERACT_USER: !!(process.env.FINERACT_USER || process.env.FINERACT_USERNAME),
+      FINERACT_PASSWORD: !!process.env.FINERACT_PASSWORD,
+      MEDUSA_URL: !!process.env.MEDUSA_URL,
+    };
+
+    return res.status(200).json({ ok: true, counts, env });
   } catch (e: any) {
-    console.error('supabase-diagnostics error', e?.message || e);
+    console.error('diagnostics error', e?.message || e);
     return res.status(500).json({ error: 'Internal error' });
   }
 }
