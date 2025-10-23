@@ -40,8 +40,6 @@
   "author": "BLCK-DEV",
   "license": "MIT",
   "dependencies": {
-    "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.76.1",
     "@tailwindcss/postcss": "^4.1.15",
     "axios": "^1.12.2",
     "framer-motion": "^10.12.16"
