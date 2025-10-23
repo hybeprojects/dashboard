@@ -171,3 +171,55 @@ export async function getUserById(id: string) {
   );
   return row || null;
 }
+
+export async function upsertAccountSnapshot(userId: string, account: any) {
+  const db = await getDb();
+  const id = String(account.id || account.accountId || account.resourceId || account.account_number || randomUUID());
+  const name = account.name || account.accountType || String(account.account_number || '');
+  const balance = Number(account.balance ?? account.currentBalance ?? account.availableBalance ?? 0);
+  const data = JSON.stringify(account);
+  await db.run(
+    `INSERT INTO accounts (id, user_id, name, balance, currency, data) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET user_id=excluded.user_id, name=excluded.name, balance=excluded.balance, currency=excluded.currency, data=excluded.data`,
+    id,
+    userId,
+    name,
+    balance,
+    account.currency || null,
+    data,
+  );
+  return id;
+}
+
+export async function getUserAccounts(userId: string) {
+  const db = await getDb();
+  const rows = await db.all('SELECT * FROM accounts WHERE user_id = ?', userId);
+  return rows || [];
+}
+
+export async function createTransaction(tx: any) {
+  const db = await getDb();
+  const id = tx.id || randomUUID();
+  await db.run(
+    'INSERT INTO transactions (id, from_account_id, to_account_id, amount, currency, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    id,
+    tx.from_account_id || null,
+    tx.to_account_id || null,
+    tx.amount || 0,
+    tx.currency || null,
+    tx.status || 'pending',
+    tx.created_at || new Date().toISOString(),
+  );
+  return id;
+}
+
+export async function updateAccountBalance(accountId: string, newBalance: number) {
+  const db = await getDb();
+  await db.run('UPDATE accounts SET balance = ? WHERE id = ?', newBalance, accountId);
+}
+
+export async function getAccountById(accountId: string) {
+  const db = await getDb();
+  const row = await db.get('SELECT * FROM accounts WHERE id = ?', accountId);
+  return row || null;
+}
