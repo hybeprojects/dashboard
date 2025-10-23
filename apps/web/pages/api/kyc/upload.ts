@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { fileData, fileName, userId } = req.body;
-    if (!fileData || !fileName || !userId) return res.status(400).json({ error: 'Missing parameters' });
+    if (!fileData || !fileName || !userId)
+      return res.status(400).json({ error: 'Missing parameters' });
 
     const fileBuffer = Buffer.from(fileData, 'base64');
     const safeName = `${userId}_${fileName}`.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -21,7 +22,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = await getDb();
     const id = cryptoRandom();
     const files = JSON.stringify([{ filename: safeName, path: result.path, url: result.url }]);
-    await db.run('INSERT INTO kyc_submissions (id, user_id, files, status) VALUES (?, ?, ?, ?)', id, userId, files, 'pending');
+    await db.run(
+      'INSERT INTO kyc_submissions (id, user_id, files, status) VALUES (?, ?, ?, ?)',
+      id,
+      userId,
+      files,
+      'pending',
+    );
 
     return res.json({ success: true, url: result.url, id });
   } catch (error: any) {
