@@ -24,7 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     res.setHeader('Set-Cookie', cookieStr);
 
-    return res.status(200).json({ user: { id: user.id, email: user.email, user_metadata: { first_name: user.firstName, last_name: user.lastName } }, session: { access_token: token } });
+    return res
+      .status(200)
+      .json({
+        user: {
+          id: user.id,
+          email: user.email,
+          user_metadata: { first_name: user.firstName, last_name: user.lastName },
+        },
+        session: { access_token: token },
+      });
   } catch (e: any) {
     console.error('signup error', e?.message || e);
     return res.status(400).json({ error: e?.message || 'Could not create user' });

@@ -5,7 +5,8 @@ import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'file:./premier_bank.db';
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || 'dev_secret';
+const JWT_SECRET =
+  process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || 'dev_secret';
 
 let dbInstance: any = null;
 
@@ -68,7 +69,17 @@ async function ensureSchema(db: any) {
   `);
 }
 
-export async function createUser({ email, password, firstName, lastName }: { email: string; password: string; firstName?: string; lastName?: string; }) {
+export async function createUser({
+  email,
+  password,
+  firstName,
+  lastName,
+}: {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}) {
   const db = await getDb();
   const existing = await db.get('SELECT id FROM users WHERE email = ?', email.toLowerCase());
   if (existing) throw new Error('User already exists');
@@ -80,7 +91,7 @@ export async function createUser({ email, password, firstName, lastName }: { ema
     email.toLowerCase(),
     hash,
     firstName || null,
-    lastName || null
+    lastName || null,
   );
   // create profile
   await db.run(
@@ -89,14 +100,22 @@ export async function createUser({ email, password, firstName, lastName }: { ema
     id,
     email.toLowerCase(),
     firstName || null,
-    lastName || null
+    lastName || null,
   );
-  return { id, email: email.toLowerCase(), firstName: firstName || null, lastName: lastName || null };
+  return {
+    id,
+    email: email.toLowerCase(),
+    firstName: firstName || null,
+    lastName: lastName || null,
+  };
 }
 
 export async function getUserByEmail(email: string) {
   const db = await getDb();
-  const row = await db.get('SELECT id, email, password_hash, first_name as firstName, last_name as lastName FROM users WHERE email = ?', email.toLowerCase());
+  const row = await db.get(
+    'SELECT id, email, password_hash, first_name as firstName, last_name as lastName FROM users WHERE email = ?',
+    email.toLowerCase(),
+  );
   return row || null;
 }
 
@@ -123,6 +142,9 @@ export function verifySessionToken(token: string) {
 
 export async function getUserById(id: string) {
   const db = await getDb();
-  const row = await db.get('SELECT id, email, first_name as firstName, last_name as lastName FROM users WHERE id = ?', id);
+  const row = await db.get(
+    'SELECT id, email, first_name as firstName, last_name as lastName FROM users WHERE id = ?',
+    id,
+  );
   return row || null;
 }
