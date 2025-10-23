@@ -13,6 +13,16 @@ let dbInstance: any = null;
 export async function getDb() {
   if (dbInstance) return dbInstance;
   const filePath = DATABASE_URL.startsWith('file:') ? DATABASE_URL.slice(5) : DATABASE_URL;
+
+  // dynamic require to avoid bundler resolving native sqlite3 at build-time
+  let sqlite3: any;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    sqlite3 = require('sqlite3');
+  } catch (e) {
+    throw new Error('sqlite3 module is not installed. Run `npm install sqlite3` in apps/web');
+  }
+
   const db = await open({ filename: filePath, driver: sqlite3.Database });
   dbInstance = db;
   await ensureSchema(db);
@@ -64,6 +74,17 @@ async function ensureSchema(db: any) {
       amount REAL,
       currency TEXT,
       status TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // KYC submissions
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS kyc_submissions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      files TEXT,
+      status TEXT DEFAULT 'pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
