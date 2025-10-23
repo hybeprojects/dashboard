@@ -50,6 +50,7 @@ async function ensureSchema(db: any) {
       email TEXT,
       first_name TEXT,
       last_name TEXT,
+      is_admin INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
