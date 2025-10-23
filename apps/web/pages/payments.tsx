@@ -10,13 +10,17 @@ import Button from '../components/ui/Button';
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 
-const schema = yup.object({
-  fromAccountId: yup.string().nullable(),
+type Form = {
+  fromAccountId: string | null;
+  to: string;
+  amount: number;
+};
+
+const schema: yup.ObjectSchema<Form> = yup.object({
+  fromAccountId: yup.string().nullable().required(),
   to: yup.string().required('Recipient required'),
   amount: yup.number().positive('Positive amount').required('Amount required'),
 });
-
-type Form = { fromAccountId?: string | null; to: string; amount: number };
 
 export default function Payments() {
   const {
@@ -97,7 +101,7 @@ export default function Payments() {
                   <div>Recipient ID looks short — ensure you entered a full account ID.</div>
                 ) : (
                   <div>
-                    Enter the recipient's account ID. For external transfers, use the provided
+                    Enter the recipient&apos;s account ID. For external transfers, use the provided
                     reference.
                   </div>
                 )}

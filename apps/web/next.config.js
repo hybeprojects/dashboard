@@ -27,6 +27,16 @@ function buildCSP() {
 }
 
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '**',
+      },
+    ],
+  },
   eslint: {
     ignoreDuringBuilds: false,
     dirs: ['pages', 'components', 'lib', 'hooks', 'state', 'styles', 'types', '.'],

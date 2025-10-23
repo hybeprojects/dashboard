@@ -1,7 +1,5 @@
 import { getServiceRoleClient } from './supabase/api';
 
-import { getServiceRoleClient } from './supabase/api';
-
 export async function recordMetric(kind: string, payload: Record<string, any> = {}) {
   try {
     // Attempt to write to a system_metrics table if available

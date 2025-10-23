@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { data: userData, error: userErr } = await client.auth.getUser(access_token as any);
     if (userErr) return res.status(400).json({ error: userErr.message || 'Failed to get user' });
-    const user = userData?.data?.user;
+    const user = userData?.user;
     if (!user) return res.status(400).json({ error: 'No user from token' });
 
     // Use service role client to update backend mapping
