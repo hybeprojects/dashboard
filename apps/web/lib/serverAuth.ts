@@ -1,22 +1,14 @@
 import type { NextApiRequest } from 'next';
-import getServerSupabase from '../pages/api/_serverSupabase';
 import cookie from 'cookie';
+import { verifySessionToken, getUserById } from '../lib/db';
 
-export async function getUserFromRequest(req: NextApiRequest) {
+export async function getUserFromRequest(req: any) {
   const cookieHeader = (req.headers.cookie as string) || '';
   const cookies = cookieHeader ? cookie.parse(cookieHeader) : {};
-  const token =
-    cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'] || null;
-
+  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'] || null;
   if (!token) return null;
-  const supabase = getServerSupabase();
-  if (!supabase) return null;
-
-  try {
-    const { data, error } = await supabase.auth.getUser(token as string);
-    if (error || !data?.user) return null;
-    return data.user;
-  } catch (e) {
-    return null;
-  }
+  const payload = verifySessionToken(token);
+  if (!payload || !payload.sub) return null;
+  const user = await getUserById(payload.sub as string);
+  return user;
 }
