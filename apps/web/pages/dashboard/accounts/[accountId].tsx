@@ -1,6 +1,5 @@
-// Supabase client will be required dynamically inside server-side props to avoid module name collisions
 import { GetServerSidePropsContext } from 'next';
-// Supabase client will be required dynamically inside server-side props to avoid module name collisions
+import { withAuth } from '../../../lib/ssrHelpers';
 
 // Define types inline instead of importing
 type Account = {
@@ -77,41 +76,18 @@ export default function AccountDetailsPage({ account, transactions }: AccountDet
   );
 }
 
-export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
-    console.error('Supabase not configured for SSR');
-    return { notFound: true };
-  }
+import { createClient } from '@supabase/supabase-js';
 
-  // Parse cookies to extract the user's Supabase access token
-  const cookiesHeader = context.req.headers.cookie || '';
-
-  const cookie = require('cookie');
-  const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
-  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
-
-  if (!token) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
+export const getServerSideProps = withAuth(async (context, session) => {
   const accountId = context.params?.accountId as string;
 
-  // Create a user-scoped client that attaches the user's access token in the Authorization header
-  // Require dynamically to avoid top-level duplicate imports and keep this code server-only
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
-  const userClient = createSupabaseClient(url, anon, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
+  const userClient = createClient(url, anon, {
+    global: { headers: { Authorization: `Bearer ${session.access_token}` } },
   });
 
-  // Fetch account and transactions using the user's client so RLS policies apply
   const { data: account, error: accountError } = await userClient
     .from('accounts')
     .select('*')
@@ -137,4 +113,4 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
       transactions: transactions || [],
     },
   };
-};
+});
