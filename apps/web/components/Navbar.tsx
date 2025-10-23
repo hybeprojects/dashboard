@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import ThemeToggle from '../lib/theme';
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
@@ -23,9 +24,11 @@ export default function Navbar() {
     <motion.nav className="navbar" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="section flex h-20 items-center justify-between">
         <Link href="/" className="text-lg font-semibold text-primary">
-          <img
+          <Image
             src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
             alt="PremierBank"
+            width={150}
+            height={40}
             className="h-20 w-auto object-contain"
           />
         </Link>

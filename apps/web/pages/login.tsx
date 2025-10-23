@@ -1,4 +1,5 @@
 import Navbar from '../components/Navbar';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -82,9 +83,9 @@ export default function Login() {
                 error={errors.password}
               />
               <div className="flex items-center justify-between">
-                <a href="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </a>
+                <Link href="/forgot-password" legacyBehavior>
+                  <a className="text-sm text-primary hover:underline">Forgot password?</a>
+                </Link>
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? 'Signing in…' : 'Sign In'}
@@ -97,9 +98,9 @@ export default function Login() {
             )}
             <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
               New to PremierBank?{' '}
-              <a href="/register" className="text-primary hover:underline">
-                Open an account
-              </a>
+              <Link href="/register" legacyBehavior>
+                <a className="text-primary hover:underline">Open an account</a>
+              </Link>
             </p>
           </div>
         </div>

@@ -24,8 +24,11 @@ export async function signInAction(formData: FormData) {
         data.user.user_metadata?.first_name || data.user.user_metadata?.firstName || '';
       const lastName =
         data.user.user_metadata?.last_name || data.user.user_metadata?.lastName || '';
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      ensureFineractClient(service, data.user.id, { firstName, lastName, email: data.user.email });
+      ensureFineractClient(service, data.user.id, {
+        firstName,
+        lastName,
+        email: data.user.email,
+      }).catch((err: any) => console.error('Fineract sync best-effort failed', err));
     }
   } catch (e) {
     // ignore
@@ -69,21 +72,17 @@ export async function getBankingData(token?: string) {
   }
 
   // Client-side flow: use sb-access-token cookie/session via API route
-  try {
-    const res = await fetch('/api/banking', {
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
-    if (!res.ok) {
-      if (res.status === 401) throw new Error('Authentication required');
-      throw new Error(`Failed to fetch banking data: ${res.status}`);
-    }
-    const json = await res.json();
-    // normalize: if API returns { success: true, data } use data, otherwise return raw
-    return json?.data ?? json;
-  } catch (err) {
-    throw err;
+  const res = await fetch('/api/banking', {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Authentication required');
+    throw new Error(`Failed to fetch banking data: ${res.status}`);
   }
+  const json = await res.json();
+  // normalize: if API returns { success: true, data } use data, otherwise return raw
+  return json?.data ?? json;
 }
 
 export async function triggerFineractSync(userId: string) {

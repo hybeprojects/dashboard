@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
-import type { NextApiRequest, NextApiResponse } from 'next';
 import getServerSupabase from '../_serverSupabase';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -59,12 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const { ensureFineractClient } = require('../../../lib/fineract');
         // don't block signup if linking fails
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         ensureFineractClient(supabase, user.id, {
           firstName: firstName || user.user_metadata?.first_name || '',
           lastName: lastName || user.user_metadata?.last_name || '',
           email: user.email,
-        });
+        }).catch((err: any) => console.warn('Fineract sync best-effort failed', err));
       } catch (e) {
         console.warn(
           'Fineract linking failed during signup',

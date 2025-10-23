@@ -1,7 +1,10 @@
+const { FlatCompat } = require('@eslint/eslintrc');
 const globals = require('globals');
 const tseslint = require('typescript-eslint');
 const eslint = require('@eslint/js');
 const prettierConfig = require('eslint-config-prettier');
+
+const compat = new FlatCompat();
 
 module.exports = [
   {
@@ -16,6 +19,8 @@ module.exports = [
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  ...compat.extends('next'),
+  ...compat.extends('next/core-web-vitals'),
   {
     files: ['apps/web/**/*.ts', 'apps/web/**/*.tsx'],
     languageOptions: {
@@ -28,14 +33,6 @@ module.exports = [
           jsx: true,
         },
       },
-    },
-    rules: {
-      // Basic Next.js rules without the problematic plugin
-      'react/no-unescaped-entities': 'off',
-      'react/display-name': 'off',
-      // Turn off rules that require optional plugins not present in CI
-      'react-hooks/exhaustive-deps': 'off',
-      '@next/next/no-img-element': 'off',
     },
   },
   prettierConfig,

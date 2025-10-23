@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -7,9 +8,11 @@ export default function Footer() {
         <div>
           <div className="text-xl font-semibold text-primary">
             <Link href="/">
-              <img
+              <Image
                 src="https://res.cloudinary.com/dgqhyz67g/image/upload/Cleaned-logo-Premier-bank_flnsfz.png"
                 alt="PremierBank"
+                width={150}
+                height={40}
                 className="h-16 w-auto object-contain"
               />
             </Link>
