@@ -35,8 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const f of files) {
       const filename = f.filename || f.file || null;
       if (!filename) continue;
-      // local storage URL
-      urls[filename] = `/api/storage/kyc/${encodeURIComponent(filename)}`;
+      try {
+        urls[filename] = await storage.getSignedUrl(`kyc/${filename}`);
+      } catch (e) {
+        urls[filename] = null;
+      }
     }
 
     return res.status(200).json({ urls });
