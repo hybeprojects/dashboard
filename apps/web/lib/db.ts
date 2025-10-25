@@ -40,13 +40,13 @@ export async function getDb() {
   // Harden connection: pragmas for durability and concurrency
   try {
     // Enable WAL for better concurrency
-    await db.exec("PRAGMA journal_mode = WAL;");
+    await db.exec('PRAGMA journal_mode = WAL;');
     // Reasonable synchronous setting
-    await db.exec("PRAGMA synchronous = NORMAL;");
+    await db.exec('PRAGMA synchronous = NORMAL;');
     // Busy timeout (ms)
-    await db.exec("PRAGMA busy_timeout = 5000;");
+    await db.exec('PRAGMA busy_timeout = 5000;');
     // Enable foreign keys
-    await db.exec("PRAGMA foreign_keys = ON;");
+    await db.exec('PRAGMA foreign_keys = ON;');
   } catch (e) {
     // ignore pragma errors but log
     // eslint-disable-next-line no-console
@@ -242,9 +242,13 @@ export async function getUserById(id: string) {
 
 export async function upsertAccountSnapshot(userId: string, account: any) {
   const db = await getDb();
-  const id = String(account.id || account.accountId || account.resourceId || account.account_number || randomUUID());
+  const id = String(
+    account.id || account.accountId || account.resourceId || account.account_number || randomUUID(),
+  );
   const name = account.name || account.accountType || String(account.account_number || '');
-  const balance = Number(account.balance ?? account.currentBalance ?? account.availableBalance ?? 0);
+  const balance = Number(
+    account.balance ?? account.currentBalance ?? account.availableBalance ?? 0,
+  );
   const data = JSON.stringify(account);
   await db.run(
     `INSERT INTO accounts (id, user_id, name, balance, currency, data) VALUES (?, ?, ?, ?, ?, ?)
@@ -337,7 +341,7 @@ export async function restoreDatabaseFromBuffer(buffer: Buffer) {
 export async function runIntegrityCheck() {
   try {
     const db = await getDb();
-    const res = await db.get("PRAGMA quick_check(1);");
+    const res = await db.get('PRAGMA quick_check(1);');
     return { ok: true, result: res };
   } catch (e: any) {
     return { ok: false, error: e?.message || String(e) };

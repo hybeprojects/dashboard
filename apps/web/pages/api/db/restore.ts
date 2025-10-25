@@ -21,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!checkAdmin(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
   const { data } = req.body || {};
-  if (!data || typeof data !== 'string') return res.status(400).json({ ok: false, error: 'missing payload' });
+  if (!data || typeof data !== 'string')
+    return res.status(400).json({ ok: false, error: 'missing payload' });
   try {
     const buf = Buffer.from(data, 'base64');
     const result = await restoreDatabaseFromBuffer(buf);

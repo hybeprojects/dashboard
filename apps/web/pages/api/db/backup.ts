@@ -15,7 +15,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // list available backups
     const backupsDir = path.join(process.cwd(), 'storage', 'backups');
     if (!fs.existsSync(backupsDir)) return res.status(200).json({ ok: true, backups: [] });
-    const list = fs.readdirSync(backupsDir).filter((f) => f.includes('.backup')).sort().reverse();
+    const list = fs
+      .readdirSync(backupsDir)
+      .filter((f) => f.includes('.backup'))
+      .sort()
+      .reverse();
     return res.status(200).json({ ok: true, backups: list });
   }
 
