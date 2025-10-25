@@ -2,26 +2,26 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { createClient } from '../lib/supabase/client';
-import type { Database } from '../lib/supabase/types.gen';
 import useRequireAuth from '../hooks/useRequireAuth';
 import cookie from 'cookie';
 import React, { useState } from 'react';
 
-type AccountRow = Database['public']['Tables']['accounts']['Row'];
-type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
+type AccountRow = any;
+
+type TransactionInsert = any;
 
 export default function TransferPage() {
   // client-side guard
   useRequireAuth();
   const qc = useQueryClient();
-  const supabase = createClient();
 
   const { data: accounts = [] } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
     queryFn: async (): Promise<AccountRow[]> => {
-      const { data } = await supabase.from('accounts').select('*');
-      return data ?? [];
+      const res = await fetch('/api/banking?type=accounts');
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      const json = await res.json();
+      return json.accounts ?? json;
     },
   });
 
@@ -42,8 +42,8 @@ export default function TransferPage() {
     setError(null);
     setSuccess(null);
     try {
-      const fromAccountRec = accounts.find((a) => String(a.id) === String(from));
-      const toAccountRec = accounts.find((a) => String(a.id) === String(to));
+      const fromAccountRec = accounts.find((a: any) => String(a.id) === String(from));
+      const toAccountRec = accounts.find((a: any) => String(a.id) === String(to));
       const fromBalance = Number(fromAccountRec?.balance ?? 0);
       const amt = parseFloat(amount);
       if (!isFinite(amt) || amt <= 0) {
@@ -67,10 +67,14 @@ export default function TransferPage() {
         reference: `TRF-${Date.now()}`,
       };
 
-      const { error } = await (supabase as any).from('transactions').insert([payload as any]);
-
-      if (error) {
-        throw error;
+      const resp = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body?.error || 'Failed to submit transfer');
       }
 
       qc.invalidateQueries({ queryKey: ['transactions'] });
@@ -78,7 +82,7 @@ export default function TransferPage() {
       setAmount('');
       setTo('');
     } catch (err: any) {
-      setError('Failed to submit transfer');
+      setError(err?.message || 'Failed to submit transfer');
     } finally {
       setLoading(false);
     }
@@ -98,7 +102,7 @@ export default function TransferPage() {
           <div>
             <label className="block text-xs text-gray-600">From</label>
             <select value={from} onChange={(e) => setFrom(e.target.value)} className="input-field">
-              {accounts.map((a) => (
+              {accounts.map((a: any) => (
                 <option key={a.id} value={a.id}>
                   {a.name} • ${Number(a.balance ?? 0).toLocaleString()}
                 </option>
