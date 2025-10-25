@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import cookie from 'cookie';
+const cookie = require('cookie');
 import { verifySessionToken, getUserById } from '../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
