@@ -5,10 +5,10 @@ import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { getJwtSecret } from './env';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'file:./premier_bank.db';
-const JWT_SECRET =
-  process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || 'dev_secret';
+const JWT_SECRET = getJwtSecret();
 
 let dbInstance: any = null;
 let dbFilePathCached: string | null = null;
