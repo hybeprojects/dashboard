@@ -1,5 +1,3 @@
-import { getServiceRoleClient } from './supabase/api';
-
 import { getDb } from './db';
 
 export async function recordMetric(kind: string, payload: Record<string, any> = {}) {
