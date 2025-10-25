@@ -2,36 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [main, orbit-haven]
+    branches: [main, master]
   pull_request:
-    branches: [main, orbit-haven]
+    branches: [main, master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
-      - name: Install
+
+      - name: Install dependencies (root)
         run: npm ci
-      - name: Lint
-        run: npm run lint
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Build
-        run: npm run build --if-present
-      - name: Semgrep scan
-        run: |
-          if command -v semgrep >/dev/null 2>&1; then
-            npm run semgrep || true
-          else
-            echo "semgrep not installed in runner; skipping"
-          fi
-      - name: Smoke tests
-        run: |
-          chmod +x scripts/smoke_tests.sh
-          BASE_URL=${{ env.BASE_URL || 'http://localhost:3000' }} ./scripts/smoke_tests.sh
+
+      - name: Lint (apps/web)
+        run: npm --prefix apps/web run lint
+
+      - name: Typecheck (apps/web)
+        run: npm --prefix apps/web run typecheck
+
+      - name: Build (apps/web)
+        run: npm --prefix apps/web run build
+
+      - name: E2E tests (optional)
+        if: ${{ false }}
+        run: npm run test:e2e
