@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromRequest } from '../../../../lib/serverAuth';
 import { getDb } from '../../../../lib/db';
+import { storage } from '../../../../lib/storage';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
