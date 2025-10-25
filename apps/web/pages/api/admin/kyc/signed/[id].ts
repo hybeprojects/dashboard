@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import type { NextApiRequest, NextApiResponse } from 'next';
 import cookie from 'cookie';
 import { verifySessionToken, getUserById, getDb } from '../../../../../lib/db';
 

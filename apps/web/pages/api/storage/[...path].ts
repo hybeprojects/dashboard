@@ -18,20 +18,28 @@ function contentTypeForExt(ext: string) {
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const segments = req.query.path;
-
-  if (Array.isArray(segments) && segments.length > 0) {
-    const fullPath = path.join(process.cwd(), 'storage', ...segments.map((s) => String(s)));
-
-    if (fs.existsSync(fullPath)) {
-      const stat = fs.statSync(fullPath);
-      if (stat.isDirectory()) return res.status(404).json({ error: 'Not a file' });
-      const file = fs.readFileSync(fullPath);
-      const ext = path.extname(fullPath);
-      res.setHeader('Content-Type', contentTypeForExt(ext));
-      res.setHeader('Content-Length', String(file.length));
-      return res.send(file);
-    }
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return res.status(404).json({ error: 'File not found' });
   }
 
-  return res.status(404).json({ error: 'File not found' });
+  const storageRoot = path.join(process.cwd(), 'storage');
+  const resolved = path.resolve(storageRoot, ...segments.map((s) => String(s)));
+  const rootResolved = path.resolve(storageRoot);
+
+  // Prevent path traversal
+  if (!(resolved + path.sep).startsWith(rootResolved + path.sep) && resolved !== rootResolved) {
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+
+  if (!fs.existsSync(resolved)) return res.status(404).json({ error: 'File not found' });
+
+  const stat = fs.statSync(resolved);
+  if (stat.isDirectory()) return res.status(404).json({ error: 'Not a file' });
+
+  const file = fs.readFileSync(resolved);
+  const ext = path.extname(resolved);
+  res.setHeader('Content-Type', contentTypeForExt(ext));
+  res.setHeader('Content-Length', String(file.length));
+  res.setHeader('Cache-Control', 'private, max-age=60');
+  return res.send(file);
 }
