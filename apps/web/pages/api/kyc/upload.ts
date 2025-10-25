@@ -2,7 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { storage } from '../../../lib/storage';
 import { getDb } from '../../../lib/db';
 import * as yup from 'yup';
-import { compose, withAuth, withCsrfVerify, withRateLimit, withValidation } from '../../../lib/api-middleware';
+import {
+  compose,
+  withAuth,
+  withCsrfVerify,
+  withRateLimit,
+  withValidation,
+} from '../../../lib/api-middleware';
 
 const schema = yup.object({
   fileData: yup.string().required(),
@@ -27,7 +33,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    const { fileData, fileName, userId } = req.body as { fileData: string; fileName: string; userId: string };
+    const { fileData, fileName, userId } = req.body as {
+      fileData: string;
+      fileName: string;
+      userId: string;
+    };
 
     const fileBuffer = Buffer.from(fileData, 'base64');
     const safeName = `${userId}_${fileName}`.replace(/[^a-zA-Z0-9._-]/g, '_');

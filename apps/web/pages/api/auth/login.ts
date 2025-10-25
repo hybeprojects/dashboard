@@ -2,7 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyPassword, createSessionToken } from '../../../lib/db';
 import cookie from 'cookie';
 import * as yup from 'yup';
-import { compose, withCsrfVerify, withRateLimit, withValidation } from '../../../lib/api-middleware';
+import {
+  compose,
+  withCsrfVerify,
+  withRateLimit,
+  withValidation,
+} from '../../../lib/api-middleware';
 
 const schema = yup.object({
   email: yup.string().email().required(),

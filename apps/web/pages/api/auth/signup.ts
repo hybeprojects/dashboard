@@ -2,7 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { createUser, createSessionToken } from '../../../lib/db';
 import cookie from 'cookie';
 import * as yup from 'yup';
-import { compose, withCsrfVerify, withRateLimit, withValidation } from '../../../lib/api-middleware';
+import {
+  compose,
+  withCsrfVerify,
+  withRateLimit,
+  withValidation,
+} from '../../../lib/api-middleware';
 
 const schema = yup.object({
   email: yup.string().email().required(),
@@ -25,7 +30,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   };
 
   try {
-    const user = await createUser({ email, password, firstName: firstName || undefined, lastName: lastName || undefined });
+    const user = await createUser({
+      email,
+      password,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+    });
     const token = createSessionToken(user.id);
 
     const cookieStr = cookie.serialize('sb-access-token', String(token), {

@@ -40,12 +40,14 @@ export type RateLimitOptions = {
 export function withRateLimit(opts: RateLimitOptions = {}): ApiMiddleware {
   const windowMs = opts.windowMs ?? 60_000;
   const limit = opts.limit ?? 60;
-  const keyGen = opts.keyGenerator ?? ((req) => {
-    const fwd = (req.headers['x-forwarded-for'] as string) || '';
-    const ip = fwd.split(',')[0].trim() || (req.socket as any)?.remoteAddress || 'unknown';
-    const route = (req.url || '').split('?')[0];
-    return `${ip}:${route}:${req.method}`;
-  });
+  const keyGen =
+    opts.keyGenerator ??
+    ((req) => {
+      const fwd = (req.headers['x-forwarded-for'] as string) || '';
+      const ip = fwd.split(',')[0].trim() || (req.socket as any)?.remoteAddress || 'unknown';
+      const route = (req.url || '').split('?')[0];
+      return `${ip}:${route}:${req.method}`;
+    });
   return (handler) => async (req: NextApiRequest, res: NextApiResponse) => {
     const key = keyGen(req);
     const now = Date.now();
@@ -79,7 +81,12 @@ async function isAdmin(userId: string) {
   return !!(row && row.isAdmin);
 }
 
-export function withRBAC(required: { role?: 'admin' | 'user'; allow?: (req: NextApiRequest) => Promise<boolean> | boolean } = {}): ApiMiddleware {
+export function withRBAC(
+  required: {
+    role?: 'admin' | 'user';
+    allow?: (req: NextApiRequest) => Promise<boolean> | boolean;
+  } = {},
+): ApiMiddleware {
   return (handler) => async (req: NextApiRequest, res: NextApiResponse) => {
     const user = (req as any).user;
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
@@ -95,7 +102,10 @@ export function withRBAC(required: { role?: 'admin' | 'user'; allow?: (req: Next
   };
 }
 
-export function withValidation<T extends yup.AnyObjectSchema>(schema: T, target: 'body' | 'query' = 'body'): ApiMiddleware {
+export function withValidation<T extends yup.AnyObjectSchema>(
+  schema: T,
+  target: 'body' | 'query' = 'body',
+): ApiMiddleware {
   return (handler) => async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const data = target === 'body' ? req.body : req.query;
