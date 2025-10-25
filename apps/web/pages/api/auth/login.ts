@@ -1,15 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { verifyPassword, createSessionToken, getUserByEmail } from '../../../lib/db';
+import { verifyPassword, createSessionToken } from '../../../lib/db';
 import cookie from 'cookie';
+import * as yup from 'yup';
+import { compose, withCsrfVerify, withRateLimit, withValidation } from '../../../lib/api-middleware';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const schema = yup.object({
+  email: yup.string().email().required(),
+  password: yup.string().min(8).required(),
+});
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end('Method Not Allowed');
   }
 
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  const { email, password } = req.body as { email: string; password: string };
 
   try {
     const user = await verifyPassword(email, password);
@@ -27,19 +33,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cookieStr = cookie.serialize('sb-access-token', String(token), cookieOpts);
     res.setHeader('Set-Cookie', cookieStr);
 
-    // Return a supabase-like shape for compatibility
-    return res
-      .status(200)
-      .json({
-        user: {
-          id: user.id,
-          email: user.email,
-          user_metadata: { first_name: user.firstName, last_name: user.lastName },
-        },
-        session: { access_token: token },
-      });
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        user_metadata: { first_name: user.firstName, last_name: user.lastName },
+      },
+      session: { access_token: token },
+    });
   } catch (e: any) {
     console.error('login error', e?.message || e);
     return res.status(500).json({ error: e?.message || 'Internal error' });
   }
-}
+};
+
+export default compose(
+  handler,
+  withValidation(schema, 'body'),
+  withCsrfVerify(),
+  withRateLimit({ windowMs: 60_000, limit: 20 }),
+);
