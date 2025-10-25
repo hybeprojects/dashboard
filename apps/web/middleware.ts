@@ -10,12 +10,7 @@ const LIMIT = 60;
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // Paths to exclude from global enforcement
-const EXEMPT_PATHS = [
-  '/api/csrf-token',
-  '/api/env-check',
-  '/api/debug',
-  '/api/auth',
-];
+const EXEMPT_PATHS = ['/api/csrf-token', '/api/env-check', '/api/debug', '/api/auth'];
 
 function isExempt(pathname: string) {
   for (const p of EXEMPT_PATHS) {
@@ -80,7 +75,10 @@ export function middleware(req: NextRequest) {
 
   // Authentication guard for admin/db endpoints: ensure session cookie present and token valid
   if (pathname.startsWith('/api/admin') || pathname.startsWith('/api/db')) {
-    const token = req.cookies.get('sb-access-token')?.value || req.cookies.get('supabase-auth-token')?.value || null;
+    const token =
+      req.cookies.get('sb-access-token')?.value ||
+      req.cookies.get('supabase-auth-token')?.value ||
+      null;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
       const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || '';
