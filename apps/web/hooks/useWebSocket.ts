@@ -11,13 +11,21 @@ export default function useWebSocket(onEvent: (event: string, payload: any) => v
     const init = async () => {
       try {
         // read httpOnly cookie cannot be accessed; attempt to read permissive token from document.cookie
-        const cookies = typeof document !== 'undefined' ? document.cookie.split(';').reduce((acc: any, c) => {
-          const [k, v] = c.split('=');
-          if (!k) return acc; acc[k.trim()] = decodeURIComponent((v || '').trim()); return acc;
-        }, {}) : {};
+        const cookies =
+          typeof document !== 'undefined'
+            ? document.cookie.split(';').reduce((acc: any, c) => {
+                const [k, v] = c.split('=');
+                if (!k) return acc;
+                acc[k.trim()] = decodeURIComponent((v || '').trim());
+                return acc;
+              }, {})
+            : {};
         const token = cookies['sb-access-token'] || cookies['sb:token'] || null;
 
-        socket = io(url, token ? { auth: { token }, withCredentials: true } : { withCredentials: true });
+        socket = io(
+          url,
+          token ? { auth: { token }, withCredentials: true } : { withCredentials: true },
+        );
 
         socketRef.current = socket;
 

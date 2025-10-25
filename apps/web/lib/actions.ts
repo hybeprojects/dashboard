@@ -35,7 +35,9 @@ export async function signInAction(formData: FormData) {
 export async function getBankingData(token?: string) {
   if (token) {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const resp = await fetch(`${baseUrl}/api/banking`, { headers: { Authorization: `Bearer ${token}` } });
+    const resp = await fetch(`${baseUrl}/api/banking`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (!resp.ok) throw new Error('Failed to fetch banking data');
     return resp.json();
   }

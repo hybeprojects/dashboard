@@ -32,7 +32,11 @@ export default function AccountDetail() {
       if (!res.ok) throw new Error('Failed to fetch transactions');
       const json = await res.json();
       // filter locally by account id
-      return (json || []).filter((t: any) => String(t.sender_account_id) === String(id) || String(t.receiver_account_id) === String(id));
+      return (json || []).filter(
+        (t: any) =>
+          String(t.sender_account_id) === String(id) ||
+          String(t.receiver_account_id) === String(id),
+      );
     },
     enabled: !!id,
   });

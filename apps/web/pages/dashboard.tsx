@@ -84,7 +84,16 @@ const icons = {
   chart: 'M5 19h14M7 17V9m5 8V5m5 12v-6',
 };
 
-export default function Dashboard({ user: initialUser, bankingData, bankingError }: { user: any; initialSession?: any; bankingData?: any; bankingError?: string }) {
+export default function Dashboard({
+  user: initialUser,
+  bankingData,
+  bankingError,
+}: {
+  user: any;
+  initialSession?: any;
+  bankingData?: any;
+  bankingError?: string;
+}) {
   const qc = useQueryClient();
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);

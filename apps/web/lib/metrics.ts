@@ -4,13 +4,14 @@ export async function recordMetric(kind: string, payload: Record<string, any> = 
   try {
     const db = await getDb();
     try {
-      await db.run('INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata) VALUES (?, ?, ?, ?, ?, ?)',
-        `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      await db.run(
+        'INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata) VALUES (?, ?, ?, ?, ?, ?)',
+        `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         null,
         kind,
         'metric',
         null,
-        JSON.stringify(payload)
+        JSON.stringify(payload),
       );
       return;
     } catch (e) {
