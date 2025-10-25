@@ -28,7 +28,8 @@ export class LocalStorage {
     }
 
     fs.writeFileSync(filePath, file);
-    return { path: filePath, url: `/api/storage/${folder}/${encodeURIComponent(filename)}` };
+    const relPath = path.join(folder, filename);
+    return { path: relPath, url: `/api/storage/${folder}/${encodeURIComponent(filename)}` };
   }
 
   async getSignedUrl(filePath: string) {
