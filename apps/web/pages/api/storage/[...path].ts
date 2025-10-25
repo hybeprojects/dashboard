@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { compose, withAuth, withRBAC, withRateLimit } from '../../../lib/api-middleware';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,12 +12,16 @@ function contentTypeForExt(ext: string) {
     '.txt': 'text/plain',
     '.json': 'application/json',
     '.csv': 'text/csv',
-    '.pdf': 'application/pdf',
   };
   return mapping[ext.toLowerCase()] || 'application/octet-stream';
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', ['GET', 'HEAD']);
+    return res.status(405).end('Method Not Allowed');
+  }
+
   const segments = req.query.path;
   if (!Array.isArray(segments) || segments.length === 0) {
     return res.status(404).json({ error: 'File not found' });
@@ -43,3 +48,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Cache-Control', 'private, max-age=60');
   return res.send(file);
 }
+
+export default compose(
+  handler,
+  withAuth(),
+  withRBAC({ role: 'admin' }),
+  withRateLimit({ windowMs: 60_000, limit: 30 }),
+);
