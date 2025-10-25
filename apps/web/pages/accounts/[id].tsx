@@ -2,26 +2,25 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/ui/Card';
-import { createClient } from '../../lib/supabase/client';
-import type { Database } from '../../lib/supabase/types.gen';
 import useRequireAuth from '../../hooks/useRequireAuth';
 import cookie from 'cookie';
 
-type AccountRow = Database['public']['Tables']['accounts']['Row'];
-type TransactionRow = Database['public']['Tables']['transactions']['Row'];
+type AccountRow = any;
+type TransactionRow = any;
 
 export default function AccountDetail() {
   // client-side guard
   useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
-  const supabase = createClient();
 
   const { data: accounts = [] } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
     queryFn: async (): Promise<AccountRow[]> => {
-      const { data } = await supabase.from('accounts').select('*');
-      return data ?? [];
+      const res = await fetch('/api/banking?type=accounts');
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      const json = await res.json();
+      return json.accounts ?? json;
     },
   });
 
@@ -29,17 +28,20 @@ export default function AccountDetail() {
     queryKey: ['transactions', id],
     queryFn: async (): Promise<TransactionRow[]> => {
       if (!id) return [];
-      const { data } = await supabase
-        .from('transactions')
-        .select('*')
-        .or(`sender_account_id.eq.${id},receiver_account_id.eq.${id}`)
-        .order('created_at', { ascending: false });
-      return (data ?? []) as TransactionRow[];
+      const res = await fetch('/api/transactions');
+      if (!res.ok) throw new Error('Failed to fetch transactions');
+      const json = await res.json();
+      // filter locally by account id
+      return (json || []).filter(
+        (t: any) =>
+          String(t.sender_account_id) === String(id) ||
+          String(t.receiver_account_id) === String(id),
+      );
     },
     enabled: !!id,
   });
 
-  const acct = accounts.find((a) => String(a.id) === String(id));
+  const acct = accounts.find((a: any) => String(a.id) === String(id));
   const relatedTx = transactions;
 
   return (
@@ -59,7 +61,7 @@ export default function AccountDetail() {
         <div>
           <h3 className="font-medium mb-2">Recent activity</h3>
           {relatedTx && relatedTx.length > 0 ? (
-            relatedTx.slice(0, 8).map((t) => (
+            relatedTx.slice(0, 8).map((t: any) => (
               <div key={t.id} className="flex justify-between py-2 border-t">
                 <div className="text-sm">
                   {t.description || `${t.sender_account_id} → ${t.receiver_account_id}`}

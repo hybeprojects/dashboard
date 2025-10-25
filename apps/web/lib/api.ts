@@ -15,22 +15,7 @@ api.interceptors.request.use(async (config) => {
       config.headers['X-XSRF-TOKEN'] = token;
     }
 
-    // attach Supabase access token if available
-    try {
-      // lazy import to avoid SSR issues
-      const { getSupabase } = await import('./supabase');
-      const supabase = getSupabase();
-      if (supabase) {
-        const s = await supabase.auth.getSession();
-        const access = s?.data?.session?.access_token;
-        if (access) {
-          config.headers = config.headers || {};
-          config.headers['Authorization'] = `Bearer ${access}`;
-        }
-      }
-    } catch (e) {
-      // ignore if supabase client not ready
-    }
+    // Do not attempt to attach JWT from httpOnly cookie; rely on cookies being sent via withCredentials
   } catch (e) {
     // non-fatal
   }

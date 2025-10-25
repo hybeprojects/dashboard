@@ -76,32 +76,22 @@ export default function AccountDetailsPage({ account, transactions }: AccountDet
   );
 }
 
-import { createClient } from '@supabase/supabase-js';
+import { getDb } from '../../../lib/db';
 
-export const getServerSideProps = withAuth(async (context, session) => {
+export const getServerSideProps = withAuth(async (context, user) => {
   const accountId = context.params?.accountId as string;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const db = await getDb();
 
-  const userClient = createClient(url, anon, {
-    global: { headers: { Authorization: `Bearer ${session.access_token}` } },
-  });
+  const account: any = await db.get('SELECT * FROM accounts WHERE id = ?', accountId);
 
-  const { data: account, error: accountError } = await userClient
-    .from('accounts')
-    .select('*')
-    .eq('id', accountId)
-    .single();
+  const transactions: any[] = await db.all(
+    'SELECT * FROM transactions WHERE from_account_id = ? OR to_account_id = ? ORDER BY created_at DESC',
+    accountId,
+    accountId,
+  );
 
-  const { data: transactions, error: transactionsError } = await userClient
-    .from('transactions')
-    .select('*')
-    .or(`sender_account_id.eq.${accountId},receiver_account_id.eq.${accountId}`)
-    .order('created_at', { ascending: false });
-
-  if (accountError || !account) {
-    console.error('Error fetching account details:', accountError);
+  if (!account) {
     return {
       notFound: true,
     };

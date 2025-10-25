@@ -1,27 +1,31 @@
 import { useRef, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { createClient } from '../lib/supabase/client';
 
 export default function useWebSocket(onEvent: (event: string, payload: any) => void) {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // connect to same origin/relative API by default; fall back to localhost:5000
     const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     let socket: Socket | null = null;
 
     const init = async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const token = session?.access_token ?? null;
+        // read httpOnly cookie cannot be accessed; attempt to read permissive token from document.cookie
+        const cookies =
+          typeof document !== 'undefined'
+            ? document.cookie.split(';').reduce((acc: any, c) => {
+                const [k, v] = c.split('=');
+                if (!k) return acc;
+                acc[k.trim()] = decodeURIComponent((v || '').trim());
+                return acc;
+              }, {})
+            : {};
+        const token = cookies['sb-access-token'] || cookies['sb:token'] || null;
 
-        socket = io(url, {
-          auth: { token },
-          withCredentials: true,
-        });
+        socket = io(
+          url,
+          token ? { auth: { token }, withCredentials: true } : { withCredentials: true },
+        );
 
         socketRef.current = socket;
 

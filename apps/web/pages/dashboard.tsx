@@ -6,13 +6,12 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../state/useAuthStore';
-import { createClient } from '../lib/supabase/client';
-import { createServerSupabaseClient } from '../lib/supabase/server';
-import type { Database } from '../lib/supabase/types.gen';
 import { type GetServerSidePropsContext } from 'next';
+import { getUserFromRequest } from '../lib/serverAuth';
+import { getDb } from '../lib/db';
 
-type AccountRow = Database['public']['Tables']['accounts']['Row'];
-type TransactionRow = Database['public']['Tables']['transactions']['Row'];
+type AccountRow = any;
+type TransactionRow = any;
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {
   return (
@@ -23,12 +22,8 @@ function Icon({ d, className = '' }: { d: string; className?: string }) {
 }
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  const supabase = createServerSupabaseClient(ctx);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session)
+  const user = await getUserFromRequest(ctx.req as any);
+  if (!user)
     return {
       redirect: {
         destination: '/login',
@@ -40,37 +35,25 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   let bankingData = null;
   let bankingError: string | null = null;
   try {
-    // use service role client to lookup fineract_client_id
-    // require here to avoid changing top-level imports
-    const { getServiceRoleClient } = require('../lib/supabase/api');
-    const service = getServiceRoleClient();
-    if (service) {
-      const { data: profile, error: profileError } = await service
-        .from('profiles')
-        .select('fineract_client_id')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!profileError && profile?.fineract_client_id) {
-        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-        const host = ctx.req.headers.host;
-        const resp = await fetch(`${protocol}://${host}/api/banking`, {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            Cookie: ctx.req.headers.cookie || '',
-          },
-        });
-        if (resp.ok) {
-          const json = await resp.json();
-          bankingData = json?.data ?? json;
-        } else {
-          bankingError = `Failed to load banking data: ${resp.status}`;
-        }
+    const db = await getDb();
+    const profile = await db.get('SELECT fineract_client_id FROM profiles WHERE id = ?', user.id);
+    const clientId = profile?.fineract_client_id;
+    if (clientId) {
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      const host = ctx.req.headers.host;
+      const resp = await fetch(`${protocol}://${host}/api/banking`, {
+        headers: {
+          Cookie: ctx.req.headers.cookie || '',
+        },
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        bankingData = json?.data ?? json;
       } else {
-        bankingError = 'Banking profile not setup';
+        bankingError = `Failed to load banking data: ${resp.status}`;
       }
     } else {
-      bankingError = 'Service client not configured';
+      bankingError = 'Banking profile not setup';
     }
   } catch (e: any) {
     console.error('Dashboard banking data error:', e);
@@ -79,8 +62,7 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   return {
     props: {
-      initialSession: session,
-      user: session.user,
+      user,
       bankingData,
       bankingError,
     },
@@ -102,19 +84,26 @@ const icons = {
   chart: 'M5 19h14M7 17V9m5 8V5m5 12v-6',
 };
 
-export default function Dashboard({ user: initialUser }: { user: any; initialSession?: any }) {
+export default function Dashboard({
+  user: initialUser,
+  bankingData,
+  bankingError,
+}: {
+  user: any;
+  initialSession?: any;
+  bankingData?: any;
+  bankingError?: string;
+}) {
   const qc = useQueryClient();
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
   const user = useAuthStore((s) => s.user);
-  const supabase = createClient();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        // Use server-provided user to initialize client state
         const u = initialUser || null;
         if (mounted) {
           setUser(
@@ -148,7 +137,7 @@ export default function Dashboard({ user: initialUser }: { user: any; initialSes
       const res = await fetch('/api/banking?type=accounts');
       if (!res.ok) throw new Error('Failed to fetch accounts');
       const json = await res.json();
-      return json.accounts ?? [];
+      return json.accounts ?? json;
     },
     staleTime: 30_000,
   });
@@ -158,7 +147,7 @@ export default function Dashboard({ user: initialUser }: { user: any; initialSes
       const res = await fetch('/api/banking?type=transactions');
       if (!res.ok) throw new Error('Failed to fetch transactions');
       const json = await res.json();
-      return json.transactions ?? [];
+      return json.transactions ?? json;
     },
     staleTime: 15_000,
   });
@@ -172,63 +161,6 @@ export default function Dashboard({ user: initialUser }: { user: any; initialSes
     },
     staleTime: 15_000,
   });
-
-  // realtime subscriptions to keep balances and transactions up-to-date
-  useEffect(() => {
-    if (!supabase) return;
-    const acctChannel = supabase
-      .channel('public:accounts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, (payload) => {
-        qc.setQueryData(['accounts'], (old: any) => {
-          const list = Array.isArray(old) ? [...old] : [];
-          const newRow = payload.new;
-          if (!newRow) return list;
-          const idx = list.findIndex(
-            (a: any) => a.id === (newRow as any).id || a.accountId === (newRow as any).accountId,
-          );
-          if (idx === -1) list.unshift(newRow);
-          else list[idx] = { ...list[idx], ...newRow };
-          return list;
-        });
-      })
-      .subscribe();
-
-    const txChannel = supabase
-      .channel('public:transactions')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'transactions' },
-        (payload) => {
-          qc.setQueryData(['transactions'], (old: any) => {
-            const list = Array.isArray(old) ? [...old] : [];
-            const newRow = payload.new;
-            if (!newRow) return list;
-            // for inserts, add to top; for updates, replace
-            const idx = list.findIndex(
-              (t: any) =>
-                t.id === (newRow as any).id || t.transactionId === (newRow as any).transactionId,
-            );
-            if (idx === -1) list.unshift(newRow);
-            else list[idx] = { ...list[idx], ...newRow };
-            return list;
-          });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      try {
-        acctChannel.unsubscribe();
-      } catch (e) {
-        // ignore
-      }
-      try {
-        txChannel.unsubscribe();
-      } catch (e) {
-        // ignore
-      }
-    };
-  }, [qc, supabase]);
 
   const accountsArr = useMemo(() => (Array.isArray(accounts) ? accounts : []), [accounts]);
   const transactionsArr = Array.isArray(transactions) ? transactions : [];

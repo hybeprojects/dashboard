@@ -1,23 +1,20 @@
 import type { GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
 import type { Session, User } from '@supabase/supabase-js';
 
-import { createServerSupabaseClient as createClient } from './supabase/server';
+import { getUserFromRequest } from './serverAuth';
 
 type GetServerSidePropsCallback = (
   context: GetServerSidePropsContext,
-  session: Session
+  user: any,
 ) => Promise<GetServerSidePropsResult<{ [key: string]: any }>>;
 
 export const withAuth = (getServerSidePropsFn?: GetServerSidePropsCallback) => {
   return async (
-    context: GetServerSidePropsContext
+    context: GetServerSidePropsContext,
   ): Promise<GetServerSidePropsResult<{ user: User } | { [key: string]: any }>> => {
-    const supabase = createClient(context);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const user = await getUserFromRequest(context.req as any);
 
-    if (!session) {
+    if (!user) {
       return {
         redirect: {
           destination: '/login',
@@ -27,12 +24,12 @@ export const withAuth = (getServerSidePropsFn?: GetServerSidePropsCallback) => {
     }
 
     if (getServerSidePropsFn) {
-      return getServerSidePropsFn(context, session);
+      return getServerSidePropsFn(context, user);
     }
 
     return {
       props: {
-        user: session.user,
+        user,
       },
     };
   };
