@@ -48,9 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       try {
         const axiosConfig: any = { timeout: 5000 };
-        if (fineractUser && fineractPass) axiosConfig.auth = { username: fineractUser, password: fineractPass };
+        if (fineractUser && fineractPass)
+          axiosConfig.auth = { username: fineractUser, password: fineractPass };
         const r = await axios.get(fineractUrl.replace(/\/$/, ''), axiosConfig);
-        result.checks.fineract = { configured: true, ok: r.status >= 200 && r.status < 300, status: r.status };
+        result.checks.fineract = {
+          configured: true,
+          ok: r.status >= 200 && r.status < 300,
+          status: r.status,
+        };
       } catch (e: any) {
         result.checks.fineract = { configured: true, ok: false, error: e?.message || String(e) };
       }
@@ -58,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Storage check: ensure storage root exists and write/read a temp file via storage adapter
     try {
-      const testName = `diag_${Date.now()}_${Math.random().toString(36).slice(2,6)}.txt`;
+      const testName = `diag_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.txt`;
       const buf = Buffer.from('diagnostics');
       const upload = await storage.uploadFile(buf, testName, 'statements');
       // resolve to real path
@@ -69,7 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (exists) {
         content = fs.readFileSync(filePath, 'utf8');
         // cleanup
-        try { fs.unlinkSync(filePath); } catch (e) {}
+        try {
+          fs.unlinkSync(filePath);
+        } catch (e) {}
       }
       result.checks.storage = { configured: true, ok: exists && content === 'diagnostics' };
     } catch (e: any) {
