@@ -2,22 +2,21 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import AccountCard from '../components/AccountCard';
 import Card from '../components/ui/Card';
-import { createClient } from '../lib/supabase/client';
-import type { Database } from '../lib/supabase/types.gen';
 import useRequireAuth from '../hooks/useRequireAuth';
 import cookie from 'cookie';
 
-type AccountRow = Database['public']['Tables']['accounts']['Row'];
+type AccountRow = any;
 
 export default function AccountsPage() {
   // client-side guard
   useRequireAuth();
-  const supabase = createClient();
   const { data: accounts = [], isLoading } = useQuery<AccountRow[]>({
     queryKey: ['accounts'],
     queryFn: async (): Promise<AccountRow[]> => {
-      const { data } = await supabase.from('accounts').select('*');
-      return data ?? [];
+      const res = await fetch('/api/banking?type=accounts');
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      const json = await res.json();
+      return json.accounts ?? json;
     },
     staleTime: 30_000,
   });
