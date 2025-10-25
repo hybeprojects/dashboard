@@ -11,6 +11,12 @@ export class LocalStorage {
     if (!fs.existsSync(this.storagePath)) {
       fs.mkdirSync(this.storagePath, { recursive: true });
     }
+
+    // Ensure default subfolders exist
+    for (const folder of ['kyc', 'statements', 'receipts']) {
+      const dir = path.join(this.storagePath, folder);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    }
   }
 
   async uploadFile(file: Buffer, filename: string, folder: string = 'kyc') {
@@ -26,9 +32,10 @@ export class LocalStorage {
   }
 
   async getSignedUrl(filePath: string) {
-    // For local storage, signed URL is a direct download endpoint with encoded path
-    // filePath is expected to be relative to storage root
-    return `/api/storage/download?file=${encodeURIComponent(filePath)}`;
+    // For local storage, return direct path served by /api/storage/[...path]
+    const segments = filePath.split(/[\\/]+/).filter(Boolean);
+    const urlPath = segments.map(encodeURIComponent).join('/');
+    return `/api/storage/${urlPath}`;
   }
 }
 
