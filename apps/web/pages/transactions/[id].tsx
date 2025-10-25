@@ -2,29 +2,25 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/ui/Card';
-import { createClient } from '../../lib/supabase/client';
-import type { Database } from '../../lib/supabase/types.gen';
 import useRequireAuth from '../../hooks/useRequireAuth';
 import { withAuth } from '../../lib/ssrHelpers';
-
-type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 export default function TransactionDetail() {
   // client-side guard
   useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
-  const supabase = createClient();
 
-  const { data: transactions = [] } = useQuery<TransactionRow[]>({
+  const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
-    queryFn: async (): Promise<TransactionRow[]> => {
-      const { data } = await supabase.from('transactions').select('*');
-      return data ?? [];
+    queryFn: async () => {
+      const res = await fetch('/api/transactions');
+      if (!res.ok) throw new Error('Failed to fetch transactions');
+      return res.json();
     },
   });
 
-  const tx = transactions.find((t) => String(t.id) === String(id));
+  const tx = (transactions || []).find((t: any) => String(t.id) === String(id));
 
   if (!tx) {
     return (
