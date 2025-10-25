@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../lib/serverAuth';
-import { getDb } from '../lib/db';
-import { storage } from '../lib/storage';
+import { getUserFromRequest } from '../../lib/serverAuth';
+import { getDb } from '../../lib/db';
+import { storage } from '../../lib/storage';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
