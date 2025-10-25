@@ -1,4 +1,5 @@
 import axios from 'axios';
+import axios from 'axios';
 import { getDb } from './db';
 import { recordMetric } from './metrics';
 
