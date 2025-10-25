@@ -25,7 +25,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const totalRow = await db.get('SELECT COUNT(1) as count FROM kyc_submissions');
     const total = totalRow ? totalRow.count : null;
 
-    return res.status(200).json({ submissions: submissions || [], page, limit, total });
+    // attach signed urls for each submission
+    const out = [] as any[];
+    for (const s of submissions || []) {
+      const files = s.files ? JSON.parse(s.files) : [];
+      const urls: Record<string, string | null> = {};
+      for (const f of files) {
+        const filename = f.filename || f.file || null;
+        if (!filename) continue;
+        try {
+          urls[filename] = await storage.getSignedUrl(`kyc/${filename}`);
+        } catch (e) {
+          urls[filename] = null;
+        }
+      }
+      out.push({ ...s, urls });
+    }
+
+    return res.status(200).json({ submissions: out, page, limit, total });
   } catch (e: any) {
     console.error('admin/kyc/submissions error', e?.message || e);
     return res.status(500).json({ error: 'Internal error' });
