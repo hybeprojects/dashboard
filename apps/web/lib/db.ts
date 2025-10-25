@@ -3,30 +3,69 @@ import { open } from 'sqlite';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'file:./premier_bank.db';
 const JWT_SECRET =
   process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || 'dev_secret';
 
 let dbInstance: any = null;
+let dbFilePathCached: string | null = null;
+
+export function getDatabaseFilePath() {
+  if (dbFilePathCached) return dbFilePathCached;
+  const filePath = DATABASE_URL.startsWith('file:') ? DATABASE_URL.slice(5) : DATABASE_URL;
+  // normalize to absolute
+  const abs = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+  dbFilePathCached = abs;
+  return abs;
+}
 
 export async function getDb() {
   if (dbInstance) return dbInstance;
-  const filePath = DATABASE_URL.startsWith('file:') ? DATABASE_URL.slice(5) : DATABASE_URL;
+  const filePath = getDatabaseFilePath();
 
   // dynamic require to avoid bundler resolving native sqlite3 at build-time
-  let sqlite3: any;
+  let sqlite3module: any;
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    sqlite3 = require('sqlite3');
+    sqlite3module = require('sqlite3');
   } catch (e) {
     throw new Error('sqlite3 module is not installed. Run `npm install sqlite3` in apps/web');
   }
 
-  const db = await open({ filename: filePath, driver: sqlite3.Database });
+  const db = await open({ filename: filePath, driver: sqlite3module.Database });
+
+  // Harden connection: pragmas for durability and concurrency
+  try {
+    // Enable WAL for better concurrency
+    await db.exec('PRAGMA journal_mode = WAL;');
+    // Reasonable synchronous setting
+    await db.exec('PRAGMA synchronous = NORMAL;');
+    // Busy timeout (ms)
+    await db.exec('PRAGMA busy_timeout = 5000;');
+    // Enable foreign keys
+    await db.exec('PRAGMA foreign_keys = ON;');
+  } catch (e) {
+    // ignore pragma errors but log
+    // eslint-disable-next-line no-console
+    console.warn('Failed to set pragmas on sqlite', e && (e.message || e));
+  }
+
   dbInstance = db;
   await ensureSchema(db);
   return db;
+}
+
+export async function closeDb() {
+  if (!dbInstance) return;
+  try {
+    await dbInstance.close();
+  } catch (e) {
+    // ignore
+  }
+  dbInstance = null;
 }
 
 async function ensureSchema(db: any) {
@@ -203,9 +242,13 @@ export async function getUserById(id: string) {
 
 export async function upsertAccountSnapshot(userId: string, account: any) {
   const db = await getDb();
-  const id = String(account.id || account.accountId || account.resourceId || account.account_number || randomUUID());
+  const id = String(
+    account.id || account.accountId || account.resourceId || account.account_number || randomUUID(),
+  );
   const name = account.name || account.accountType || String(account.account_number || '');
-  const balance = Number(account.balance ?? account.currentBalance ?? account.availableBalance ?? 0);
+  const balance = Number(
+    account.balance ?? account.currentBalance ?? account.availableBalance ?? 0,
+  );
   const data = JSON.stringify(account);
   await db.run(
     `INSERT INTO accounts (id, user_id, name, balance, currency, data) VALUES (?, ?, ?, ?, ?, ?)
@@ -251,4 +294,66 @@ export async function getAccountById(accountId: string) {
   const db = await getDb();
   const row = await db.get('SELECT * FROM accounts WHERE id = ?', accountId);
   return row || null;
+}
+
+// --- Utilities for backups and maintenance ---
+export async function backupDatabase(destinationFolder?: string) {
+  const src = getDatabaseFilePath();
+  const destFolder = destinationFolder || path.join(process.cwd(), 'storage', 'backups');
+  if (!fs.existsSync(destFolder)) fs.mkdirSync(destFolder, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const base = path.basename(src);
+  const destName = `${base}.${ts}.backup`;
+  const dest = path.join(destFolder, destName);
+
+  // Ensure DB is flushed to disk
+  try {
+    const db = await getDb();
+    // checkpoint WAL to ensure all data is in main DB
+    try {
+      await db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (e) {
+      // ignore
+    }
+  } catch (e) {
+    // ignore if cannot open
+  }
+
+  fs.copyFileSync(src, dest);
+  return { ok: true, path: dest, name: destName };
+}
+
+export async function restoreDatabaseFromBuffer(buffer: Buffer) {
+  const dest = getDatabaseFilePath();
+  // close existing db connection first
+  await closeDb();
+
+  // write to temp and then move
+  const tmp = dest + '.restore.tmp';
+  fs.writeFileSync(tmp, buffer);
+  fs.renameSync(tmp, dest);
+  // reset cached path and instance
+  dbFilePathCached = dest;
+  dbInstance = null;
+  return { ok: true, path: dest };
+}
+
+export async function runIntegrityCheck() {
+  try {
+    const db = await getDb();
+    const res = await db.get('PRAGMA quick_check(1);');
+    return { ok: true, result: res };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || String(e) };
+  }
+}
+
+export async function runVacuum() {
+  try {
+    const db = await getDb();
+    await db.exec('VACUUM;');
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || String(e) };
+  }
 }

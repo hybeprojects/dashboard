@@ -15,9 +15,9 @@ function buildCSP() {
       ? "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
       : "style-src 'self' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    isDev ? "img-src 'self' data: https:" : "img-src 'self' data:",
+    isDev ? "img-src 'self' data: https:" : "img-src 'self' data: https:",
   ];
-  const connect = ["connect-src 'self'"];
+  const connect = ["connect-src 'self' https://*.ingest.sentry.io"];
   if (isDev) connect.push('ws:', 'wss:', 'blob:');
   if (supabase) connect.push(supabase);
   if (apiUrl) connect.push(apiUrl);
