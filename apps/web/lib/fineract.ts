@@ -3,7 +3,10 @@ import axios from 'axios';
 import { getDb } from './db';
 import { recordMetric } from './metrics';
 
-export async function ensureFineractClient(userId: string, opts: { firstName?: string; lastName?: string; email?: string } = {}) {
+export async function ensureFineractClient(
+  userId: string,
+  opts: { firstName?: string; lastName?: string; email?: string } = {},
+) {
   const db = await getDb();
 
   try {
@@ -75,7 +78,11 @@ export async function createFineractTransfer(payload: any) {
   if (tenant) axiosConfig.headers['Fineract-Platform-TenantId'] = tenant;
 
   try {
-    const resp = await axios.post(`${fineractUrl.replace(/\/$/, '')}/transfers`, payload, axiosConfig);
+    const resp = await axios.post(
+      `${fineractUrl.replace(/\/$/, '')}/transfers`,
+      payload,
+      axiosConfig,
+    );
     return resp.data;
   } catch (e) {
     console.warn('Fineract transfer failed', e && (e as any).message ? (e as any).message : e);
