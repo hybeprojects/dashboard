@@ -173,9 +173,7 @@ export default function AdminAuditPage() {
 
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm text-gray-600">
-              {loading ? 'Loading…' : `${total} total`}
-            </div>
+            <div className="text-sm text-gray-600">{loading ? 'Loading…' : `${total} total`}</div>
             <div className="flex items-center gap-2">
               <Button
                 variant="secondary"

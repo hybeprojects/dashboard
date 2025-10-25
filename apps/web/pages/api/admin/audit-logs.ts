@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `target_id.ilike.%${search}%`,
           `ip.ilike.%${search}%`,
           `user_agent.ilike.%${search}%`,
-        ].join(',')
+        ].join(','),
       );
     }
 
