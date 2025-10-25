@@ -19,7 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = await getDb();
     const sub = await db.get('SELECT * FROM kyc_submissions WHERE id = ?', submissionId);
     if (!sub) return res.status(404).json({ error: 'Submission not found' });
-    if (String(sub.user_id) !== String(user.id)) return res.status(403).json({ error: 'Forbidden' });
+    if (String(sub.user_id) !== String(user.id))
+      return res.status(403).json({ error: 'Forbidden' });
 
     const files = sub.files ? JSON.parse(sub.files) : [];
     const urls: Record<string, string | null> = {};

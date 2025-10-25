@@ -14,7 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
     const db = await getDb();
-    const submissions = await db.all('SELECT * FROM kyc_submissions WHERE user_id = ? ORDER BY created_at DESC', user.id);
+    const submissions = await db.all(
+      'SELECT * FROM kyc_submissions WHERE user_id = ? ORDER BY created_at DESC',
+      user.id,
+    );
 
     // attach signed urls for each file
     const out = [] as any[];

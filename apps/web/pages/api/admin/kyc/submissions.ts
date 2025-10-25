@@ -22,7 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const limit = Math.min(Number(req.query.limit || 50), 200);
     const offset = (Math.max(1, page) - 1) * limit;
 
-    const submissions = await db.all('SELECT * FROM kyc_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?', limit, offset);
+    const submissions = await db.all(
+      'SELECT * FROM kyc_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      limit,
+      offset,
+    );
     const totalRow = await db.get('SELECT COUNT(1) as count FROM kyc_submissions');
     const total = totalRow ? totalRow.count : null;
 
