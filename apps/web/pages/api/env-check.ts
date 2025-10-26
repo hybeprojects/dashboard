@@ -3,14 +3,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 type EnvCheckResult = {
   public: {
     NEXT_PUBLIC_API_URL?: string;
-    NEXT_PUBLIC_SUPABASE_URL?: string;
     NEXT_PUBLIC_SUPABASE_ANON_KEY_PRESENT: boolean;
   };
   server: {
     JWT_SECRET_PRESENT: boolean;
     POSTGRES_URL_PRESENT: boolean;
     SENTRY_DSN_PRESENT: boolean;
-    SUPABASE_SERVICE_ROLE_KEY_PRESENT: boolean;
   };
   timestamp: string;
 };
