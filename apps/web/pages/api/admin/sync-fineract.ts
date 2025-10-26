@@ -3,7 +3,7 @@ import { recordMetric } from '../../../lib/metrics';
 import { getDb, upsertAccountSnapshot } from '../../../lib/db';
 
 // Protect this route with FINERACT_SYNC_SECRET env var
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end('Method Not Allowed');
