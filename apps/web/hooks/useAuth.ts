@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useAuthStore } from '../state/useAuthStore';
 import { me } from '../lib/auth';
 
-export function useSupabaseSession() {
+export function useAuthSession() {
   const setUser = useAuthStore((s) => s.setUser);
 
   React.useEffect(() => {
