@@ -1,6 +1,4 @@
 import type { GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
-import type { Session, User } from '@supabase/supabase-js';
-
 import { getUserFromRequest } from './serverAuth';
 
 type GetServerSidePropsCallback = (
@@ -11,7 +9,7 @@ type GetServerSidePropsCallback = (
 export const withAuth = (getServerSidePropsFn?: GetServerSidePropsCallback) => {
   return async (
     context: GetServerSidePropsContext,
-  ): Promise<GetServerSidePropsResult<{ user: User } | { [key: string]: any }>> => {
+  ): Promise<GetServerSidePropsResult<{ user: any } | { [key: string]: any }>> => {
     const user = await getUserFromRequest(context.req as any);
 
     if (!user) {
