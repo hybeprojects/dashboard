@@ -77,7 +77,11 @@ export async function middleware(req: NextRequest) {
     const secret = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET || '';
     if (!secret) return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     try {
-      const token = await getToken({ req, secret, secureCookie: process.env.NODE_ENV === 'production' });
+      const token = await getToken({
+        req,
+        secret,
+        secureCookie: process.env.NODE_ENV === 'production',
+      });
       if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       // Detailed RBAC (is_admin) checks should run inside API handlers (server-side DB) where DB access is available.
     } catch (e) {
