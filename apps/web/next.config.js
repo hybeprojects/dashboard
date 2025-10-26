@@ -2,7 +2,6 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 function buildCSP() {
-  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
   const parts = [
     "default-src 'self'",
