@@ -47,7 +47,7 @@ export async function getDb() {
     await db.exec('PRAGMA busy_timeout = 5000;');
     // Enable foreign keys
     await db.exec('PRAGMA foreign_keys = ON;');
-  } catch (e) {
+  } catch (e: any) {
     // ignore pragma errors but log
     // eslint-disable-next-line no-console
     console.warn('Failed to set pragmas on sqlite', e && (e.message || e));
