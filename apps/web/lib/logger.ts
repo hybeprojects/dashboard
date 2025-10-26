@@ -1,7 +1,5 @@
 const sensitiveKeys = [
   'JWT_SECRET',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'DB_PASSWORD',
 ];
 
