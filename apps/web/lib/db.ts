@@ -62,7 +62,7 @@ export async function closeDb() {
   if (!dbInstance) return;
   try {
     await dbInstance.close();
-  } catch (e) {
+  } catch (e: any) {
     // ignore
   }
   dbInstance = null;
@@ -312,9 +312,9 @@ export async function backupDatabase(destinationFolder?: string) {
     // checkpoint WAL to ensure all data is in main DB
     try {
       await db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (e) {
-      // ignore
-    }
+    } catch (e: any) {
+    // ignore
+  }
   } catch (e) {
     // ignore if cannot open
   }
