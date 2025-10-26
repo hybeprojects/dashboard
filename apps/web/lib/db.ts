@@ -31,7 +31,7 @@ export async function getDb() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     sqlite3module = require('sqlite3');
-  } catch (e) {
+  } catch (e: any) {
     throw new Error('sqlite3 module is not installed. Run `npm install sqlite3` in apps/web');
   }
 
