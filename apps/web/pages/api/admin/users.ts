@@ -1,5 +1,3 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromRequest } from '../../../lib/serverAuth';
 import { getDb } from '../../../lib/db';
 
