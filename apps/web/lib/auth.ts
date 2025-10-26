@@ -51,12 +51,12 @@ export async function register(payload: {
 }
 
 export async function logout() {
-  await fetch('/api/auth/logout', { method: 'POST' });
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
 }
 
 export async function me(): Promise<UserProfile | null> {
   try {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
     if (!res.ok) return null;
     const data = await res.json();
     const user = data?.user || null;
