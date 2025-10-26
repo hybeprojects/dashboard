@@ -2,7 +2,7 @@ import { getUserFromRequest } from '../../../../lib/serverAuth';
 import { getDb } from '../../../../lib/db';
 const crypto = require('crypto');
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end('Method Not Allowed');
