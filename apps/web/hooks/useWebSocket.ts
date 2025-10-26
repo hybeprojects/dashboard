@@ -20,7 +20,7 @@ export default function useWebSocket(onEvent: (event: string, payload: any) => v
                 return acc;
               }, {})
             : {};
-        const token = cookies['sb-access-token'] || cookies['sb:token'] || null;
+        const token = cookies['sb-access-token'] || null;
 
         socket = io(
           url,
