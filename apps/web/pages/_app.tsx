@@ -6,7 +6,7 @@ import { AppQueryProvider } from '../lib/query';
 import TopProgressBar from '../components/ui/TopProgressBar';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Suspense } from 'react';
-import { useSupabaseSession } from '../hooks/useAuth';
+import { useAuthSession } from '../hooks/useAuth';
 import { useCsrfBootstrap } from '../hooks/useCsrf';
 
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -24,7 +24,7 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
-  useSupabaseSession();
+  useAuthSession();
   useCsrfBootstrap();
 
   return (

@@ -142,7 +142,7 @@ export default function TransferPage() {
 export async function getServerSideProps(context: any) {
   const cookiesHeader = context.req.headers.cookie || '';
   const cookies = cookiesHeader ? cookie.parse(cookiesHeader) : {};
-  const token = cookies['sb-access-token'] || cookies['supabase-auth-token'] || cookies['sb:token'];
+  const token = cookies['sb-access-token'] || null;
 
   if (!token) {
     return {

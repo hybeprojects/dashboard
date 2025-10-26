@@ -2,7 +2,6 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 function buildCSP() {
-  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
   const parts = [
     "default-src 'self'",
@@ -19,7 +18,6 @@ function buildCSP() {
   ];
   const connect = ["connect-src 'self' https://*.ingest.sentry.io"];
   if (isDev) connect.push('ws:', 'wss:', 'blob:');
-  if (supabase) connect.push(supabase);
   if (apiUrl) connect.push(apiUrl);
   parts.push(connect.join(' '));
   if (!isDev) parts.push('upgrade-insecure-requests');

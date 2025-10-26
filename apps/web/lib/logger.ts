@@ -1,9 +1,4 @@
-const sensitiveKeys = [
-  'JWT_SECRET',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'DB_PASSWORD',
-];
+const sensitiveKeys = ['JWT_SECRET', 'DB_PASSWORD'];
 
 function maskMessage(msg: string) {
   if (!msg || typeof msg !== 'string') return msg;
