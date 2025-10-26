@@ -29,7 +29,6 @@ export async function getDb() {
   // dynamic require to avoid bundler resolving native sqlite3 at build-time
   let sqlite3module: any;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     sqlite3module = require('sqlite3');
   } catch (e: any) {
     throw new Error('sqlite3 module is not installed. Run `npm install sqlite3` in apps/web');
