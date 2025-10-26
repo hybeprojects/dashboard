@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 // Simple in-memory rate limiter (per-process). Note: Edge middleware runs per instance.
 const buckets = new Map<string, { count: number; resetAt: number }>();
@@ -28,7 +29,7 @@ function getIp(req: NextRequest) {
   return 'unknown';
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { method } = req;
   const url = req.nextUrl.clone();
   const pathname = url.pathname;
@@ -75,15 +76,11 @@ export function middleware(req: NextRequest) {
 
   // Authentication guard for admin/db endpoints: ensure session cookie present and token valid
   if (pathname.startsWith('/api/admin') || pathname.startsWith('/api/db')) {
-    const token =
-      req.cookies.get('sb-access-token')?.value ||
-      req.cookies.get('supabase-auth-token')?.value ||
-      null;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const secret = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET || '';
+    if (!secret) return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     try {
-      const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || '';
-      if (!secret) return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
-      jwt.verify(token, secret);
+      const token = await getToken({ req, secret, secureCookie: process.env.NODE_ENV === 'production' });
+      if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       // Detailed RBAC (is_admin) checks should run inside API handlers (server-side DB) where DB access is available.
     } catch (e) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
