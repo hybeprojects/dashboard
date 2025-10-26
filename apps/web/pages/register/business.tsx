@@ -44,6 +44,7 @@ export default function BusinessRegister() {
 
       const signupResp = await fetch('/api/auth/signup', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: v.email,

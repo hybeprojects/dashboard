@@ -29,9 +29,8 @@ export async function getDb() {
   // dynamic require to avoid bundler resolving native sqlite3 at build-time
   let sqlite3module: any;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     sqlite3module = require('sqlite3');
-  } catch (e) {
+  } catch (e: any) {
     throw new Error('sqlite3 module is not installed. Run `npm install sqlite3` in apps/web');
   }
 
@@ -47,9 +46,8 @@ export async function getDb() {
     await db.exec('PRAGMA busy_timeout = 5000;');
     // Enable foreign keys
     await db.exec('PRAGMA foreign_keys = ON;');
-  } catch (e) {
+  } catch (e: any) {
     // ignore pragma errors but log
-    // eslint-disable-next-line no-console
     console.warn('Failed to set pragmas on sqlite', e && (e.message || e));
   }
 
@@ -62,7 +60,7 @@ export async function closeDb() {
   if (!dbInstance) return;
   try {
     await dbInstance.close();
-  } catch (e) {
+  } catch (e: any) {
     // ignore
   }
   dbInstance = null;
@@ -312,7 +310,7 @@ export async function backupDatabase(destinationFolder?: string) {
     // checkpoint WAL to ensure all data is in main DB
     try {
       await db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (e) {
+    } catch (e: any) {
       // ignore
     }
   } catch (e) {

@@ -1,10 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromRequest } from '../../../../lib/serverAuth';
 import { getDb } from '../../../../lib/db';
 const crypto = require('crypto');
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end('Method Not Allowed');
@@ -20,7 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { submissionId, decision, note } = req.body || {};
     if (!submissionId) return res.status(400).json({ error: 'Missing submissionId' });
-    if (decision !== 'approved' && decision !== 'rejected') return res.status(400).json({ error: 'Invalid decision' });
+    if (decision !== 'approved' && decision !== 'rejected')
+      return res.status(400).json({ error: 'Invalid decision' });
 
     const status = decision === 'approved' ? 'approved' : 'rejected';
 
