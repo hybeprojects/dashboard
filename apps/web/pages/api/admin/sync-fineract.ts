@@ -1,5 +1,3 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import { recordMetric } from '../../../lib/metrics';
 import { getDb, upsertAccountSnapshot } from '../../../lib/db';
