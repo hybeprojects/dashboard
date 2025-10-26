@@ -18,7 +18,6 @@ function buildCSP() {
   ];
   const connect = ["connect-src 'self' https://*.ingest.sentry.io"];
   if (isDev) connect.push('ws:', 'wss:', 'blob:');
-  if (supabase) connect.push(supabase);
   if (apiUrl) connect.push(apiUrl);
   parts.push(connect.join(' '));
   if (!isDev) parts.push('upgrade-insecure-requests');
