@@ -313,8 +313,8 @@ export async function backupDatabase(destinationFolder?: string) {
     try {
       await db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
     } catch (e: any) {
-    // ignore
-  }
+      // ignore
+    }
   } catch (e) {
     // ignore if cannot open
   }

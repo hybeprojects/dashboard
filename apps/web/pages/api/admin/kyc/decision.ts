@@ -18,7 +18,8 @@ export default async function handler(req: any, res: any) {
 
     const { submissionId, decision, note } = req.body || {};
     if (!submissionId) return res.status(400).json({ error: 'Missing submissionId' });
-    if (decision !== 'approved' && decision !== 'rejected') return res.status(400).json({ error: 'Invalid decision' });
+    if (decision !== 'approved' && decision !== 'rejected')
+      return res.status(400).json({ error: 'Invalid decision' });
 
     const status = decision === 'approved' ? 'approved' : 'rejected';
 

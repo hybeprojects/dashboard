@@ -9,7 +9,8 @@ export default async function handler(req: any, res: any) {
     return res.status(405).end('Method Not Allowed');
   }
 
-  const secret = req.headers['x-sync-secret'] || req.query.secret || process.env.FINERACT_SYNC_SECRET;
+  const secret =
+    req.headers['x-sync-secret'] || req.query.secret || process.env.FINERACT_SYNC_SECRET;
   if (!secret || String(secret) !== String(process.env.FINERACT_SYNC_SECRET)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -18,7 +19,9 @@ export default async function handler(req: any, res: any) {
   (async () => {
     try {
       const db = await getDb();
-      const profiles = await db.all('SELECT id, fineract_client_id FROM profiles WHERE fineract_client_id IS NOT NULL');
+      const profiles = await db.all(
+        'SELECT id, fineract_client_id FROM profiles WHERE fineract_client_id IS NOT NULL',
+      );
       if (!profiles || !Array.isArray(profiles)) return;
 
       const fineractUrl = process.env.FINERACT_URL || '';
@@ -39,9 +42,16 @@ export default async function handler(req: any, res: any) {
           for (const a of accounts) {
             await upsertAccountSnapshot(p.id, a);
           }
-          await recordMetric('fineract.sync.success', { userId: p.id, clientId, count: Array.isArray(accounts) ? accounts.length : 1 });
+          await recordMetric('fineract.sync.success', {
+            userId: p.id,
+            clientId,
+            count: Array.isArray(accounts) ? accounts.length : 1,
+          });
         } catch (e: any) {
-          await recordMetric('fineract.sync.failure', { userId: p.id, error: e?.message || String(e) });
+          await recordMetric('fineract.sync.failure', {
+            userId: p.id,
+            error: e?.message || String(e),
+          });
         }
       }
     } catch (e: any) {
