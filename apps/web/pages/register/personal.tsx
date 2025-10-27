@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button';
 import api from '../../lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
 
 type Form = {
   fullName: string;
@@ -39,20 +40,21 @@ export default function PersonalRegister() {
       const firstName = names.shift() || '';
       const lastName = names.join(' ');
 
-      const signupResp = await fetch('/api/auth/signup', {
+      const signupResp = await fetch('/api/register', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: v.email,
           password: v.password,
           firstName,
           lastName,
-          userType: 'personal',
         }),
       });
-      const signupBody = await signupResp.json();
-      if (!signupResp.ok) throw new Error(signupBody?.error || 'Signup failed');
+
+      if (!signupResp.ok) {
+        const signupBody = await signupResp.json();
+        throw new Error(signupBody?.error || 'Signup failed');
+      }
 
       // proceed with KYC submission
       const form = new FormData();
@@ -75,6 +77,12 @@ export default function PersonalRegister() {
       if (v.openSavings) {
         await api.post('/accounts', { type: 'savings', linkedTo: 'primary' }).catch(() => {});
       }
+
+      await signIn('credentials', {
+        email: v.email,
+        password: v.password,
+        redirect: false,
+      });
 
       setStatus('Submitted — verification in progress. Check your email for confirmation.');
       router.push('/register/complete?type=personal');
