@@ -173,7 +173,7 @@ export async function createUser({
   const existing = await db.get('SELECT id FROM users WHERE email = ?', email.toLowerCase());
   if (existing) throw new Error('User already exists');
   const id = randomUUID();
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 12);
   await db.run(
     'INSERT INTO users (id, email, password_hash, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
     id,
@@ -191,6 +191,18 @@ export async function createUser({
     firstName || null,
     lastName || null,
   );
+
+  // Create a default checking account
+  const accountId = randomUUID();
+  await db.run(
+    'INSERT INTO accounts (id, user_id, name, balance, currency) VALUES (?, ?, ?, ?, ?)',
+    accountId,
+    id,
+    'Checking Account',
+    0,
+    'USD',
+  );
+
   return {
     id,
     email: email.toLowerCase(),
